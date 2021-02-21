@@ -1,0 +1,7 @@
+Src/.vs/
+
+Src/**/[Bb]in/
+Src/**/[Oo]bj/
+
+Src/**/*.suo
+Src/**/*.user
