@@ -43,12 +43,12 @@ namespace TileMapService.Controllers
             }
         }
 
-        [HttpGet("1.0.0/{tilesetName}")]
-        public IActionResult GetCapabilitiesTileSets(string tilesetName)
+        [HttpGet("1.0.0/{tileset}")]
+        public IActionResult GetCapabilitiesTileSets(string tileset)
         {
             using (var ms = new MemoryStream())
             {
-                new CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tilesetName).Save(ms);
+                new CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tileset).Save(ms);
                 return File(ms.ToArray(), Utils.TextXml);
             }
         }
@@ -57,24 +57,24 @@ namespace TileMapService.Controllers
         /// Get tile from tileset with specified coordinates 
         /// URL format according to TMS 1.0.0 specs, like http://localhost:5000/tms/1.0.0/world/3/4/5.png
         /// </summary>
-        /// <param name="tilesetName">Tileset name</param>
+        /// <param name="tileset">Tileset name</param>
         /// <param name="x">Tile column</param>
         /// <param name="y">Tile row</param>
         /// <param name="z">Zoom level</param>
         /// <param name="formatExtension"></param>
         /// <returns></returns>
-        [HttpGet("1.0.0/{tilesetName}/{z}/{x}/{y}.{formatExtension}")]
-        public async Task<IActionResult> GetTileAsync(string tilesetName, int x, int y, int z, string formatExtension)
+        [HttpGet("1.0.0/{tileset}/{z}/{x}/{y}.{formatExtension}")]
+        public async Task<IActionResult> GetTileAsync(string tileset, int x, int y, int z, string formatExtension)
         {
-            if (String.IsNullOrEmpty(tilesetName))
+            if (String.IsNullOrEmpty(tileset))
             {
                 return BadRequest();
             }
 
-            if (this.tileSources.TileSources.ContainsKey(tilesetName))
+            if (this.tileSources.TileSources.ContainsKey(tileset))
             {
                 // TODO: check formatExtension == tileset.Configuration.Format
-                var tileSource = this.tileSources.TileSources[tilesetName];
+                var tileSource = this.tileSources.TileSources[tileset];
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null)
                 {
@@ -87,7 +87,7 @@ namespace TileMapService.Controllers
             }
             else
             {
-                return NotFound($"Specified tileset '{tilesetName}' not exists on server");
+                return NotFound($"Specified tileset '{tileset}' not exists on server");
             }
         }
     }

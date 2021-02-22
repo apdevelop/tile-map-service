@@ -5,26 +5,23 @@ namespace TileMapService
 {
     class MBTilesTileSource : ITileSource
     {
-        private TileSourceConfiguration configuration;
+        private readonly TileSourceConfiguration configuration;
 
         private readonly string contentType;
+
+        private readonly MBTilesRepository repository;
 
         public MBTilesTileSource(TileSourceConfiguration configuration)
         {
             this.configuration = configuration;
             this.contentType = Utils.GetContentType(this.configuration.Format); // TODO: from db metadata
+            var connectionString = GetMBTilesConnectionString(this.configuration.Source);
+            this.repository = new MBTilesRepository(connectionString);
         }
 
         async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            if (!this.configuration.Tms)
-            {
-                y = Utils.FromTmsY(y, z);
-            }
-
-            var connectionString = GetMBTilesConnectionString(this.configuration.Source);
-
-            return await new MBTilesRepository(connectionString).ReadTileDataAsync(x, y, z);
+            return await this.repository.ReadTileDataAsync(x, this.configuration.Tms ? y : Utils.FlipYCoordinate(y, z), z);
         }
 
         private static string GetLocalFilePath(string source)

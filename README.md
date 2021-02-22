@@ -1,5 +1,5 @@
-# Map Tile Service
-Basic implementation of Tile Map Service (TMS) for .NET5 platform, provides access to raster tiles stored in MBTiles database or local file system.
+# Tile Map Service for .NET 5
+Basic implementation of Tile Map Service (TMS) for .NET 5 platform, provides access to raster tiles stored in MBTiles database or local file system.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)

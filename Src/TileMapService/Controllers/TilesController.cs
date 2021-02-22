@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TileMapService.Controllers
 {
-    [Route("tiles")]
+    [Route("tiles")] // TODO: ? rename route to xyz
     public class TilesController : Controller
     {
         private readonly ITileSourceFabric tileSources;
@@ -46,28 +46,27 @@ namespace TileMapService.Controllers
 
         private async Task<IActionResult> ReadTileAsync(string tileset, int x, int y, int z)
         {
-            if (!String.IsNullOrEmpty(tileset))
+            if (String.IsNullOrEmpty(tileset))
             {
-                if (this.tileSources.TileSources.ContainsKey(tileset))
+                return BadRequest();
+            }
+
+            if (this.tileSources.TileSources.ContainsKey(tileset))
+            {
+                var tileSource = this.tileSources.TileSources[tileset];
+                var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z);
+                if (data != null)
                 {
-                    var tileSource = this.tileSources.TileSources[tileset];
-                    var data = await tileSource.GetTileAsync(x, Utils.FromTmsY(y, z), z);
-                    if (data != null)
-                    {
-                        return File(data, tileSource.ContentType);
-                    }
-                    else
-                    {
-                        return NotFound();
-                    }
+                    return File(data, tileSource.ContentType);
                 }
                 else
                 {
-                    return NotFound($"Specified tileset '{tileset}' not found on server");
+                    return NotFound();
                 }
             }
+            else
             {
-                return BadRequest();
+                return NotFound($"Specified tileset '{tileset}' not found on server");
             }
         }
     }

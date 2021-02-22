@@ -19,12 +19,7 @@ namespace TileMapService
 
         async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            if (!this.configuration.Tms)
-            {
-                y = Utils.FromTmsY(y, z);
-            }
-
-            var path = GetLocalFilePath(this.configuration.Source, x, y, z);
+            var path = GetLocalFilePath(this.configuration.Source, x, this.configuration.Tms ? y : Utils.FlipYCoordinate(y, z), z);
             var fileInfo = new FileInfo(path);
             if (fileInfo.Exists)
             {
@@ -41,17 +36,14 @@ namespace TileMapService
             }
         }
 
-        private static string GetLocalFilePath(string source, int x, int y, int z)
+        private static string GetLocalFilePath(string template, int x, int y, int z)
         {
-            var uriString = String.Format(
-                        CultureInfo.InvariantCulture,
-                        source.Replace("{x}", "{0}").Replace("{y}", "{1}").Replace("{z}", "{2}"),
-                        x,
-                        y,
-                        z);
-            var uri = new Uri(uriString);
+            var uriString = template
+                            .Replace("{x}", x.ToString(CultureInfo.InvariantCulture))
+                            .Replace("{y}", y.ToString(CultureInfo.InvariantCulture))
+                            .Replace("{z}", z.ToString(CultureInfo.InvariantCulture));
 
-            return uri.LocalPath;
+            return new Uri(uriString).LocalPath;
         }
 
         TileSourceConfiguration ITileSource.Configuration => this.configuration;

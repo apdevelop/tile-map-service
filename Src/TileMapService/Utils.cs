@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using Microsoft.Extensions.Configuration;
+using System.Runtime.CompilerServices;
 
 namespace TileMapService
 {
@@ -50,14 +48,15 @@ namespace TileMapService
         // https://alastaira.wordpress.com/2011/07/06/converting-tms-tile-coordinates-to-googlebingosm-tile-coordinates/
 
         /// <summary>
-        /// Convert Y tile coordinate of TMS standard (flip)
+        /// Flips Y coordinate (according to TMS coordinate system)
         /// </summary>
-        /// <param name="y"></param>
+        /// <param name="y">Y tile coordinate</param>
         /// <param name="zoom">Zoom level</param>
-        /// <returns></returns>
-        public static int FromTmsY(int tmsY, int zoom)
+        /// <returns>Flipped Y coordinate</returns>
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        public static int FlipYCoordinate(int y, int zoom)
         {
-            return (1 << zoom) - tmsY - 1;
+            return (1 << zoom) - y - 1;
         }
     }
 }
