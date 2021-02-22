@@ -7,11 +7,11 @@ namespace TileMapService
 {
     class LocalFileTileSource : ITileSource
     {
-        private readonly TileSetConfiguration configuration;
+        private readonly TileSourceConfiguration configuration;
 
         private readonly string contentType;
 
-        public LocalFileTileSource(TileSetConfiguration configuration)
+        public LocalFileTileSource(TileSourceConfiguration configuration)
         {
             this.configuration = configuration;
             this.contentType = Utils.GetContentType(this.configuration.Format);
@@ -54,7 +54,7 @@ namespace TileMapService
             return uri.LocalPath;
         }
 
-        TileSetConfiguration ITileSource.Configuration => this.configuration;
+        TileSourceConfiguration ITileSource.Configuration => this.configuration;
 
         string ITileSource.ContentType => this.contentType;
     }

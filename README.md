@@ -1,8 +1,14 @@
 # Map Tile Service
-Simple implementation of Tile Map Service (TMS) for .NET5 platform, provides access to raster tiles stored in MBTiles database or local file system.
+Basic implementation of Tile Map Service (TMS) for .NET5 platform, provides access to raster tiles stored in MBTiles database or local file system.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
+
+### Features
+* Supported tile sources: MBTiles (SQLite database), local file system.
+* Supported API / protocols: Tile Map Service (TMS), XYZ / Slippy map (OSM term) queries.
+* Coordinate system: currently limited to Mercator (EPSG:3857).
+* Formats: currently only raster (PNG, JPEG) images.
 
 ### Technologies
 Developed using MS Visual Studio 2019 (v16.8.5) with .NET 5 SDK (v5.0.103).
@@ -26,8 +32,8 @@ After start, it will listen on default TCP port 5000 (using in-process `Kestrel`
 and tile service with demo page will be available on http://localhost:5000/ address; to enable remote calls allow connections to this port in firewall settings.
 
 ### TODOs
-* Better implementation of MBTiles specifications (processing metadata, corner cases).
-* Support for more formats (vector tiles).
+* Better implementation of MBTiles specifications.
+* Support for more formats (vector tiles) and coordinate systems.
 * Include test dataset created from free data.
 * Use some new C# 9 language features.
 * Extended diagnostics and logging.

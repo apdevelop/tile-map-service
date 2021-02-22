@@ -1,6 +1,6 @@
 ﻿(function () {
 
-    // TODO: get tilesets list from TMS capabilities response
+    // TODO: get layers list from TMS capabilities response
     // TODO: update Tile Grid overlay after base map change
 
     var baseMaps = {

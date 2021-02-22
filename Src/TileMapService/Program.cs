@@ -14,7 +14,7 @@ namespace TileMapService
 
         public static IHostBuilder CreateHostBuilder()
         {
-            // Using config from appsettings.json ("Kestrel" section)
+            // Using configuration from appsettings.json ("Kestrel" section)
             return Host.CreateDefaultBuilder()
                     .ConfigureWebHostDefaults(webBuilder =>
                     {

@@ -8,9 +8,12 @@ namespace TileMapService
     {
         private readonly string baseUrl;
 
-        public CapabilitiesDocumentBuilder(string baseUrl)
+        private readonly ITileSourceFabric tileSources;
+
+        public CapabilitiesDocumentBuilder(string baseUrl, ITileSourceFabric tileSources)
         {
             this.baseUrl = baseUrl;
+            this.tileSources = tileSources;
         }
 
         public XmlDocument GetServices()
@@ -47,7 +50,7 @@ namespace TileMapService
             var tileMaps = doc.CreateElement("TileMaps");
             root.AppendChild(tileMaps);
 
-            foreach (var tileSource in Startup.TileSources)
+            foreach (var tileSource in this.tileSources.TileSources)
             {
                 var tileMap = doc.CreateElement("TileMap");
 
@@ -141,7 +144,7 @@ namespace TileMapService
 
             root.AppendChild(origin);
 
-            var tm = Startup.TileSources[tilemapName];
+            var tm = this.tileSources.TileSources[tilemapName];
 
             var tileFormat = doc.CreateElement("TileFormat");
 

@@ -5,11 +5,11 @@ namespace TileMapService
 {
     class MBTilesTileSource : ITileSource
     {
-        private TileSetConfiguration configuration;
+        private TileSourceConfiguration configuration;
 
         private readonly string contentType;
 
-        public MBTilesTileSource(TileSetConfiguration configuration)
+        public MBTilesTileSource(TileSourceConfiguration configuration)
         {
             this.configuration = configuration;
             this.contentType = Utils.GetContentType(this.configuration.Format); // TODO: from db metadata
@@ -42,7 +42,7 @@ namespace TileMapService
             return $"Data Source={GetLocalFilePath(source)}; Mode=ReadOnly;";
         }
 
-        TileSetConfiguration ITileSource.Configuration => this.configuration;
+        TileSourceConfiguration ITileSource.Configuration => this.configuration;
 
         string ITileSource.ContentType => this.contentType;
     }

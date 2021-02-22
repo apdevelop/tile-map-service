@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading.Tasks;
 
@@ -8,11 +7,11 @@ namespace TileMapService.Controllers
     [Route("tiles")]
     public class TilesController : Controller
     {
-        private readonly IConfiguration configuration;
+        private readonly ITileSourceFabric tileSources;
 
-        public TilesController(IConfiguration configuration)
+        public TilesController(ITileSourceFabric tileSources)
         {
-            this.configuration = configuration;
+            this.tileSources = tileSources;
         }
 
         /// <summary>
@@ -49,9 +48,9 @@ namespace TileMapService.Controllers
         {
             if (!String.IsNullOrEmpty(tileset))
             {
-                if (Startup.TileSources.ContainsKey(tileset))
+                if (this.tileSources.TileSources.ContainsKey(tileset))
                 {
-                    var tileSource = Startup.TileSources[tileset];
+                    var tileSource = this.tileSources.TileSources[tileset];
                     var data = await tileSource.GetTileAsync(x, Utils.FromTmsY(y, z), z);
                     if (data != null)
                     {

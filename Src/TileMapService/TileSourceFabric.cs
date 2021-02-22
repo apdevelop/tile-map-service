@@ -1,16 +1,39 @@
-﻿namespace TileMapService
+﻿using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace TileMapService
 {
-    class TileSourceFabric
+    public class TileSourceFabric : ITileSourceFabric
     {
-        public static ITileSource CreateTileSource(TileSetConfiguration configuration)
+        private readonly Dictionary<string, ITileSource> tileSources;
+
+        public TileSourceFabric(IConfiguration configuration)
         {
-            if (Utils.IsLocalFileScheme(configuration.Source))
+            // TODO: check and log configuration errors
+            this.tileSources = configuration
+                    .GetSection("TileSources")
+                    .Get<IList<TileSourceConfiguration>>()
+                    .ToDictionary(c => c.Name, c => CreateTileSource(c));
+        }
+
+        public Dictionary<string, ITileSource> TileSources
+        {
+            get
             {
-                return new LocalFileTileSource(configuration);
+                return this.tileSources;
             }
-            else if (Utils.IsMBTilesScheme(configuration.Source))
+        }
+
+        private static ITileSource CreateTileSource(TileSourceConfiguration config)
+        {
+            if (Utils.IsLocalFileScheme(config.Source))
             {
-                return new MBTilesTileSource(configuration);
+                return new LocalFileTileSource(config);
+            }
+            else if (Utils.IsMBTilesScheme(config.Source))
+            {
+                return new MBTilesTileSource(config);
             }
             else
             {

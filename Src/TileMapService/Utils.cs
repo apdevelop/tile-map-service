@@ -24,13 +24,6 @@ namespace TileMapService
 
         public static readonly string EPSG3857 = "EPSG:3857";
 
-        public static IList<TileSetConfiguration> GetTileSetConfigurations(this IConfiguration configuration)
-        {
-            return configuration
-                .GetSection("tilesets")
-                .Get<IList<TileSetConfiguration>>();
-        }
-
         public static string GetContentType(string tileFormat)
         {
             string mediaType;

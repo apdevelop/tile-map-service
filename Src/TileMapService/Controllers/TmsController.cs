@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,11 +8,11 @@ namespace TileMapService.Controllers
     [Route("tms")]
     public class TmsController : Controller
     {
-        private readonly IConfiguration configuration;
+        private readonly ITileSourceFabric tileSources;
 
-        public TmsController(IConfiguration configuration)
+        public TmsController(ITileSourceFabric tileSources)
         {
-            this.configuration = configuration;
+            this.tileSources = tileSources;
         }
 
         private string BaseUrl
@@ -29,7 +28,7 @@ namespace TileMapService.Controllers
         {
             using (var ms = new MemoryStream())
             {
-                new CapabilitiesDocumentBuilder(this.BaseUrl).GetServices().Save(ms);
+                new CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetServices().Save(ms);
                 return File(ms.ToArray(), Utils.TextXml);
             }
         }
@@ -39,7 +38,7 @@ namespace TileMapService.Controllers
         {
             using (var ms = new MemoryStream())
             {
-                new CapabilitiesDocumentBuilder(this.BaseUrl).GetTileMaps().Save(ms);
+                new CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileMaps().Save(ms);
                 return File(ms.ToArray(), Utils.TextXml);
             }
         }
@@ -49,7 +48,7 @@ namespace TileMapService.Controllers
         {
             using (var ms = new MemoryStream())
             {
-                new CapabilitiesDocumentBuilder(this.BaseUrl).GetTileSets(tilesetName).Save(ms);
+                new CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tilesetName).Save(ms);
                 return File(ms.ToArray(), Utils.TextXml);
             }
         }
@@ -72,10 +71,10 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (Startup.TileSources.ContainsKey(tilesetName))
+            if (this.tileSources.TileSources.ContainsKey(tilesetName))
             {
                 // TODO: check formatExtension == tileset.Configuration.Format
-                var tileSource = Startup.TileSources[tilesetName];
+                var tileSource = this.tileSources.TileSources[tilesetName];
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null)
                 {

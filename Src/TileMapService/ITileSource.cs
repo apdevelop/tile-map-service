@@ -2,11 +2,11 @@
 
 namespace TileMapService
 {
-    interface ITileSource
+    public interface ITileSource
     {
         Task<byte[]> GetTileAsync(int x, int y, int z);
 
-        TileSetConfiguration Configuration { get; }
+        TileSourceConfiguration Configuration { get; }
 
         string ContentType { get; }
     }
