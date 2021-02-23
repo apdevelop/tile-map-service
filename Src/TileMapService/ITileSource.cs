@@ -5,12 +5,12 @@ namespace TileMapService
     public interface ITileSource
     {
         /// <summary>
-        /// Read tile from source
+        /// Get tile from source
         /// </summary>
         /// <param name="x">X coordinate (column)</param>
-        /// <param name="y">Y coordinate (row)</param>
+        /// <param name="y">Y coordinate (row), Y axis goes up from the bottom (TMS scheme)</param>
         /// <param name="z">Z coordinate (zoom level)</param>
-        /// <returns></returns>
+        /// <returns>Tile image contents</returns>
         Task<byte[]> GetTileAsync(int x, int y, int z);
 
         TileSourceConfiguration Configuration { get; }

@@ -23,9 +23,9 @@ namespace TileMapService
             var fileInfo = new FileInfo(path);
             if (fileInfo.Exists)
             {
-                var buffer = new byte[fileInfo.Length];
                 using (var fileStream = fileInfo.OpenRead())
                 {
+                    var buffer = new byte[fileInfo.Length];
                     await fileStream.ReadAsync(buffer, 0, buffer.Length);
                     return buffer;
                 }

@@ -45,10 +45,8 @@ namespace TileMapService
             return source.StartsWith(LocalFileScheme, StringComparison.Ordinal);
         }
 
-        // https://alastaira.wordpress.com/2011/07/06/converting-tms-tile-coordinates-to-googlebingosm-tile-coordinates/
-
         /// <summary>
-        /// Flips Y coordinate (according to TMS coordinate system)
+        /// Flips Y coordinate (according to XYZ/TMS coordinate systems conversion)
         /// </summary>
         /// <param name="y">Y tile coordinate</param>
         /// <param name="zoom">Zoom level</param>

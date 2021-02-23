@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace TileMapService.Controllers
 {
+    /// <summary>
+    /// Serving tiles using Tile Map Service (TMS) protocol; with metadata.
+    /// </summary>
     [Route("tms")]
     public class TmsController : Controller
     {
@@ -58,27 +61,27 @@ namespace TileMapService.Controllers
         /// URL format according to TMS 1.0.0 specs, like http://localhost:5000/tms/1.0.0/world/3/4/5.png
         /// </summary>
         /// <param name="tileset">Tileset name</param>
-        /// <param name="x">Tile column</param>
-        /// <param name="y">Tile row</param>
-        /// <param name="z">Zoom level</param>
-        /// <param name="formatExtension"></param>
+        /// <param name="x">X coordinate (tile column)</param>
+        /// <param name="y">Y coordinate (tile row), Y axis goes up from the bottom</param>
+        /// <param name="z">Z coordinate (zoom level)</param>
+        /// <param name="extension"></param>
         /// <returns></returns>
-        [HttpGet("1.0.0/{tileset}/{z}/{x}/{y}.{formatExtension}")]
-        public async Task<IActionResult> GetTileAsync(string tileset, int x, int y, int z, string formatExtension)
+        [HttpGet("1.0.0/{tileset}/{z}/{x}/{y}.{extension}")]
+        public async Task<IActionResult> GetTileAsync(string tileset, int x, int y, int z, string extension)
         {
-            if (String.IsNullOrEmpty(tileset))
+            if (String.IsNullOrEmpty(tileset) || String.IsNullOrEmpty(extension))
             {
                 return BadRequest();
             }
 
             if (this.tileSources.TileSources.ContainsKey(tileset))
             {
-                // TODO: check formatExtension == tileset.Configuration.Format
+                // TODO: check extension == tileset.Configuration.Format
                 var tileSource = this.tileSources.TileSources[tileset];
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null)
                 {
-                    return File(data, tileSource.ContentType);
+                    return File(data, tileSource.ContentType); // TODO: file name
                 }
                 else
                 {
@@ -87,7 +90,7 @@ namespace TileMapService.Controllers
             }
             else
             {
-                return NotFound($"Specified tileset '{tileset}' not exists on server");
+                return NotFound($"Specified tileset '{tileset}' not found");
             }
         }
     }

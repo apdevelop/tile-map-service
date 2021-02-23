@@ -11,14 +11,18 @@
             maxZoom: 5,
             tms: true
         }),
-        'World Countries (XYZ)': L.tileLayer('/tiles/world-countries/?x={x}&y={y}&z={z}', {
+        'World Countries (XYZ)': L.tileLayer('/xyz/world-countries/?x={x}&y={y}&z={z}', {
             attribution: 'Esri',
             maxZoom: 5
         }),
-        'Satellite Lowres (XYZ)': L.tileLayer('/tiles/satellite-lowres/?x={x}&y={y}&z={z}', {
+        'Satellite Lowres (XYZ)': L.tileLayer('/xyz/satellite-lowres/?x={x}&y={y}&z={z}', {
             attribution: 'MapTiler AG',
             maxZoom: 5
         }),
+        'World Countries (XYZ FS)': L.tileLayer('/xyz/world-countries-fs/{z}/{x}/{y}.png', {
+            attribution: 'Esri',
+            maxZoom: 5
+        })
     };
 
     var tileGrid = L.gridLayer.tileGrid({
