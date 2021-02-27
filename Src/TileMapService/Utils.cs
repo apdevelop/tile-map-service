@@ -8,19 +8,13 @@ namespace TileMapService
     /// </summary>
     static class Utils
     {
-        public static readonly string ImagePng = "image/png";
+        private const string ImagePng = "image/png";
 
-        public static readonly string ImageJpeg = "image/jpeg";
-
-        public static readonly string TextXml = "text/xml";
+        private const string ImageJpeg = "image/jpeg";
 
         public static readonly string LocalFileScheme = "file:///";
 
         public static readonly string MBTilesScheme = "mbtiles:///";
-
-        public static readonly string TileMapServiceVersion = "1.0.0";
-
-        public static readonly string EPSG3857 = "EPSG:3857";
 
         public static string GetContentType(string tileFormat)
         {
@@ -33,16 +27,6 @@ namespace TileMapService
             }
 
             return mediaType;
-        }
-
-        public static bool IsMBTilesScheme(string source)
-        {
-            return source.StartsWith(MBTilesScheme, StringComparison.Ordinal);
-        }
-
-        public static bool IsLocalFileScheme(string source)
-        {
-            return source.StartsWith(LocalFileScheme, StringComparison.Ordinal);
         }
 
         /// <summary>

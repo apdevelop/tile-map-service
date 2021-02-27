@@ -4,6 +4,10 @@ namespace TileMapService
 {
     public interface ITileSourceFabric
     {
-        Dictionary<string, ITileSource> TileSources { get; }
+        bool Contains(string sourceName);
+
+        TileSources.ITileSource Get(string sourceName);
+
+        List<TileSourceConfiguration> Sources { get; }
     }
 }

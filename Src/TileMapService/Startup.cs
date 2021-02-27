@@ -15,7 +15,7 @@ namespace TileMapService
 
             services.AddControllers();
             services.AddSingleton(configuration);
-            services.AddSingleton<ITileSourceFabric, TileSourceFabric>();
+            services.AddSingleton<ITileSourceFabric, TileSources.TileSourceFabric>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

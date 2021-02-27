@@ -5,10 +5,16 @@ Basic implementation of Tile Map Service (TMS) for .NET 5 platform, provides acc
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
 
 ### Features
-* Supported tile sources: MBTiles (SQLite database), local file system.
-* Supported API / protocols: Tile Map Service (TMS), XYZ / Slippy map (OSM term) queries.
-* Coordinate system: currently limited to Mercator (EPSG:3857).
-* Formats: currently only raster (PNG, JPEG) images.
+* Supported tile sources:
+  * MBTiles 1.3 (SQLite database).
+  * Local file system (each tile in separate file).
+* Supported protocols for serving tiles: 
+  * XYZ / "Slippy Map" ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)).
+  * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)).
+  * WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)).
+* Coordinate system: currently [Web Mercator](https://en.wikipedia.org/wiki/Web_Mercator_projection) only.
+* Formats: currently raster (PNG, JPEG) images only.
+* Configuration in JSON file.
 
 ### Technologies
 Developed using MS Visual Studio 2019 (v16.8.5) with .NET 5 SDK (v5.0.103).
@@ -47,7 +53,7 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 * [Satellite Lowres raster tiles Planet by MapTiler](https://data.maptiler.com/downloads/dataset/satellite-lowres/)
 
 ### References
-* [Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)
-* [Tile Map Service Specification](https://wiki.osgeo.org/index.php?title=Tile_Map_Service_Specification)
 * [MBTiles Specification](https://github.com/mapbox/mbtiles-spec)
+* [Tile Map Service Specification](https://wiki.osgeo.org/index.php?title=Tile_Map_Service_Specification)
+* [OpenGIS Web Map Tile Service Implementation Standard](https://www.ogc.org/standards/wmts)
 * [Using TMS in Leaflet](http://leafletjs.com/examples/wms/wms.html)

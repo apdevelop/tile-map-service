@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace TileMapService
+namespace TileMapService.TileSources
 {
     public interface ITileSource
     {

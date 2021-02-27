@@ -1,0 +1,110 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Net.Mime;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace TileMapService.Controllers
+{
+    [Route("wmts")]
+    public class WmtsController : Controller
+    {
+        private readonly ITileSourceFabric tileSources;
+
+        public WmtsController(ITileSourceFabric tileSources)
+        {
+            this.tileSources = tileSources;
+        }
+
+        [HttpGet("")]
+        public async Task<IActionResult> ProcessRequestAsync(
+            string service = null,
+            string request = null,
+            string version = null,
+            string layer = null,
+            string style = null,
+            string format = null,
+            string tileMatrixSet = null,
+            string tileMatrix = null,
+            int tileRow = 0,
+            int tileCol = 0)
+        {
+            // TODO: errors in XML format
+
+            ////if (String.Compare(service, "WMTS", StringComparison.Ordinal) != 0)
+            ////{
+            ////    return BadRequest("service");
+            ////}
+
+            ////if (String.Compare(version, "1.0.0", StringComparison.Ordinal) != 0)
+            ////{
+            ////    return BadRequest("version");
+            ////}
+
+            if (String.Compare(request, "GetCapabilities", StringComparison.Ordinal) == 0)
+            {
+                return ProcessGetCapabilitiesRequest();
+            }
+            else if (String.Compare(request, "GetTile", StringComparison.Ordinal) == 0)
+            {
+                return await ProcessGetTileRequestAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix));
+            }
+            else
+            {
+                return BadRequest("request");
+            }
+        }
+
+        private IActionResult ProcessGetCapabilitiesRequest()
+        {
+            var layers = this.tileSources.Sources
+                    .Select(s => new Wmts.Layer
+                    {
+                        Identifier = s.Name,
+                        Title = s.Name,
+                        Format = s.Format,
+                    })
+                    .ToList();
+
+            var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts").GetCapabilities(layers); // TODO: fix base URL
+            var bytes = Encoding.UTF8.GetBytes(xmlDoc.OuterXml);
+
+            return File(bytes, MediaTypeNames.Text.Xml);
+        }
+
+        private async Task<IActionResult> ProcessGetTileRequestAsync(string tileset, int x, int y, int z)
+        {
+            if (String.IsNullOrEmpty(tileset))
+            {
+                return BadRequest();
+            }
+
+            if (this.tileSources.Contains(tileset))
+            {
+                var tileSource = this.tileSources.Get(tileset);
+                var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z); // Y axis goes down from the top
+                if (data != null)
+                {
+                    return File(data, tileSource.ContentType); // TODO: file name
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            else
+            {
+                return NotFound($"Specified tileset '{tileset}' not found");
+            }
+        }
+
+        private string BaseUrl
+        {
+            get
+            {
+                return $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
+            }
+        }
+    }
+}

@@ -66,9 +66,9 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (this.tileSources.TileSources.ContainsKey(tileset))
+            if (this.tileSources.Contains(tileset))
             {
-                var tileSource = this.tileSources.TileSources[tileset];
+                var tileSource = this.tileSources.Get(tileset);
                 var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z);
                 if (data != null)
                 {

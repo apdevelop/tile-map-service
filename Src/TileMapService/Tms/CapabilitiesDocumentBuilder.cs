@@ -2,13 +2,17 @@
 using System.Globalization;
 using System.Xml;
 
-namespace TileMapService
+namespace TileMapService.Tms
 {
     class CapabilitiesDocumentBuilder
     {
         private readonly string baseUrl;
 
         private readonly ITileSourceFabric tileSources;
+
+        private const string TileMapServiceVersion = "1.0.0";
+
+        private const string EPSG3857 = "EPSG:3857";
 
         public CapabilitiesDocumentBuilder(string baseUrl, ITileSourceFabric tileSources)
         {
@@ -25,7 +29,7 @@ namespace TileMapService
             var child = doc.CreateElement("TileMapService");
             root.AppendChild(child);
 
-            var href = $"{this.baseUrl}/tms/{Utils.TileMapServiceVersion}/";
+            var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/";
             var hrefAttribute = doc.CreateAttribute("href");
             hrefAttribute.Value = href;
             child.Attributes.Append(hrefAttribute);
@@ -44,21 +48,21 @@ namespace TileMapService
             doc.AppendChild(root);
 
             var versionAttribute = doc.CreateAttribute("version");
-            versionAttribute.Value = Utils.TileMapServiceVersion;
+            versionAttribute.Value = TileMapServiceVersion;
             root.Attributes.Append(versionAttribute);
 
             var tileMaps = doc.CreateElement("TileMaps");
             root.AppendChild(tileMaps);
 
-            foreach (var tileSource in this.tileSources.TileSources)
+            foreach (var tileSource in this.tileSources.Sources)
             {
                 var tileMap = doc.CreateElement("TileMap");
 
                 var titleAttribute = doc.CreateAttribute("title");
-                titleAttribute.Value = tileSource.Value.Configuration.Name;
+                titleAttribute.Value = tileSource.Name;
                 tileMap.Attributes.Append(titleAttribute);
 
-                var href = $"{this.baseUrl}/tms/{Utils.TileMapServiceVersion}/{tileSource.Value.Configuration.Name}";
+                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tileSource.Name}";
                 var hrefAttribute = doc.CreateAttribute("href");
                 hrefAttribute.Value = href;
                 tileMap.Attributes.Append(hrefAttribute);
@@ -68,7 +72,7 @@ namespace TileMapService
                 tileMap.Attributes.Append(profileAttribute);
 
                 var srsAttribute = doc.CreateAttribute("srs");
-                srsAttribute.Value = Utils.EPSG3857;
+                srsAttribute.Value = EPSG3857;
                 tileMap.Attributes.Append(srsAttribute);
 
                 tileMaps.AppendChild(tileMap);
@@ -84,10 +88,10 @@ namespace TileMapService
             doc.AppendChild(root);
 
             var versionAttribute = doc.CreateAttribute("version");
-            versionAttribute.Value = Utils.TileMapServiceVersion;
+            versionAttribute.Value = TileMapServiceVersion;
             root.Attributes.Append(versionAttribute);
 
-            var tilemapservice = $"{this.baseUrl}/tms/{Utils.TileMapServiceVersion}/";
+            var tilemapservice = $"{this.baseUrl}/tms/{TileMapServiceVersion}/";
             var tilemapserviceAttribute = doc.CreateAttribute("tilemapservice");
             tilemapserviceAttribute.Value = tilemapservice;
             root.Attributes.Append(tilemapserviceAttribute);
@@ -102,7 +106,7 @@ namespace TileMapService
             root.AppendChild(abstractNode);
 
             var srs = doc.CreateElement("SRS");
-            srs.AppendChild(doc.CreateTextNode(Utils.EPSG3857));
+            srs.AppendChild(doc.CreateTextNode(EPSG3857));
             root.AppendChild(srs);
 
             const int TileSize = 256;
@@ -144,7 +148,7 @@ namespace TileMapService
 
             root.AppendChild(origin);
 
-            var tm = this.tileSources.TileSources[tilemapName];
+            var tm = this.tileSources.Get(tilemapName);
 
             var tileFormat = doc.CreateElement("TileFormat");
 
@@ -174,7 +178,7 @@ namespace TileMapService
             {
                 var tileSet = doc.CreateElement("TileSet");
 
-                var href = $"{this.baseUrl}/tms/{Utils.TileMapServiceVersion}/{tm.Configuration.Name}/{tilemapName}/{level}";
+                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tm.Configuration.Name}/{tilemapName}/{level}";
                 var hrefAttribute = doc.CreateAttribute("href");
                 hrefAttribute.Value = href;
                 tileSet.Attributes.Append(hrefAttribute);

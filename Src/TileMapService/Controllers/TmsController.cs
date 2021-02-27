@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.IO;
+using System.Net.Mime;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace TileMapService.Controllers
@@ -29,31 +31,28 @@ namespace TileMapService.Controllers
         [HttpGet("")]
         public IActionResult GetCapabilitiesServices()
         {
-            using (var ms = new MemoryStream())
-            {
-                new CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetServices().Save(ms);
-                return File(ms.ToArray(), Utils.TextXml);
-            }
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetServices();
+            var bytes = Encoding.UTF8.GetBytes(xmlDoc.OuterXml);
+
+            return File(bytes, MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0")]
         public IActionResult GetCapabilitiesTileMaps()
         {
-            using (var ms = new MemoryStream())
-            {
-                new CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileMaps().Save(ms);
-                return File(ms.ToArray(), Utils.TextXml);
-            }
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileMaps();
+            var bytes = Encoding.UTF8.GetBytes(xmlDoc.OuterXml);
+
+            return File(bytes, MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0/{tileset}")]
         public IActionResult GetCapabilitiesTileSets(string tileset)
         {
-            using (var ms = new MemoryStream())
-            {
-                new CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tileset).Save(ms);
-                return File(ms.ToArray(), Utils.TextXml);
-            }
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tileset);
+            var bytes = Encoding.UTF8.GetBytes(xmlDoc.OuterXml);
+
+            return File(bytes, MediaTypeNames.Text.Xml);
         }
 
         /// <summary>
@@ -74,10 +73,10 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (this.tileSources.TileSources.ContainsKey(tileset))
+            if (this.tileSources.Contains(tileset))
             {
                 // TODO: check extension == tileset.Configuration.Format
-                var tileSource = this.tileSources.TileSources[tileset];
+                var tileSource = this.tileSources.Get(tileset);
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null)
                 {

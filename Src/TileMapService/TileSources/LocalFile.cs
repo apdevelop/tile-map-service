@@ -3,15 +3,15 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace TileMapService
+namespace TileMapService.TileSources
 {
-    class LocalFileTileSource : ITileSource
+    class LocalFile : ITileSource
     {
         private readonly TileSourceConfiguration configuration;
 
         private readonly string contentType;
 
-        public LocalFileTileSource(TileSourceConfiguration configuration)
+        public LocalFile(TileSourceConfiguration configuration)
         {
             this.configuration = configuration;
             this.contentType = Utils.GetContentType(this.configuration.Format);

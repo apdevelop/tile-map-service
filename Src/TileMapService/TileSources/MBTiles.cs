@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace TileMapService
+namespace TileMapService.TileSources
 {
-    class MBTilesTileSource : ITileSource
+    class MBTiles : ITileSource
     {
         private readonly TileSourceConfiguration configuration;
 
@@ -11,7 +11,7 @@ namespace TileMapService
 
         private readonly MBTilesRepository repository;
 
-        public MBTilesTileSource(TileSourceConfiguration configuration)
+        public MBTiles(TileSourceConfiguration configuration)
         {
             this.configuration = configuration;
             this.contentType = Utils.GetContentType(this.configuration.Format); // TODO: from db metadata
@@ -23,6 +23,10 @@ namespace TileMapService
         {
             return await this.repository.ReadTileDataAsync(x, this.configuration.Tms ? y : Utils.FlipYCoordinate(y, z), z);
         }
+
+        TileSourceConfiguration ITileSource.Configuration => this.configuration;
+
+        string ITileSource.ContentType => this.contentType;
 
         private static string GetLocalFilePath(string source)
         {
@@ -38,9 +42,5 @@ namespace TileMapService
 
             return $"Data Source={GetLocalFilePath(source)}; Mode=ReadOnly;";
         }
-
-        TileSourceConfiguration ITileSource.Configuration => this.configuration;
-
-        string ITileSource.ContentType => this.contentType;
     }
 }
