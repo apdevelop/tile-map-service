@@ -52,37 +52,31 @@ namespace TileMapService.Wmts
             doc.AppendChild(root);
 
             var serviceIdentificationElement = doc.CreateElement(OwsPrefix, "ServiceIdentification", OwsNamespaceUri);
-            {
-                var titleElement = doc.CreateElement(OwsPrefix, "Title", OwsNamespaceUri);
-                titleElement.InnerText = "WMTS Service";
-                serviceIdentificationElement.AppendChild(titleElement);
-            }
-            {
-                var abstractElement = doc.CreateElement(OwsPrefix, "Abstract", OwsNamespaceUri);
-                abstractElement.InnerText = "OGC WMTS";
-                serviceIdentificationElement.AppendChild(abstractElement);
-            }
-            {
-                var serviceTypeElement = doc.CreateElement(OwsPrefix, "ServiceType", OwsNamespaceUri);
-                serviceTypeElement.InnerText = "OGC WMTS";
-                serviceIdentificationElement.AppendChild(serviceTypeElement);
-            }
-            {
-                var serviceTypeVersionElement = doc.CreateElement(OwsPrefix, "ServiceTypeVersion", OwsNamespaceUri);
-                serviceTypeVersionElement.InnerText = Version;
-                serviceIdentificationElement.AppendChild(serviceTypeVersionElement);
-            }
+
+            var titleElement = doc.CreateElement(OwsPrefix, "Title", OwsNamespaceUri);
+            titleElement.InnerText = "WMTS Service";
+            serviceIdentificationElement.AppendChild(titleElement);
+
+            ////var abstractElement = doc.CreateElement(OwsPrefix, "Abstract", OwsNamespaceUri);
+            ////abstractElement.InnerText = "OGC WMTS";
+            ////serviceIdentificationElement.AppendChild(abstractElement);
+
+            var serviceTypeElement = doc.CreateElement(OwsPrefix, "ServiceType", OwsNamespaceUri);
+            serviceTypeElement.InnerText = "OGC WMTS";
+            serviceIdentificationElement.AppendChild(serviceTypeElement);
+
+            var serviceTypeVersionElement = doc.CreateElement(OwsPrefix, "ServiceTypeVersion", OwsNamespaceUri);
+            serviceTypeVersionElement.InnerText = Version;
+            serviceIdentificationElement.AppendChild(serviceTypeVersionElement);
 
             root.AppendChild(serviceIdentificationElement);
 
             var serviceProviderElement = doc.CreateElement(OwsPrefix, "ServiceProvider", OwsNamespaceUri);
-            {
-                var serviceContactElement = doc.CreateElement(OwsPrefix, "ServiceContact", OwsNamespaceUri);
-                var contactInfoElement = doc.CreateElement(OwsPrefix, "ContactInfo", OwsNamespaceUri);
-                contactInfoElement.InnerText = String.Empty;
-                serviceContactElement.AppendChild(contactInfoElement);
-                serviceProviderElement.AppendChild(serviceContactElement);
-            }
+            var serviceContactElement = doc.CreateElement(OwsPrefix, "ServiceContact", OwsNamespaceUri);
+            var contactInfoElement = doc.CreateElement(OwsPrefix, "ContactInfo", OwsNamespaceUri);
+            contactInfoElement.InnerText = String.Empty;
+            serviceContactElement.AppendChild(contactInfoElement);
+            serviceProviderElement.AppendChild(serviceContactElement);
 
             root.AppendChild(serviceProviderElement);
 
@@ -100,7 +94,7 @@ namespace TileMapService.Wmts
             }
 
             contentsElement.AppendChild(CreateTileMatrixSetElement(
-                GoogleMapsCompatible, 
+                GoogleMapsCompatible,
                 "urn:ogc:def:crs:EPSG::3857",
                 "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible"));
             root.AppendChild(contentsElement);
@@ -123,11 +117,9 @@ namespace TileMapService.Wmts
             var HTTP = doc.CreateElement(OwsPrefix, "HTTP", OwsNamespaceUri);
 
             var getElement = doc.CreateElement(OwsPrefix, "Get", OwsNamespaceUri);
-            {
-                var hrefAttribute = doc.CreateAttribute(XlinkPrefix, "href", XlinkNamespaceUri);
-                hrefAttribute.Value = this.baseUrl + "?";
-                getElement.Attributes.Append(hrefAttribute);
-            }
+            var hrefAttribute = doc.CreateAttribute(XlinkPrefix, "href", XlinkNamespaceUri);
+            hrefAttribute.Value = this.baseUrl + "?";
+            getElement.Attributes.Append(hrefAttribute);
 
             var constraintElement = doc.CreateElement(OwsPrefix, "Constraint", OwsNamespaceUri);
             constraintElement.SetAttribute("name", "GetEncoding");
@@ -164,16 +156,14 @@ namespace TileMapService.Wmts
             layerElement.AppendChild(formatElement);
 
             var wgs84BoundingBoxElement = doc.CreateElement(OwsPrefix, "WGS84BoundingBox", OwsNamespaceUri);
-            {
-                var lowerCornerElement = doc.CreateElement(OwsPrefix, "LowerCorner", OwsNamespaceUri);
-                lowerCornerElement.InnerText = "-180.000000 -85.05112878";
-                wgs84BoundingBoxElement.AppendChild(lowerCornerElement);
-            }
-            {
-                var upperCornerElement = doc.CreateElement(OwsPrefix, "UpperCorner", OwsNamespaceUri);
-                upperCornerElement.InnerText = "180.000000 85.05112878";
-                wgs84BoundingBoxElement.AppendChild(upperCornerElement);
-            }
+
+            var lowerCornerElement = doc.CreateElement(OwsPrefix, "LowerCorner", OwsNamespaceUri);
+            lowerCornerElement.InnerText = "-180.000000 -85.05112878";
+            wgs84BoundingBoxElement.AppendChild(lowerCornerElement);
+
+            var upperCornerElement = doc.CreateElement(OwsPrefix, "UpperCorner", OwsNamespaceUri);
+            upperCornerElement.InnerText = "180.000000 85.05112878";
+            wgs84BoundingBoxElement.AppendChild(upperCornerElement);
 
             layerElement.AppendChild(wgs84BoundingBoxElement);
 

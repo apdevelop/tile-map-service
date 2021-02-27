@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace TileMapService.Controllers
 {
@@ -31,28 +32,26 @@ namespace TileMapService.Controllers
         [HttpGet("")]
         public IActionResult GetCapabilitiesServices()
         {
+            // TODO: services/root.xml
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetServices();
-            var bytes = Encoding.UTF8.GetBytes(xmlDoc.OuterXml);
 
-            return File(bytes, MediaTypeNames.Text.Xml);
+            return XmlResponse(xmlDoc);
         }
 
         [HttpGet("1.0.0")]
         public IActionResult GetCapabilitiesTileMaps()
         {
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileMaps();
-            var bytes = Encoding.UTF8.GetBytes(xmlDoc.OuterXml);
-
-            return File(bytes, MediaTypeNames.Text.Xml);
+           
+            return XmlResponse(xmlDoc);
         }
 
         [HttpGet("1.0.0/{tileset}")]
         public IActionResult GetCapabilitiesTileSets(string tileset)
         {
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tileset);
-            var bytes = Encoding.UTF8.GetBytes(xmlDoc.OuterXml);
 
-            return File(bytes, MediaTypeNames.Text.Xml);
+            return XmlResponse(xmlDoc);
         }
 
         /// <summary>
@@ -90,6 +89,19 @@ namespace TileMapService.Controllers
             else
             {
                 return NotFound($"Specified tileset '{tileset}' not found");
+            }
+        }
+
+        private IActionResult XmlResponse(XmlDocument xml)
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var xw = XmlWriter.Create(new StreamWriter(ms, Encoding.UTF8)))
+                {
+                    xml.Save(xw);
+                }
+
+                return File(ms.ToArray(), MediaTypeNames.Text.Xml);
             }
         }
     }

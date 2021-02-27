@@ -1,5 +1,5 @@
 # Tile Map Service for .NET 5
-Basic implementation of Tile Map Service (TMS) for .NET 5 platform, provides access to raster tiles stored in MBTiles database or local file system.
+Basic implementation of tile server for .NET 5 platform, provides access to raster tiles stored in MBTiles database or local file system with XYZ, TMS and WMTS protocols support.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
@@ -12,7 +12,7 @@ Basic implementation of Tile Map Service (TMS) for .NET 5 platform, provides acc
   * XYZ / "Slippy Map" ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)).
   * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)).
   * WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)).
-* Coordinate system: currently [Web Mercator](https://en.wikipedia.org/wiki/Web_Mercator_projection) only.
+* Coordinate system: currently [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection) only.
 * Formats: currently raster (PNG, JPEG) images only.
 * Configuration in JSON file.
 
