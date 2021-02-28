@@ -44,11 +44,11 @@ namespace TileMapService.TileSources
 
         private static ITileSource CreateTileSource(TileSourceConfiguration config)
         {
-            if (IsLocalFileScheme(config.Source))
+            if (IsLocalFileScheme(config.Location))
             {
                 return new LocalFile(config);
             }
-            else if (IsMBTilesScheme(config.Source))
+            else if (IsMBTilesScheme(config.Location))
             {
                 return new MBTiles(config);
             }

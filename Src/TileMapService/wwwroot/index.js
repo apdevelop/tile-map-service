@@ -1,5 +1,5 @@
 ﻿(function () {
-    // TODO: get layers list from service (TMS capabilities response ?)
+    // TODO: get layers list from service (from WMTS capabilities response)
     var baseMaps = {
         'World Countries (TMS)': L.tileLayer('/tms/1.0.0/world-countries/{z}/{x}/{y}.png', {
             attribution: 'Esri',

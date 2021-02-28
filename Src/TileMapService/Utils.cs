@@ -1,10 +1,13 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Xml;
 
 namespace TileMapService
 {
     /// <summary>
-    /// Various utility functions (for all types of tile sources)
+    /// Various utility functions.
     /// </summary>
     static class Utils
     {
@@ -29,12 +32,25 @@ namespace TileMapService
             return mediaType;
         }
 
+        public static byte[] ToByteArray(this XmlDocument xml)
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var xw = XmlWriter.Create(new StreamWriter(ms, Encoding.UTF8)))
+                {
+                    xml.Save(xw);
+                }
+
+                return ms.ToArray();
+            }
+        }
+
         /// <summary>
-        /// Flips Y coordinate (according to XYZ/TMS coordinate systems conversion)
+        /// Flips tile Y coordinate (according to XYZ/TMS coordinate systems conversion).
         /// </summary>
-        /// <param name="y">Y tile coordinate</param>
-        /// <param name="zoom">Zoom level</param>
-        /// <returns>Flipped Y coordinate</returns>
+        /// <param name="y">Tile Y coordinate.</param>
+        /// <param name="zoom">Tile zoom level.</param>
+        /// <returns>Flipped tile Y coordinate.</returns>
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
         public static int FlipYCoordinate(int y, int zoom)
         {

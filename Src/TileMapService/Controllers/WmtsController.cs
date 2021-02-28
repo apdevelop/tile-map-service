@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.IO;
 using System.Linq;
 using System.Net.Mime;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace TileMapService.Controllers
 {
+    /// <summary>
+    /// Serving tiles using Web Map Tile Service (WMTS) protocol.
+    /// </summary>
     [Route("wmts")]
     public class WmtsController : Controller
     {
@@ -71,20 +71,7 @@ namespace TileMapService.Controllers
 
             var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts").GetCapabilities(layers); // TODO: fix base URL
 
-            return XmlResponse(xmlDoc);
-        }
-
-        private IActionResult XmlResponse(XmlDocument xml)
-        {
-            using (var ms = new MemoryStream())
-            {
-                using (var xw = XmlWriter.Create(new StreamWriter(ms, Encoding.UTF8)))
-                {
-                    xml.Save(xw);
-                }
-
-                return File(ms.ToArray(), MediaTypeNames.Text.Xml);
-            }
+            return File(xmlDoc.ToByteArray(), MediaTypeNames.Text.Xml);
         }
 
         private async Task<IActionResult> ProcessGetTileRequestAsync(string tileset, int x, int y, int z)

@@ -21,9 +21,9 @@ namespace TileMapService.Tms
         }
 
         /// <summary>
-        /// The root resource describes the available versions of the <TileMapService> (and possibly other services as well). 
+        /// The root resource describes the available versions of the TileMapService (and possibly other services as well).
         /// </summary>
-        /// <returns></returns>
+        /// <returns>XML document with available versions of the TileMapService.</returns>
         public XmlDocument GetServices()
         {
             var doc = new XmlDocument();
@@ -32,6 +32,7 @@ namespace TileMapService.Tms
 
             var tileMapService = doc.CreateElement("TileMapService");
             root.AppendChild(tileMapService);
+
 
             var titleAttribute = doc.CreateAttribute("title");
             titleAttribute.Value = "Tile Map Service";
@@ -55,12 +56,15 @@ namespace TileMapService.Tms
             var root = doc.CreateElement(String.Empty, "TileMapService", String.Empty);
             doc.AppendChild(root);
 
+
             var versionAttribute = doc.CreateAttribute("version");
             versionAttribute.Value = TileMapServiceVersion;
             root.Attributes.Append(versionAttribute);
 
+
             var tileMaps = doc.CreateElement("TileMaps");
             root.AppendChild(tileMaps);
+
 
             foreach (var tileSource in this.tileSources.Sources)
             {
@@ -101,22 +105,22 @@ namespace TileMapService.Tms
             versionAttribute.Value = TileMapServiceVersion;
             root.Attributes.Append(versionAttribute);
 
+
             var tilemapservice = $"{this.baseUrl}/tms/{TileMapServiceVersion}/";
             var tilemapserviceAttribute = doc.CreateAttribute("tilemapservice");
             tilemapserviceAttribute.Value = tilemapservice;
             root.Attributes.Append(tilemapserviceAttribute);
 
+
             var titleNode = doc.CreateElement("Title");
             titleNode.AppendChild(doc.CreateTextNode(tileSource.Configuration.Title));
             root.AppendChild(titleNode);
 
-            ////var abstractNode = doc.CreateElement("Abstract");
-            ////abstractNode.AppendChild(doc.CreateTextNode());
-            ////root.AppendChild(abstractNode);
 
             var srs = doc.CreateElement("SRS");
             srs.AppendChild(doc.CreateTextNode(EPSG3857));
             root.AppendChild(srs);
+
 
             const int TileSize = 256;
             const double maxy = 20037508.342789;
@@ -157,6 +161,7 @@ namespace TileMapService.Tms
 
             root.AppendChild(origin);
 
+
             var tileFormat = doc.CreateElement("TileFormat");
 
             var extensionAttribute = doc.CreateAttribute("extension");
@@ -180,6 +185,7 @@ namespace TileMapService.Tms
 
             var tileSets = doc.CreateElement("TileSets");
             root.AppendChild(tileSets);
+
 
             for (var level = 0; level <= 18; level++) // TODO: get real existing range
             {

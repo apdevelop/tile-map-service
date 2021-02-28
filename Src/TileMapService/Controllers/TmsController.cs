@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.IO;
 using System.Net.Mime;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace TileMapService.Controllers
 {
     /// <summary>
-    /// Serving tiles using Tile Map Service (TMS) protocol; with metadata.
+    /// Serving tiles using Tile Map Service (TMS) protocol.
     /// </summary>
     [Route("tms")]
     public class TmsController : Controller
@@ -21,52 +18,46 @@ namespace TileMapService.Controllers
             this.tileSources = tileSources;
         }
 
-        private string BaseUrl
-        {
-            get
-            {
-                return $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
-            }
-        }
-
         [HttpGet("")]
         public IActionResult GetCapabilitiesServices()
         {
             // TODO: services/root.xml
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetServices();
 
-            return XmlResponse(xmlDoc);
+            return File(xmlDoc.ToByteArray(), MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0")]
         public IActionResult GetCapabilitiesTileMaps()
         {
+            // TODO: services/tilemapservice.xml
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileMaps();
-           
-            return XmlResponse(xmlDoc);
+
+            return File(xmlDoc.ToByteArray(), MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0/{tileset}")]
         public IActionResult GetCapabilitiesTileSets(string tileset)
         {
+            // TODO: services/basemap.xml
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tileset);
 
-            return XmlResponse(xmlDoc);
+            return File(xmlDoc.ToByteArray(), MediaTypeNames.Text.Xml);
         }
 
         /// <summary>
-        /// Get tile from tileset with specified coordinates 
-        /// URL format according to TMS 1.0.0 specs, like http://localhost:5000/tms/1.0.0/world/3/4/5.png
+        /// Get tile from tileset with specified coordinates.
         /// </summary>
-        /// <param name="tileset">Tileset name</param>
-        /// <param name="x">X coordinate (tile column)</param>
-        /// <param name="y">Y coordinate (tile row), Y axis goes up from the bottom</param>
-        /// <param name="z">Z coordinate (zoom level)</param>
-        /// <param name="extension"></param>
-        /// <returns></returns>
+        /// <param name="tileset">Tileset (source) name.</param>
+        /// <param name="x">Tile X coordinate (column).</param>
+        /// <param name="y">Tile Y coordinate (row), Y axis goes up from the bottom.</param>
+        /// <param name="z">Tile Z coordinate (zoom level).</param>
+        /// <param name="extension">File extension.</param>
+        /// <returns>Response with tile contents.</returns>
         [HttpGet("1.0.0/{tileset}/{z}/{x}/{y}.{extension}")]
         public async Task<IActionResult> GetTileAsync(string tileset, int x, int y, int z, string extension)
         {
+            // TODO: z can be a string, not integer number
             if (String.IsNullOrEmpty(tileset) || String.IsNullOrEmpty(extension))
             {
                 return BadRequest();
@@ -92,16 +83,11 @@ namespace TileMapService.Controllers
             }
         }
 
-        private IActionResult XmlResponse(XmlDocument xml)
+        private string BaseUrl
         {
-            using (var ms = new MemoryStream())
+            get
             {
-                using (var xw = XmlWriter.Create(new StreamWriter(ms, Encoding.UTF8)))
-                {
-                    xml.Save(xw);
-                }
-
-                return File(ms.ToArray(), MediaTypeNames.Text.Xml);
+                return $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
             }
         }
     }

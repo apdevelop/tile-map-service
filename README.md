@@ -9,7 +9,7 @@ Basic implementation of tile server for .NET 5 platform, provides access to rast
   * MBTiles 1.3 (SQLite database).
   * Local file system (each tile in separate file).
 * Supported protocols for serving tiles: 
-  * XYZ / "Slippy Map" ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)).
+  * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)).
   * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)).
   * WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)).
 * Coordinate system: currently [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection) only.

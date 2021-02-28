@@ -6,8 +6,8 @@ using System.Xml;
 namespace TileMapService.Wmts
 {
     /// <summary>
-    /// Capabilities document builder.
-    /// Supports only Web Mercator (EPSG:3857) / "Google Maps Compatible" 256x256 tile sets
+    /// WMTS capabilities document builder.
+    /// Supports only Web Mercator (EPSG:3857) / "Google Maps Compatible" 256x256 tile sets.
     /// </summary>
     class CapabilitiesDocumentBuilder
     {
@@ -57,10 +57,6 @@ namespace TileMapService.Wmts
             titleElement.InnerText = "WMTS Service";
             serviceIdentificationElement.AppendChild(titleElement);
 
-            ////var abstractElement = doc.CreateElement(OwsPrefix, "Abstract", OwsNamespaceUri);
-            ////abstractElement.InnerText = "OGC WMTS";
-            ////serviceIdentificationElement.AppendChild(abstractElement);
-
             var serviceTypeElement = doc.CreateElement(OwsPrefix, "ServiceType", OwsNamespaceUri);
             serviceTypeElement.InnerText = "OGC WMTS";
             serviceIdentificationElement.AppendChild(serviceTypeElement);
@@ -98,12 +94,6 @@ namespace TileMapService.Wmts
                 "urn:ogc:def:crs:EPSG::3857",
                 "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible"));
             root.AppendChild(contentsElement);
-
-            ////var serviceMetadataURL = doc.CreateElement("ServiceMetadataURL");
-            ////var hrefAttribute = doc.CreateAttribute(XlinkPrefix, "href", XlinkNamespaceUri);
-            ////hrefAttribute.Value = this.baseUrl + "?REQUEST=GetCapabilities&VERSION=" + Version;
-            ////serviceMetadataURL.Attributes.Append(hrefAttribute);
-            ////root.AppendChild(serviceMetadataURL);
 
             return doc;
         }

@@ -19,7 +19,7 @@ namespace TileMapService.TileSources
 
         async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            var path = GetLocalFilePath(this.configuration.Source, x, this.configuration.Tms ? y : Utils.FlipYCoordinate(y, z), z);
+            var path = GetLocalFilePath(this.configuration.Location, x, this.configuration.Tms ? y : Utils.FlipYCoordinate(y, z), z);
             var fileInfo = new FileInfo(path);
             if (fileInfo.Exists)
             {

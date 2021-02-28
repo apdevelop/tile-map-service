@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 
 namespace TileMapService.Controllers
 {
     /// <summary>
-    /// Minimalistic REST API for serving tiles ("Slippy Map" / "XYZ"); without metadata.
+    /// Serving tiles using minimalistic REST API.
     /// </summary>
     [Route("xyz")]
     public class XyzController : Controller
@@ -19,14 +18,13 @@ namespace TileMapService.Controllers
         }
 
         /// <summary>
-        /// Get tile from tileset with specified coordinates 
-        /// URL format like http://.../xyz/tileset/?x=1&y=2&z=3
+        /// Get tile from tileset with specified coordinates.
         /// </summary>
-        /// <param name="tileset">Tileset name</param>
-        /// <param name="x">X coordinate (tile column)</param>
-        /// <param name="y">Y coordinate (tile row), Y axis goes down from the top</param>
-        /// <param name="z">Z coordinate (zoom level)</param>
-        /// <returns></returns>
+        /// <param name="tileset">Tileset (source) name.</param>
+        /// <param name="x">Tile X coordinate (column).</param>
+        /// <param name="y">Tile Y coordinate (row), Y axis goes down from the top.</param>
+        /// <param name="z">Tile Z coordinate (zoom level).</param>
+        /// <returns>Response with tile contents.</returns>
         [HttpGet("{tileset}")]
         public async Task<IActionResult> GetTileWithUrlQueryParametersAsync(string tileset, int x, int y, int z)
         {
@@ -39,14 +37,14 @@ namespace TileMapService.Controllers
         }
 
         /// <summary>
-        /// Get tile from tileset with specified coordinates 
-        /// URL format like http://.../xyz/tileset/3/1/2
+        /// Get tile from tileset with specified coordinates.
         /// </summary>
         /// <param name="tileset">Tileset name</param>
-        /// <param name="x">X coordinate (tile column)</param>
-        /// <param name="y">Y coordinate (tile row), Y axis goes down from the top</param>
-        /// <param name="z">Z coordinate (zoom level)</param>
-        /// <returns></returns>
+        /// <param name="x">Tile X coordinate (column)</param>
+        /// <param name="y">Tile Y coordinate (row), Y axis goes down from the top</param>
+        /// <param name="z">Tile Z coordinate (zoom level)</param>
+        /// <param name="extension">File extension.</param>
+        /// <returns>Response with tile contents.</returns>
         [HttpGet("{tileset}/{z}/{x}/{y}.{extension}")]
         public async Task<IActionResult> GetTileWithUrlPathAsync(string tileset, int x, int y, int z, string extension)
         {

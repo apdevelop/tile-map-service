@@ -7,9 +7,6 @@ namespace TileMapService
     /// </summary>
     public class TileSourceConfiguration
     {
-        [JsonPropertyName("format")]
-        public string Format { get; set; } // TODO: get from actual source properties
-
         /// <summary>
         /// String identifier of tile source.
         /// </summary>
@@ -17,16 +14,22 @@ namespace TileMapService
         public string Name { get; set; }
 
         /// <summary>
-        /// User-friendly (human-readable) name of tile source.
+        /// Name of tiles format.
+        /// </summary>
+        [JsonPropertyName("format")]
+        public string Format { get; set; } // TODO: get from actual source properties
+
+        /// <summary>
+        /// User-friendly (displayed) name of tile source.
         /// </summary>
         [JsonPropertyName("title")]
         public string Title { get; set; }
 
         /// <summary>
-        /// Uri of source.
+        /// Location of tiles in URL-like format.
         /// </summary>
-        [JsonPropertyName("source")]
-        public string Source { get; set; }
+        [JsonPropertyName("location")]
+        public string Location { get; set; }
 
         /// <summary>
         /// TMS type Y coordinate (true: Y going from bottom to top; false: from top to bottom, like in OSM tiles).

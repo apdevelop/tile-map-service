@@ -7,7 +7,7 @@ using Microsoft.Data.Sqlite;
 namespace TileMapService
 {
     /// <summary>
-    /// Repository for MBTiles 1.3 (SQLite) database access (in read only mode)
+    /// Repository for MBTiles 1.3 (SQLite) database access (in read only mode).
     /// </summary>
     /// <remarks>
     /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
@@ -15,7 +15,7 @@ namespace TileMapService
     class MBTilesRepository
     {
         /// <summary>
-        /// Connection string for SQLite database
+        /// Connection string for SQLite database.
         /// </summary>
         private readonly string connectionString;
 
@@ -40,9 +40,9 @@ namespace TileMapService
         #endregion
 
         /// <summary>
-        /// Constructor
+        /// Constructor.
         /// </summary>
-        /// <param name="connectionString">Connection string for SQLite database</param>
+        /// <param name="connectionString">Connection string for SQLite database.</param>
         public MBTilesRepository(string connectionString)
         {
             this.connectionString = connectionString;

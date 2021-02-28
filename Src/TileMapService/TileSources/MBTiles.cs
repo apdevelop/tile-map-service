@@ -15,7 +15,7 @@ namespace TileMapService.TileSources
         {
             this.configuration = configuration;
             this.contentType = Utils.GetContentType(this.configuration.Format); // TODO: from db metadata
-            var connectionString = GetMBTilesConnectionString(this.configuration.Source);
+            var connectionString = GetMBTilesConnectionString(this.configuration.Location);
             this.repository = new MBTilesRepository(connectionString);
         }
 
