@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
-using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace TileMapService.Controllers
@@ -65,13 +64,13 @@ namespace TileMapService.Controllers
                     {
                         Identifier = s.Name,
                         Title = s.Title,
-                        Format = s.Format,
+                        Format = Utils.TileFormatToContentType(s.Format),
                     })
                     .ToList();
 
             var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts").GetCapabilities(layers); // TODO: fix base URL
 
-            return File(xmlDoc.ToByteArray(), MediaTypeNames.Text.Xml);
+            return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
         }
 
         private async Task<IActionResult> ProcessGetTileRequestAsync(string tileset, int x, int y, int z)
@@ -80,14 +79,13 @@ namespace TileMapService.Controllers
             {
                 return BadRequest();
             }
-
-            if (this.tileSources.Contains(tileset))
+            else if (this.tileSources.Contains(tileset))
             {
                 var tileSource = this.tileSources.Get(tileset);
                 var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z); // Y axis goes down from the top
                 if (data != null)
                 {
-                    return File(data, tileSource.ContentType); // TODO: file name
+                    return File(data, tileSource.Configuration.ContentType);
                 }
                 else
                 {

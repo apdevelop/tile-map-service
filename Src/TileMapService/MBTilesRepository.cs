@@ -40,7 +40,7 @@ namespace TileMapService
         #endregion
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="MBTilesRepository"/> class.
         /// </summary>
         /// <param name="connectionString">Connection string for SQLite database.</param>
         public MBTilesRepository(string connectionString)

@@ -70,7 +70,7 @@ namespace TileMapService.Controllers
                 var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z);
                 if (data != null)
                 {
-                    return File(data, tileSource.ContentType); // TODO: file name
+                    return File(data, tileSource.Configuration.ContentType);
                 }
                 else
                 {

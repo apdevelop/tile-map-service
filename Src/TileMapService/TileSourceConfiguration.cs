@@ -3,7 +3,7 @@
 namespace TileMapService
 {
     /// <summary>
-    /// Tile source configuration and properties.
+    /// Represents tile source configuration and properties.
     /// </summary>
     public class TileSourceConfiguration
     {
@@ -36,5 +36,8 @@ namespace TileMapService
         /// </summary>
         [JsonPropertyName("tms")]
         public bool Tms { get; set; } // TODO: default true for MBTiles
+
+        [JsonIgnore]
+        public string ContentType { get; set; }
     }
 }

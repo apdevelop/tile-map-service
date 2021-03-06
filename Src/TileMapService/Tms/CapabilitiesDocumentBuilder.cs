@@ -33,7 +33,6 @@ namespace TileMapService.Tms
             var tileMapService = doc.CreateElement("TileMapService");
             root.AppendChild(tileMapService);
 
-
             var titleAttribute = doc.CreateAttribute("title");
             titleAttribute.Value = "Tile Map Service";
             tileMapService.Attributes.Append(titleAttribute);
@@ -56,15 +55,12 @@ namespace TileMapService.Tms
             var root = doc.CreateElement(String.Empty, "TileMapService", String.Empty);
             doc.AppendChild(root);
 
-
             var versionAttribute = doc.CreateAttribute("version");
             versionAttribute.Value = TileMapServiceVersion;
             root.Attributes.Append(versionAttribute);
 
-
             var tileMaps = doc.CreateElement("TileMaps");
             root.AppendChild(tileMaps);
-
 
             foreach (var tileSource in this.tileSources.Sources)
             {
@@ -105,22 +101,18 @@ namespace TileMapService.Tms
             versionAttribute.Value = TileMapServiceVersion;
             root.Attributes.Append(versionAttribute);
 
-
             var tilemapservice = $"{this.baseUrl}/tms/{TileMapServiceVersion}/";
             var tilemapserviceAttribute = doc.CreateAttribute("tilemapservice");
             tilemapserviceAttribute.Value = tilemapservice;
             root.Attributes.Append(tilemapserviceAttribute);
 
-
             var titleNode = doc.CreateElement("Title");
             titleNode.AppendChild(doc.CreateTextNode(tileSource.Configuration.Title));
             root.AppendChild(titleNode);
 
-
             var srs = doc.CreateElement("SRS");
             srs.AppendChild(doc.CreateTextNode(EPSG3857));
             root.AppendChild(srs);
-
 
             const int TileSize = 256;
             const double maxy = 20037508.342789;
@@ -148,7 +140,6 @@ namespace TileMapService.Tms
 
             root.AppendChild(boundingBox);
 
-
             var origin = doc.CreateElement("Origin");
 
             var yAttribute = doc.CreateAttribute("y");
@@ -161,7 +152,6 @@ namespace TileMapService.Tms
 
             root.AppendChild(origin);
 
-
             var tileFormat = doc.CreateElement("TileFormat");
 
             var extensionAttribute = doc.CreateAttribute("extension");
@@ -169,7 +159,7 @@ namespace TileMapService.Tms
             tileFormat.Attributes.Append(extensionAttribute);
 
             var mimetypeAttribute = doc.CreateAttribute("mime-type");
-            mimetypeAttribute.Value = tileSource.ContentType;
+            mimetypeAttribute.Value = tileSource.Configuration.ContentType;
             tileFormat.Attributes.Append(mimetypeAttribute);
 
             var heightAttribute = doc.CreateAttribute("height");
@@ -182,12 +172,10 @@ namespace TileMapService.Tms
 
             root.AppendChild(tileFormat);
 
-
             var tileSets = doc.CreateElement("TileSets");
             root.AppendChild(tileSets);
 
-
-            for (var level = 0; level <= 18; level++) // TODO: get real existing range
+            for (var level = 0; level <= 18; level++) // TODO: use real existing range
             {
                 var tileSet = doc.CreateElement("TileSet");
 

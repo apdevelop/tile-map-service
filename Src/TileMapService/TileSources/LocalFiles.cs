@@ -5,17 +5,29 @@ using System.Threading.Tasks;
 
 namespace TileMapService.TileSources
 {
-    class LocalFile : ITileSource
+    class LocalFiles : ITileSource
     {
         private readonly TileSourceConfiguration configuration;
 
-        private readonly string contentType;
-
-        public LocalFile(TileSourceConfiguration configuration)
+        public LocalFiles(TileSourceConfiguration configuration)
         {
-            this.configuration = configuration;
-            this.contentType = Utils.GetContentType(this.configuration.Format);
+            // TODO: configuration values priority:
+            // 1. Default values for local files.
+            // 2. Actual values (from first found tile properties).
+            // 3. Values from configuration file.
+
+            this.configuration = new TileSourceConfiguration
+            {
+                Format = configuration.Format,
+                Name = configuration.Name,
+                Title = configuration.Title,
+                Tms = configuration.Tms,
+                Location = configuration.Location,
+                ContentType = Utils.TileFormatToContentType(configuration.Format),
+            };
         }
+
+        #region ITileSource implementation
 
         async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
@@ -36,6 +48,16 @@ namespace TileMapService.TileSources
             }
         }
 
+        TileSourceConfiguration ITileSource.Configuration
+        {
+            get
+            {
+                return this.configuration;
+            }
+        }
+
+        #endregion
+
         private static string GetLocalFilePath(string template, int x, int y, int z)
         {
             var uriString = template
@@ -45,9 +67,5 @@ namespace TileMapService.TileSources
 
             return new Uri(uriString).LocalPath;
         }
-
-        TileSourceConfiguration ITileSource.Configuration => this.configuration;
-
-        string ITileSource.ContentType => this.contentType;
     }
 }

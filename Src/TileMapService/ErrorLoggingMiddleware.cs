@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace TileMapService
 {
-    public class ErrorLoggingMiddleware
+    class ErrorLoggingMiddleware
     {
         private readonly RequestDelegate next;
 

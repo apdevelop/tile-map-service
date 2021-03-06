@@ -46,7 +46,7 @@ namespace TileMapService.TileSources
         {
             if (IsLocalFileScheme(config.Location))
             {
-                return new LocalFile(config);
+                return new LocalFiles(config);
             }
             else if (IsMBTilesScheme(config.Location))
             {

@@ -85,8 +85,7 @@ namespace TileMapService.Wmts
             var contentsElement = doc.CreateElement(String.Empty, "Contents", WmtsNamespaceUri);
             foreach (var layer in layers)
             {
-                var mediaType = Utils.GetContentType(layer.Format);
-                contentsElement.AppendChild(CreateLayerElement(layer.Identifier, layer.Title, mediaType, GoogleMapsCompatible));
+                contentsElement.AppendChild(CreateLayerElement(layer, GoogleMapsCompatible));
             }
 
             contentsElement.AppendChild(CreateTileMatrixSetElement(
@@ -129,20 +128,20 @@ namespace TileMapService.Wmts
             return operationElement;
         }
 
-        private XmlElement CreateLayerElement(string identifier, string title, string format, string tileMatrixSetIdentifier)
+        private XmlElement CreateLayerElement(Layer layer, string tileMatrixSetIdentifier)
         {
             var layerElement = doc.CreateElement(String.Empty, "Layer", WmtsNamespaceUri);
 
             var titleElement = doc.CreateElement(OwsPrefix, "Title", OwsNamespaceUri);
-            titleElement.InnerText = title;
+            titleElement.InnerText = layer.Title;
             layerElement.AppendChild(titleElement);
 
             var identifierElement = doc.CreateElement(OwsPrefix, "Identifier", OwsNamespaceUri);
-            identifierElement.InnerText = identifier;
+            identifierElement.InnerText = layer.Identifier;
             layerElement.AppendChild(identifierElement);
 
             var formatElement = doc.CreateElement(String.Empty, "Format", WmtsNamespaceUri);
-            formatElement.InnerText = format;
+            formatElement.InnerText = layer.Format;
             layerElement.AppendChild(formatElement);
 
             var wgs84BoundingBoxElement = doc.CreateElement(OwsPrefix, "WGS84BoundingBox", OwsNamespaceUri);

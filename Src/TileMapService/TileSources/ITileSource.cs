@@ -14,7 +14,5 @@ namespace TileMapService.TileSources
         Task<byte[]> GetTileAsync(int x, int y, int z);
 
         TileSourceConfiguration Configuration { get; }
-
-        string ContentType { get; }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace TileMapService.Controllers
@@ -24,7 +23,7 @@ namespace TileMapService.Controllers
             // TODO: services/root.xml
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetServices();
 
-            return File(xmlDoc.ToByteArray(), MediaTypeNames.Text.Xml);
+            return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0")]
@@ -33,7 +32,7 @@ namespace TileMapService.Controllers
             // TODO: services/tilemapservice.xml
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileMaps();
 
-            return File(xmlDoc.ToByteArray(), MediaTypeNames.Text.Xml);
+            return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0/{tileset}")]
@@ -42,7 +41,7 @@ namespace TileMapService.Controllers
             // TODO: services/basemap.xml
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tileset);
 
-            return File(xmlDoc.ToByteArray(), MediaTypeNames.Text.Xml);
+            return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
         }
 
         /// <summary>
@@ -70,7 +69,7 @@ namespace TileMapService.Controllers
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null)
                 {
-                    return File(data, tileSource.ContentType); // TODO: file name
+                    return File(data, tileSource.Configuration.ContentType);
                 }
                 else
                 {
