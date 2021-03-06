@@ -8,10 +8,10 @@ namespace TileMapService
     public class TileSourceConfiguration
     {
         /// <summary>
-        /// String identifier of tile source.
+        /// String identifier of tile source (case-sensitive).
         /// </summary>
-        [JsonPropertyName("name")]
-        public string Name { get; set; }
+        [JsonPropertyName("id")] // TODO: ! JsonPropertyName("...") actually ignored
+        public string Id { get; set; }
 
         /// <summary>
         /// Name of tiles format (jpg, png).
@@ -20,7 +20,7 @@ namespace TileMapService
         public string Format { get; set; }
 
         /// <summary>
-        /// User-friendly (displayed) name of tile source.
+        /// User-friendly title (displayed name) of tile source.
         /// </summary>
         [JsonPropertyName("title")]
         public string Title { get; set; }

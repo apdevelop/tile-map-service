@@ -7,9 +7,9 @@ namespace TileMapService
     {
         Task InitAsync();
 
-        bool Contains(string sourceName);
+        bool Contains(string id);
 
-        TileSources.ITileSource Get(string sourceName);
+        TileSources.ITileSource Get(string id);
 
         List<TileSourceConfiguration> Sources { get; }
     }

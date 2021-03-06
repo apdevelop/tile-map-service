@@ -11,7 +11,7 @@ namespace TileMapService.TileSources
 
         public LocalFilesTileSource(TileSourceConfiguration configuration)
         {
-            if (String.IsNullOrEmpty(configuration.Name))
+            if (String.IsNullOrEmpty(configuration.Id))
             {
                 throw new ArgumentException();
             }
@@ -35,7 +35,7 @@ namespace TileMapService.TileSources
 
             this.configuration = new TileSourceConfiguration
             {
-                Name = this.configuration.Name,
+                Id = this.configuration.Id,
                 Format = this.configuration.Format, // TODO: from file properties
                 Title = this.configuration.Title,
                 Tms = this.configuration.Tms ?? false,

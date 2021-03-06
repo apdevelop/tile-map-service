@@ -15,7 +15,7 @@ namespace TileMapService.TileSources
 
         public MBTilesTileSource(TileSourceConfiguration configuration)
         {
-            if (String.IsNullOrEmpty(configuration.Name))
+            if (String.IsNullOrEmpty(configuration.Id))
             {
                 throw new ArgumentException();
             }
@@ -41,7 +41,7 @@ namespace TileMapService.TileSources
             var metadata = new MBTiles.Metadata(await this.repository.ReadMetadataAsync());
 
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
-                    (!String.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Name) :
+                    (!String.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Id) :
                     this.configuration.Title;
 
             var format = String.IsNullOrEmpty(this.configuration.Format) ?
@@ -50,7 +50,7 @@ namespace TileMapService.TileSources
 
             this.configuration = new TileSourceConfiguration
             {
-                Name = this.configuration.Name,
+                Id = this.configuration.Id,
                 Format = format,
                 Title = title,
                 Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.

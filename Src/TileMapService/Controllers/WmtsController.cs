@@ -62,7 +62,7 @@ namespace TileMapService.Controllers
             var layers = this.tileSourceFabric.Sources
                     .Select(s => new Wmts.Layer
                     {
-                        Identifier = s.Name,
+                        Identifier = s.Id,
                         Title = s.Title,
                         Format = s.ContentType,
                     })

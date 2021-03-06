@@ -15,7 +15,7 @@ namespace TileMapService.TileSources
             this.tileSources = configuration
                     .GetSection("TileSources")
                     .Get<IList<TileSourceConfiguration>>()
-                    .ToDictionary(c => c.Name, c => CreateTileSource(c));
+                    .ToDictionary(c => c.Id, c => CreateTileSource(c));
         }
 
         #region ITileSourceFabric implementation
@@ -28,14 +28,14 @@ namespace TileMapService.TileSources
             }
         }
 
-        bool ITileSourceFabric.Contains(string sourceName)
+        bool ITileSourceFabric.Contains(string id)
         {
-            return this.tileSources.ContainsKey(sourceName);
+            return this.tileSources.ContainsKey(id);
         }
 
-        ITileSource ITileSourceFabric.Get(string sourceName)
+        ITileSource ITileSourceFabric.Get(string id)
         {
-            return this.tileSources[sourceName];
+            return this.tileSources[id];
         }
 
         List<TileSourceConfiguration> ITileSourceFabric.Sources
