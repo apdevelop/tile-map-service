@@ -4,6 +4,8 @@ namespace TileMapService.TileSources
 {
     public interface ITileSource
     {
+        Task InitAsync();
+
         /// <summary>
         /// Get tile from source.
         /// </summary>

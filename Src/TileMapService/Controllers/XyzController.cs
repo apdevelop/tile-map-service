@@ -10,11 +10,11 @@ namespace TileMapService.Controllers
     [Route("xyz")]
     public class XyzController : Controller
     {
-        private readonly ITileSourceFabric tileSources;
+        private readonly ITileSourceFabric tileSourceFabric;
 
-        public XyzController(ITileSourceFabric tileSources)
+        public XyzController(ITileSourceFabric tileSourceFabric)
         {
-            this.tileSources = tileSources;
+            this.tileSourceFabric = tileSourceFabric;
         }
 
         /// <summary>
@@ -64,9 +64,9 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (this.tileSources.Contains(tileset))
+            if (this.tileSourceFabric.Contains(tileset))
             {
-                var tileSource = this.tileSources.Get(tileset);
+                var tileSource = this.tileSourceFabric.Get(tileset);
                 var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z);
                 if (data != null)
                 {

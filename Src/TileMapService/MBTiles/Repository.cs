@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Data.Sqlite;
 
-namespace TileMapService
+namespace TileMapService.MBTiles
 {
     /// <summary>
     /// Repository for MBTiles 1.3 (SQLite) database access (in read only mode).
@@ -12,7 +12,7 @@ namespace TileMapService
     /// <remarks>
     /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
     /// </remarks>
-    class MBTilesRepository
+    class Repository
     {
         /// <summary>
         /// Connection string for SQLite database.
@@ -40,10 +40,10 @@ namespace TileMapService
         #endregion
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MBTilesRepository"/> class.
+        /// Initializes a new instance of the <see cref="Repository"/> class.
         /// </summary>
         /// <param name="connectionString">Connection string for SQLite database.</param>
-        public MBTilesRepository(string connectionString)
+        public Repository(string connectionString)
         {
             this.connectionString = connectionString;
         }
@@ -82,13 +82,16 @@ namespace TileMapService
             return result;
         }
 
-        public async Task<Tuple<string, string>[]> ReadMetadataAsync()
+        /// <summary>
+        /// Reads all metadata key/value items.
+        /// </summary>
+        /// <returns>Metadata records.</returns>
+        public async Task<MetadataItem[]> ReadMetadataAsync()
         {
-            var result = new List<Tuple<string, string>>(); // TODO: DTO with <string name, string value>
-
-            var commandText = $"SELECT {ColumnMetadataName}, {ColumnMetadataValue} FROM {TableMetadata}";
+            var result = new List<MetadataItem>();
             using (var connection = new SqliteConnection(this.connectionString))
             {
+                var commandText = $"SELECT {ColumnMetadataName}, {ColumnMetadataValue} FROM {TableMetadata}";
                 using (var command = new SqliteCommand(commandText, connection))
                 {
                     await connection.OpenAsync().ConfigureAwait(false);
@@ -96,12 +99,14 @@ namespace TileMapService
                     {
                         while (await dr.ReadAsync().ConfigureAwait(false))
                         {
-                            var name = dr.IsDBNull(0) ? null : dr.GetString(0);
-                            var value = dr.IsDBNull(1) ? null : dr.GetString(1);
-                            result.Add(new Tuple<string, string>(name, value));
+                            result.Add(new MetadataItem
+                            {
+                                Name = dr.IsDBNull(0) ? null : dr.GetString(0),
+                                Value = dr.IsDBNull(1) ? null : dr.GetString(1),
+                            });
                         }
 
-                        dr.Close();
+                        await dr.CloseAsync().ConfigureAwait(false);
                     }
                 }
 

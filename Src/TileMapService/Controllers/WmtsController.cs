@@ -11,11 +11,11 @@ namespace TileMapService.Controllers
     [Route("wmts")]
     public class WmtsController : Controller
     {
-        private readonly ITileSourceFabric tileSources;
+        private readonly ITileSourceFabric tileSourceFabric;
 
-        public WmtsController(ITileSourceFabric tileSources)
+        public WmtsController(ITileSourceFabric tileSourceFabric)
         {
-            this.tileSources = tileSources;
+            this.tileSourceFabric = tileSourceFabric;
         }
 
         [HttpGet("")]
@@ -59,12 +59,12 @@ namespace TileMapService.Controllers
 
         private IActionResult ProcessGetCapabilitiesRequest()
         {
-            var layers = this.tileSources.Sources
+            var layers = this.tileSourceFabric.Sources
                     .Select(s => new Wmts.Layer
                     {
                         Identifier = s.Name,
                         Title = s.Title,
-                        Format = Utils.TileFormatToContentType(s.Format),
+                        Format = s.ContentType,
                     })
                     .ToList();
 
@@ -79,9 +79,9 @@ namespace TileMapService.Controllers
             {
                 return BadRequest();
             }
-            else if (this.tileSources.Contains(tileset))
+            else if (this.tileSourceFabric.Contains(tileset))
             {
-                var tileSource = this.tileSources.Get(tileset);
+                var tileSource = this.tileSourceFabric.Get(tileset);
                 var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z); // Y axis goes down from the top
                 if (data != null)
                 {

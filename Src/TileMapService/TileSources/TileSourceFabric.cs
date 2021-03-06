@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace TileMapService.TileSources
 {
@@ -11,7 +12,6 @@ namespace TileMapService.TileSources
 
         public TileSourceFabric(IConfiguration configuration)
         {
-            // TODO: check and log configuration errors
             this.tileSources = configuration
                     .GetSection("TileSources")
                     .Get<IList<TileSourceConfiguration>>()
@@ -19,6 +19,14 @@ namespace TileMapService.TileSources
         }
 
         #region ITileSourceFabric implementation
+
+        async Task ITileSourceFabric.InitAsync()
+        {
+            foreach (var tileSource in this.tileSources)
+            {
+                await tileSource.Value.InitAsync(); // TODO: in parallel ?
+            }
+        }
 
         bool ITileSourceFabric.Contains(string sourceName)
         {
@@ -46,11 +54,11 @@ namespace TileMapService.TileSources
         {
             if (IsLocalFileScheme(config.Location))
             {
-                return new LocalFiles(config);
+                return new LocalFilesTileSource(config);
             }
             else if (IsMBTilesScheme(config.Location))
             {
-                return new MBTiles(config);
+                return new MBTilesTileSource(config);
             }
             else
             {

@@ -14,10 +14,10 @@ namespace TileMapService
         public string Name { get; set; }
 
         /// <summary>
-        /// Name of tiles format.
+        /// Name of tiles format (jpg, png).
         /// </summary>
         [JsonPropertyName("format")]
-        public string Format { get; set; } // TODO: get from actual source properties
+        public string Format { get; set; }
 
         /// <summary>
         /// User-friendly (displayed) name of tile source.
@@ -35,9 +35,11 @@ namespace TileMapService
         /// TMS type Y coordinate (true: Y going from bottom to top; false: from top to bottom, like in OSM tiles).
         /// </summary>
         [JsonPropertyName("tms")]
-        public bool Tms { get; set; } // TODO: default true for MBTiles
+        public bool? Tms { get; set; }
 
         [JsonIgnore]
         public string ContentType { get; set; }
+
+        // TODO: bounds, minzoom, maxzoom, center, attribution,.. (MBTiles metadata as example).
     }
 }

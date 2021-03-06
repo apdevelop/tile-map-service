@@ -10,18 +10,18 @@ namespace TileMapService.Controllers
     [Route("tms")]
     public class TmsController : Controller
     {
-        private readonly ITileSourceFabric tileSources;
+        private readonly ITileSourceFabric tileSourceFabric;
 
-        public TmsController(ITileSourceFabric tileSources)
+        public TmsController(ITileSourceFabric tileSourceFabric)
         {
-            this.tileSources = tileSources;
+            this.tileSourceFabric = tileSourceFabric;
         }
 
         [HttpGet("")]
         public IActionResult GetCapabilitiesServices()
         {
             // TODO: services/root.xml
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetServices();
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSourceFabric).GetServices();
 
             return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
         }
@@ -30,7 +30,7 @@ namespace TileMapService.Controllers
         public IActionResult GetCapabilitiesTileMaps()
         {
             // TODO: services/tilemapservice.xml
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileMaps();
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSourceFabric).GetTileMaps();
 
             return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
         }
@@ -39,7 +39,7 @@ namespace TileMapService.Controllers
         public IActionResult GetCapabilitiesTileSets(string tileset)
         {
             // TODO: services/basemap.xml
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSources).GetTileSets(tileset);
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSourceFabric).GetTileSets(tileset);
 
             return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
         }
@@ -62,10 +62,10 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (this.tileSources.Contains(tileset))
+            if (this.tileSourceFabric.Contains(tileset))
             {
                 // TODO: check extension == tileset.Configuration.Format
-                var tileSource = this.tileSources.Get(tileset);
+                var tileSource = this.tileSourceFabric.Get(tileset);
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null)
                 {

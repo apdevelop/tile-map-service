@@ -36,17 +36,15 @@ namespace TileMapService
 
         public static readonly string MBTilesScheme = "mbtiles:///";
 
-        public static string TileFormatToContentType(string tileFormat)
+        public static string TileFormatToContentType(string format)
         {
-            string mediaType;
-            switch (tileFormat)
+            switch (format)
             {
-                case "png": { mediaType = MediaTypeNames.Image.Png; break; }
-                case "jpg": { mediaType = MediaTypeNames.Image.Jpeg; break; }
-                default: throw new ArgumentException($"Bad tileFormat: {tileFormat}");
+                case "png": return MediaTypeNames.Image.Png;
+                case "jpg": return MediaTypeNames.Image.Jpeg;
+                // TODO: ? other MBTiles possible types
+                default: return format;
             }
-
-            return mediaType;
         }
 
         /// <summary>
