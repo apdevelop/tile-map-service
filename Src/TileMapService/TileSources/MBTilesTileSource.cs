@@ -1,6 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace TileMapService.TileSources
@@ -16,6 +15,16 @@ namespace TileMapService.TileSources
 
         public MBTilesTileSource(TileSourceConfiguration configuration)
         {
+            if (String.IsNullOrEmpty(configuration.Name))
+            {
+                throw new ArgumentException();
+            }
+
+            if (String.IsNullOrEmpty(configuration.Location))
+            {
+                throw new ArgumentException();
+            }
+
             this.configuration = configuration; // May be changed later in InitAsync
             this.repository = new MBTiles.Repository(CreateSqliteConnectionString(configuration.Location));
         }
@@ -24,34 +33,19 @@ namespace TileMapService.TileSources
 
         async Task ITileSource.InitAsync()
         {
-            if (String.IsNullOrEmpty(this.configuration.Name))
-            {
-                throw new InvalidOperationException();
-            }
-
-            if (String.IsNullOrEmpty(this.configuration.Location))
-            {
-                throw new InvalidOperationException();
-            }
-
-            var metadata = await this.repository.ReadMetadataAsync();
-            // TODO: Metadata class with all these fields and Init(MetadataItem[]) method.
-            var nameItem = metadata.FirstOrDefault(i => i.Name == MBTiles.MetadataItem.KeyName);
-            var formatItem = metadata.FirstOrDefault(i => i.Name == MBTiles.MetadataItem.KeyFormat);
-
-            // TODO: use all metadata values (bounds, zoom, center), useful for 
-
             // Configuration values priority:
             // 1. Default values for MBTiles.
             // 2. Actual values (MBTiles metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
+            var metadata = new MBTiles.Metadata(await this.repository.ReadMetadataAsync());
+
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
-                    (nameItem != null && !String.IsNullOrEmpty(nameItem.Value) ? nameItem.Value : this.configuration.Name) :
+                    (!String.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Name) :
                     this.configuration.Title;
 
             var format = String.IsNullOrEmpty(this.configuration.Format) ?
-                    (formatItem != null && !String.IsNullOrEmpty(formatItem.Value) ? formatItem.Value : "png") :
+                    (!String.IsNullOrEmpty(metadata.Format) ? metadata.Format : "png") :
                     this.configuration.Format;
 
             this.configuration = new TileSourceConfiguration

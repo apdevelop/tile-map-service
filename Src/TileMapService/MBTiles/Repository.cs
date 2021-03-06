@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.Data.Sqlite;
@@ -48,6 +47,13 @@ namespace TileMapService.MBTiles
             this.connectionString = connectionString;
         }
 
+        /// <summary>
+        /// Asynchronously reads tile image contents with given coordinates from source.
+        /// </summary>
+        /// <param name="tileColumn">Tile X coordinate (column).</param>
+        /// <param name="tileRow">Tile Y coordinate (row), Y axis goes up from the bottom (TMS scheme).</param>
+        /// <param name="zoomLevel">Tile Z coordinate (zoom level).</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task<byte[]> ReadTileDataAsync(int tileColumn, int tileRow, int zoomLevel)
         {
             byte[] result = null;
@@ -83,7 +89,7 @@ namespace TileMapService.MBTiles
         }
 
         /// <summary>
-        /// Reads all metadata key/value items.
+        /// Asynchronously reads all metadata key/value items.
         /// </summary>
         /// <returns>Metadata records.</returns>
         public async Task<MetadataItem[]> ReadMetadataAsync()
@@ -108,9 +114,9 @@ namespace TileMapService.MBTiles
 
                         await dr.CloseAsync().ConfigureAwait(false);
                     }
-                }
 
-                connection.Close();
+                    await connection.CloseAsync().ConfigureAwait(false);
+                }
             }
 
             return result.ToArray();

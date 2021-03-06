@@ -11,6 +11,16 @@ namespace TileMapService.TileSources
 
         public LocalFilesTileSource(TileSourceConfiguration configuration)
         {
+            if (String.IsNullOrEmpty(configuration.Name))
+            {
+                throw new ArgumentException();
+            }
+
+            if (String.IsNullOrEmpty(configuration.Location))
+            {
+                throw new ArgumentException();
+            }
+
             this.configuration = configuration; // May be changed later in InitAsync
         }
 
@@ -18,16 +28,6 @@ namespace TileMapService.TileSources
 
         async Task ITileSource.InitAsync()
         {
-            if (String.IsNullOrEmpty(this.configuration.Name))
-            {
-                throw new InvalidOperationException();
-            }
-
-            if (String.IsNullOrEmpty(this.configuration.Location))
-            {
-                throw new InvalidOperationException();
-            }
-
             // TODO: configuration values priority:
             // 1. Default values for local files.
             // 2. Actual values (from first found tile properties).
