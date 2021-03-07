@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Xml;
 
 namespace TileMapService.Wmts
@@ -23,25 +24,35 @@ namespace TileMapService.Wmts
 
         private const string Version = "1.0.0";
 
-        private const string GoogleMapsCompatible = "GoogleMapsCompatible";
-
         private const int TileWidth = 256; // TODO: other resolutions
 
         private const int TileHeight = 256;
 
         private readonly string baseUrl;
 
+        private readonly ITileSourceFabric tileSourceFabric;
+
         private XmlDocument doc;
 
         // TODO: use actual properties of source tiles
 
-        public CapabilitiesDocumentBuilder(string baseUrl)
+        public CapabilitiesDocumentBuilder(string baseUrl, ITileSourceFabric tileSourceFabric)
         {
             this.baseUrl = baseUrl;
+            this.tileSourceFabric = tileSourceFabric;
         }
 
-        public XmlDocument GetCapabilities(IList<Layer> layers)
+        public XmlDocument GetCapabilities()
         {
+            var layers = this.tileSourceFabric.Sources
+                .Select(s => new Layer
+                {
+                    Identifier = s.Id,
+                    Title = s.Title,
+                    Format = s.ContentType,
+                })
+                .ToList();
+
             doc = new XmlDocument();
             var root = doc.CreateElement(String.Empty, "Capabilities", WmtsNamespaceUri);
             root.SetAttribute("xmlns:" + OwsPrefix, OwsNamespaceUri);
@@ -83,15 +94,31 @@ namespace TileMapService.Wmts
             root.AppendChild(operationsMetadataElement);
 
             var contentsElement = doc.CreateElement(String.Empty, "Contents", WmtsNamespaceUri);
+
+            var identifiers = new HashSet<string>();
             foreach (var layer in layers)
             {
-                contentsElement.AppendChild(CreateLayerElement(layer, GoogleMapsCompatible));
+                var config = this.tileSourceFabric.Get(layer.Identifier);
+                var identifier = String.Format(
+                    CultureInfo.InvariantCulture,
+                    "google3857_{0}-{1}",
+                    config.Configuration.MinZoom.Value,
+                    config.Configuration.MaxZoom.Value);
+
+                contentsElement.AppendChild(CreateLayerElement(layer, identifier));
+
+                if (!identifiers.Contains(identifier))
+                {
+                    identifiers.Add(identifier);
+                    contentsElement.AppendChild(CreateTileMatrixSetElement(
+                        config.Configuration.MinZoom.Value,
+                        config.Configuration.MaxZoom.Value,
+                        identifier,
+                        "urn:ogc:def:crs:EPSG::3857",
+                        "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible"));
+                }
             }
 
-            contentsElement.AppendChild(CreateTileMatrixSetElement(
-                GoogleMapsCompatible,
-                "urn:ogc:def:crs:EPSG::3857",
-                "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible"));
             root.AppendChild(contentsElement);
 
             return doc;
@@ -136,9 +163,18 @@ namespace TileMapService.Wmts
             titleElement.InnerText = layer.Title;
             layerElement.AppendChild(titleElement);
 
+            // TODO: Abstract
+
             var identifierElement = doc.CreateElement(OwsPrefix, "Identifier", OwsNamespaceUri);
             identifierElement.InnerText = layer.Identifier;
             layerElement.AppendChild(identifierElement);
+
+            var styleElement = doc.CreateElement(String.Empty, "Style", WmtsNamespaceUri);
+            var styleIdentifierElement = doc.CreateElement(OwsPrefix, "Identifier", OwsNamespaceUri);
+            styleIdentifierElement.InnerText = "normal";
+            styleElement.SetAttribute("isDefault", "true");
+            styleElement.AppendChild(styleIdentifierElement);
+            layerElement.AppendChild(styleElement);
 
             var formatElement = doc.CreateElement(String.Empty, "Format", WmtsNamespaceUri);
             formatElement.InnerText = layer.Format;
@@ -147,25 +183,32 @@ namespace TileMapService.Wmts
             var wgs84BoundingBoxElement = doc.CreateElement(OwsPrefix, "WGS84BoundingBox", OwsNamespaceUri);
 
             var lowerCornerElement = doc.CreateElement(OwsPrefix, "LowerCorner", OwsNamespaceUri);
-            lowerCornerElement.InnerText = "-180.000000 -85.05112878";
+            lowerCornerElement.InnerText = "-180.000000 -85.05112878"; // TODO: use actual values
             wgs84BoundingBoxElement.AppendChild(lowerCornerElement);
 
             var upperCornerElement = doc.CreateElement(OwsPrefix, "UpperCorner", OwsNamespaceUri);
-            upperCornerElement.InnerText = "180.000000 85.05112878";
+            upperCornerElement.InnerText = "180.000000 85.05112878"; // TODO: use actual values
             wgs84BoundingBoxElement.AppendChild(upperCornerElement);
 
             layerElement.AppendChild(wgs84BoundingBoxElement);
 
             var tileMatrixSetLinkElement = doc.CreateElement(String.Empty, "TileMatrixSetLink", WmtsNamespaceUri);
+
             var tileMatrixSetElement = doc.CreateElement(String.Empty, "TileMatrixSet", WmtsNamespaceUri);
             tileMatrixSetElement.InnerText = tileMatrixSetIdentifier;
+
             tileMatrixSetLinkElement.AppendChild(tileMatrixSetElement);
             layerElement.AppendChild(tileMatrixSetLinkElement);
 
             return layerElement;
         }
 
-        private XmlElement CreateTileMatrixSetElement(string identifier, string crs, string wellKnownScaleSet)
+        private XmlElement CreateTileMatrixSetElement(
+            int minZoom,
+            int maxZoom,
+            string identifier,
+            string crs,
+            string wellKnownScaleSet)
         {
             const double ScaleDenominator = 5.590822640287179E8;
 
@@ -196,7 +239,7 @@ namespace TileMapService.Wmts
             wellKnownScaleSetElement.InnerText = wellKnownScaleSet;
             tileMatrixSetElement.AppendChild(wellKnownScaleSetElement);
 
-            for (var zoom = 0; zoom <= 20; zoom++) // TODO: use actual source properties
+            for (var zoom = minZoom; zoom <= maxZoom; zoom++)
             {
                 var tileMatrixElement = doc.CreateElement(String.Empty, "TileMatrix", WmtsNamespaceUri);
 
@@ -209,7 +252,7 @@ namespace TileMapService.Wmts
                 tileMatrixElement.AppendChild(scaleDenominatorElement);
 
                 var topLeftCornerElement = doc.CreateElement(String.Empty, "TopLeftCorner", WmtsNamespaceUri);
-                topLeftCornerElement.InnerText = "-20037508.342789 20037508.342789";
+                topLeftCornerElement.InnerText = "-20037508.342789 20037508.342789"; // TODO: const
                 tileMatrixElement.AppendChild(topLeftCornerElement);
 
                 var tileWidthElement = doc.CreateElement(String.Empty, "TileWidth", WmtsNamespaceUri);

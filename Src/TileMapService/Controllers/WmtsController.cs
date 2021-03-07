@@ -59,16 +59,8 @@ namespace TileMapService.Controllers
 
         private IActionResult ProcessGetCapabilitiesRequest()
         {
-            var layers = this.tileSourceFabric.Sources
-                    .Select(s => new Wmts.Layer
-                    {
-                        Identifier = s.Id,
-                        Title = s.Title,
-                        Format = s.ContentType,
-                    })
-                    .ToList();
-
-            var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts").GetCapabilities(layers); // TODO: fix base URL
+            var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts", this.tileSourceFabric)
+                .GetCapabilities(); // TODO: fix base URL
 
             return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
         }

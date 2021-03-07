@@ -9,12 +9,12 @@
     class MetadataItem
     {
         /// <summary>
-        /// Name (key).
+        /// Name (key) of item.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Value.
+        /// Value of item.
         /// </summary>
         public string Value { get; set; }
 
@@ -22,6 +22,8 @@
         {
             return $"\"{this.Name}\": \"{this.Value}\"";
         }
+
+        #region Names of standard items.
 
         /// <summary>
         /// The human-readable name of the tileset.
@@ -59,7 +61,7 @@
         public const string KeyAttribution = "attribution";
 
         /// <summary>
-        /// A description of the tileset's content.
+        /// A description of the tileset content.
         /// </summary>
         public const string KeyDescription = "description";
 
@@ -71,11 +73,13 @@
         /// <summary>
         /// The version (revision) number of the tileset.
         /// </summary>
-        public const string KeyVersion = "version ";
+        public const string KeyVersion = "version";
 
         /// <summary>
         /// Lists the layers that appear in the vector tiles and the names and types of the attributes of features that appear in those layers n case of pbf format.
         /// </summary>
         public const string KeyJson = "json";
+
+        #endregion
     }
 }

@@ -41,6 +41,8 @@ namespace TileMapService.TileSources
                 Tms = this.configuration.Tms ?? false,
                 Location = this.configuration.Location,
                 ContentType = Utils.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
+                MinZoom = 0, // TODO: actual / configuration values
+                MaxZoom = 20, // TODO: actual / configuration values
             };
 
             await Task.Delay(0); // TODO: implement

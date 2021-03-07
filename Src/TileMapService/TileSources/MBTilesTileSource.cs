@@ -56,6 +56,8 @@ namespace TileMapService.TileSources
                 Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
                 Location = this.configuration.Location,
                 ContentType = Utils.TileFormatToContentType(format),
+                MinZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? 0,
+                MaxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? 20,
             };
         }
 

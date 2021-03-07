@@ -44,7 +44,6 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 * Use some new C# 9 language features.
 * Extended diagnostics and logging.
 * Test in various environments.
-* Access to metadata.
 * Performance tests.
 * Live demo.
 

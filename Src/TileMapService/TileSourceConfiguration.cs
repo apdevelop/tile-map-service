@@ -40,6 +40,12 @@ namespace TileMapService
         [JsonIgnore]
         public string ContentType { get; set; }
 
-        // TODO: bounds, minzoom, maxzoom, center, attribution,.. (MBTiles metadata as example).
+        [JsonIgnore] // TODO: JsonPropertyName("minzoom")
+        public int? MinZoom { get; set; }
+
+        [JsonIgnore] // TODO: JsonPropertyName("maxzoom")
+        public int? MaxZoom { get; set; }
+
+        // TODO: bounds, center, attribution,.. (MBTiles metadata as example).
     }
 }

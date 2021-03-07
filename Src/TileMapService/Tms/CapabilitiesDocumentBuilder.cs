@@ -89,9 +89,9 @@ namespace TileMapService.Tms
             return doc;
         }
 
-        public XmlDocument GetTileSets(string tilemapName)
+        public XmlDocument GetTileSets(string id)
         {
-            var tileSource = this.tileSourceFabric.Get(tilemapName);
+            var tileSource = this.tileSourceFabric.Get(id);
 
             var doc = new XmlDocument();
             var root = doc.CreateElement(String.Empty, "TileMap", String.Empty);
@@ -114,7 +114,7 @@ namespace TileMapService.Tms
             srs.AppendChild(doc.CreateTextNode(EPSG3857));
             root.AppendChild(srs);
 
-            const int TileSize = 256;
+            const int TileSize = 256; // TODO: other resolutions
             const double maxy = 20037508.342789;
             const double maxx = 20037508.342789;
             const double miny = -20037508.342789;
@@ -175,11 +175,11 @@ namespace TileMapService.Tms
             var tileSets = doc.CreateElement("TileSets");
             root.AppendChild(tileSets);
 
-            for (var level = 0; level <= 18; level++) // TODO: use real existing range
+            for (var level = tileSource.Configuration.MinZoom.Value; level <= tileSource.Configuration.MaxZoom.Value; level++)
             {
                 var tileSet = doc.CreateElement("TileSet");
 
-                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tileSource.Configuration.Id}/{tilemapName}/{level}";
+                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tileSource.Configuration.Id}/{id}/{level}";
                 var hrefAttribute = doc.CreateAttribute("href");
                 hrefAttribute.Value = href;
                 tileSet.Attributes.Append(hrefAttribute);
