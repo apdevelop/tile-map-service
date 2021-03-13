@@ -14,7 +14,7 @@ namespace TileMapService.TileSources
         Task InitAsync();
 
         /// <summary>
-        /// Asynchronously reads tile image contents with given coordinates from source.
+        /// Asynchronously gets tile image contents with given coordinates from source.
         /// </summary>
         /// <param name="x">Tile X coordinate (column).</param>
         /// <param name="y">Tile Y coordinate (row), Y axis goes up from the bottom (TMS scheme).</param>

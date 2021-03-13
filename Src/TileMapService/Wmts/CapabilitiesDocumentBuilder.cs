@@ -12,6 +12,8 @@ namespace TileMapService.Wmts
     /// </summary>
     class CapabilitiesDocumentBuilder
     {
+        #region Constants
+
         private const string WmtsNamespaceUri = "http://www.opengis.net/wmts/1.0";
 
         private const string OwsPrefix = "ows";
@@ -28,31 +30,22 @@ namespace TileMapService.Wmts
 
         private const int TileHeight = 256;
 
+        #endregion
+
         private readonly string baseUrl;
 
-        private readonly ITileSourceFabric tileSourceFabric;
+        private readonly List<Models.Layer> layers;
 
         private XmlDocument doc;
 
-        // TODO: use actual properties of source tiles
-
-        public CapabilitiesDocumentBuilder(string baseUrl, ITileSourceFabric tileSourceFabric)
+        public CapabilitiesDocumentBuilder(string baseUrl, IList<Models.Layer> layers)
         {
             this.baseUrl = baseUrl;
-            this.tileSourceFabric = tileSourceFabric;
+            this.layers = layers.ToList();
         }
 
         public XmlDocument GetCapabilities()
         {
-            var layers = this.tileSourceFabric.Sources
-                .Select(s => new Layer
-                {
-                    Identifier = s.Id,
-                    Title = s.Title,
-                    Format = s.ContentType,
-                })
-                .ToList();
-
             doc = new XmlDocument();
             var root = doc.CreateElement(String.Empty, "Capabilities", WmtsNamespaceUri);
             root.SetAttribute("xmlns:" + OwsPrefix, OwsNamespaceUri);
@@ -96,14 +89,13 @@ namespace TileMapService.Wmts
             var contentsElement = doc.CreateElement(String.Empty, "Contents", WmtsNamespaceUri);
 
             var identifiers = new HashSet<string>();
-            foreach (var layer in layers)
+            foreach (var layer in this.layers)
             {
-                var config = this.tileSourceFabric.Get(layer.Identifier);
                 var identifier = String.Format(
                     CultureInfo.InvariantCulture,
                     "google3857_{0}-{1}",
-                    config.Configuration.MinZoom.Value,
-                    config.Configuration.MaxZoom.Value);
+                    layer.MinZoom,
+                    layer.MaxZoom);
 
                 contentsElement.AppendChild(CreateLayerElement(layer, identifier));
 
@@ -111,8 +103,8 @@ namespace TileMapService.Wmts
                 {
                     identifiers.Add(identifier);
                     contentsElement.AppendChild(CreateTileMatrixSetElement(
-                        config.Configuration.MinZoom.Value,
-                        config.Configuration.MaxZoom.Value,
+                        layer.MinZoom,
+                        layer.MaxZoom,
                         identifier,
                         "urn:ogc:def:crs:EPSG::3857",
                         "urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible"));
@@ -155,7 +147,7 @@ namespace TileMapService.Wmts
             return operationElement;
         }
 
-        private XmlElement CreateLayerElement(Layer layer, string tileMatrixSetIdentifier)
+        private XmlElement CreateLayerElement(Models.Layer layer, string tileMatrixSetIdentifier)
         {
             var layerElement = doc.CreateElement(String.Empty, "Layer", WmtsNamespaceUri);
 
@@ -163,7 +155,7 @@ namespace TileMapService.Wmts
             titleElement.InnerText = layer.Title;
             layerElement.AppendChild(titleElement);
 
-            // TODO: Abstract
+            // TODO: Abstract element
 
             var identifierElement = doc.CreateElement(OwsPrefix, "Identifier", OwsNamespaceUri);
             identifierElement.InnerText = layer.Identifier;
@@ -177,7 +169,7 @@ namespace TileMapService.Wmts
             layerElement.AppendChild(styleElement);
 
             var formatElement = doc.CreateElement(String.Empty, "Format", WmtsNamespaceUri);
-            formatElement.InnerText = layer.Format;
+            formatElement.InnerText = layer.ContentType;
             layerElement.AppendChild(formatElement);
 
             var wgs84BoundingBoxElement = doc.CreateElement(OwsPrefix, "WGS84BoundingBox", OwsNamespaceUri);

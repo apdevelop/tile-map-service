@@ -52,28 +52,12 @@ namespace TileMapService.TileSources
 
         private static ITileSource CreateTileSource(TileSourceConfiguration config)
         {
-            if (IsLocalFileScheme(config.Location))
+            switch (config.Type.ToLowerInvariant())
             {
-                return new LocalFilesTileSource(config);
+                case TileSourceConfiguration.TypeLocalFiles: return new LocalFilesTileSource(config);
+                case TileSourceConfiguration.TypeMBTiles: return new MBTilesTileSource(config);
+                default: throw new NotSupportedException();
             }
-            else if (IsMBTilesScheme(config.Location))
-            {
-                return new MBTilesTileSource(config);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private static bool IsMBTilesScheme(string source)
-        {
-            return source.StartsWith(Utils.MBTilesScheme, StringComparison.Ordinal);
-        }
-
-        private static bool IsLocalFileScheme(string source)
-        {
-            return source.StartsWith(Utils.LocalFileScheme, StringComparison.Ordinal);
         }
     }
 }

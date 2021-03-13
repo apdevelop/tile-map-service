@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
@@ -11,31 +13,6 @@ namespace TileMapService
     /// </summary>
     static class Utils
     {
-        /// <summary>
-        /// Media type identifiers.
-        /// </summary>
-        /// <remarks>
-        /// Structure is similar to <see cref="System.Net.Mime.MediaTypeNames"/> class.
-        /// </remarks>
-        internal static class MediaTypeNames
-        {
-            public static class Image
-            {
-                public const string Png = "image/png";
-
-                public const string Jpeg = "image/jpeg";
-            }
-
-            public static class Text
-            {
-                public const string Xml = "text/xml";
-            }
-        }
-
-        public static readonly string LocalFileScheme = "file:///";
-
-        public static readonly string MBTilesScheme = "mbtiles:///";
-
         public static string TileFormatToContentType(string format)
         {
             switch (format)
@@ -47,11 +24,26 @@ namespace TileMapService
             }
         }
 
+        public static List<Models.Layer> SourcesToLayers(IList<TileSourceConfiguration> sources)
+        {
+            return sources
+               .Select(c => new Models.Layer
+               {
+                   Identifier = c.Id,
+                   Title = c.Title,
+                   ContentType = c.ContentType,
+                   Format = c.Format,
+                   MinZoom = c.MinZoom.Value,
+                   MaxZoom = c.MaxZoom.Value,
+               })
+               .ToList();
+        }
+
         /// <summary>
         /// Saves <paramref name="xml"/> document with header to byte array using UTF-8 encoding.
         /// </summary>
-        /// <param name="xml">XML Document</param>
-        /// <returns></returns>
+        /// <param name="xml">XML Document.</param>
+        /// <returns>Contents of XML document.</returns>
         public static byte[] ToUTF8ByteArray(this XmlDocument xml)
         {
             using (var ms = new MemoryStream())

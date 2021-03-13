@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TileMapService", "TileMapSe
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{BA9C4EF9-3990-46B6-9354-EA789EDF404A}"
 	ProjectSection(SolutionItems) = preProject
+		..\Docs\appsettings.md = ..\Docs\appsettings.md
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject

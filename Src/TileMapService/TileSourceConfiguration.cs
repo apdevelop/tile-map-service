@@ -8,13 +8,25 @@ namespace TileMapService
     public class TileSourceConfiguration
     {
         /// <summary>
+        /// Type of tile source, "file" or "mbtiles".
+        /// </summary>
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonIgnore]
+        public const string TypeLocalFiles = "file";
+
+        [JsonIgnore]
+        public const string TypeMBTiles = "mbtiles";
+
+        /// <summary>
         /// String identifier of tile source (case-sensitive).
         /// </summary>
         [JsonPropertyName("id")] // TODO: ! JsonPropertyName("...") actually ignored
         public string Id { get; set; }
 
         /// <summary>
-        /// Name of tiles format (jpg, png).
+        /// Name of tiles image format (png, jpg).
         /// </summary>
         [JsonPropertyName("format")]
         public string Format { get; set; }
@@ -26,7 +38,7 @@ namespace TileMapService
         public string Title { get; set; }
 
         /// <summary>
-        /// Location of tiles in URL-like format.
+        /// Location of tiles (path template for "file", full path for "mbtiles").
         /// </summary>
         [JsonPropertyName("location")]
         public string Location { get; set; }
@@ -40,10 +52,10 @@ namespace TileMapService
         [JsonIgnore]
         public string ContentType { get; set; }
 
-        [JsonIgnore] // TODO: JsonPropertyName("minzoom")
+        [JsonPropertyName("minzoom")]
         public int? MinZoom { get; set; }
 
-        [JsonIgnore] // TODO: JsonPropertyName("maxzoom")
+        [JsonPropertyName("maxzoom")]
         public int? MaxZoom { get; set; }
 
         // TODO: bounds, center, attribution,.. (MBTiles metadata as example).

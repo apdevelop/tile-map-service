@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
+using System.Collections.Generic;
 
 namespace TileMapService.MBTiles
 {
     /// <summary>
-    /// Repository for MBTiles 1.3 (SQLite) database access (in read only mode).
+    /// Repository for MBTiles database access (in read only mode).
     /// </summary>
     /// <remarks>
     /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
@@ -41,23 +39,22 @@ namespace TileMapService.MBTiles
         /// <summary>
         /// Initializes a new instance of the <see cref="Repository"/> class.
         /// </summary>
-        /// <param name="connectionString">Connection string for SQLite database.</param>
-        public Repository(string connectionString)
+        /// <param name="path">Full path to MBTiles database file.</param>
+        public Repository(string path)
         {
-            this.connectionString = connectionString;
+            this.connectionString = CreateSqliteConnectionString(path);
         }
 
         /// <summary>
-        /// Asynchronously reads tile image contents with given coordinates from source.
+        /// Reads tile image contents with given coordinates from database.
         /// </summary>
         /// <param name="tileColumn">Tile X coordinate (column).</param>
         /// <param name="tileRow">Tile Y coordinate (row), Y axis goes up from the bottom (TMS scheme).</param>
         /// <param name="zoomLevel">Tile Z coordinate (zoom level).</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task<byte[]> ReadTileDataAsync(int tileColumn, int tileRow, int zoomLevel)
+        /// <seealso href="https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/async">Async Limitations</seealso>
+        /// <returns>Tile image contents.</returns>
+        public byte[] ReadTileData(int tileColumn, int tileRow, int zoomLevel)
         {
-            byte[] result = null;
-
             var commandText = $"SELECT {ColumnTileData} FROM {TableTiles} WHERE (({ColumnZoomLevel} = @zoom_level) AND ({ColumnTileColumn} = @tile_column) AND ({ColumnTileRow} = @tile_row))";
             using (var connection = new SqliteConnection(this.connectionString))
             {
@@ -70,40 +67,41 @@ namespace TileMapService.MBTiles
                         new SqliteParameter("@zoom_level", zoomLevel),
                     });
 
-                    await connection.OpenAsync().ConfigureAwait(false);
-                    using (var dr = await command.ExecuteReaderAsync().ConfigureAwait(false)) // TODO: fine tune with CommandBehavior ?
+                    connection.Open();
+                    using (var dr = command.ExecuteReader())
                     {
-                        if (await dr.ReadAsync().ConfigureAwait(false))
+                        byte[] result = null;
+
+                        if (dr.Read())
                         {
                             result = (byte[])dr[0];
                         }
 
                         dr.Close();
+
+                        return result;
                     }
                 }
-
-                connection.Close();
             }
-
-            return result;
         }
 
         /// <summary>
-        /// Asynchronously reads all metadata key/value items.
+        /// Reads all metadata key/value items from database.
         /// </summary>
         /// <returns>Metadata records.</returns>
-        public async Task<MetadataItem[]> ReadMetadataAsync()
+        public MetadataItem[] ReadMetadata()
         {
-            var result = new List<MetadataItem>();
             using (var connection = new SqliteConnection(this.connectionString))
             {
                 var commandText = $"SELECT {ColumnMetadataName}, {ColumnMetadataValue} FROM {TableMetadata}";
                 using (var command = new SqliteCommand(commandText, connection))
                 {
-                    await connection.OpenAsync().ConfigureAwait(false);
-                    using (var dr = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    var result = new List<MetadataItem>();
+
+                    connection.Open();
+                    using (var dr = command.ExecuteReader())
                     {
-                        while (await dr.ReadAsync().ConfigureAwait(false))
+                        while (dr.Read())
                         {
                             result.Add(new MetadataItem
                             {
@@ -112,14 +110,27 @@ namespace TileMapService.MBTiles
                             });
                         }
 
-                        await dr.CloseAsync().ConfigureAwait(false);
+                        dr.Close();
                     }
 
-                    await connection.CloseAsync().ConfigureAwait(false);
+                    return result.ToArray();
                 }
             }
+        }
 
-            return result.ToArray();
+        /// <summary>
+        /// Creates connection string for MBTiles database.
+        /// </summary>
+        /// <param name="source">Full path to MBTiles database file.</param>
+        /// <returns>Connection string.</returns>
+        private static string CreateSqliteConnectionString(string path)
+        {
+            return new SqliteConnectionStringBuilder
+            {
+                DataSource = path,
+                Mode = SqliteOpenMode.ReadOnly,
+                Cache = SqliteCacheMode.Shared,
+            }.ToString();
         }
     }
 }

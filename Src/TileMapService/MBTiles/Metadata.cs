@@ -10,14 +10,32 @@ namespace TileMapService.MBTiles
     /// </summary>
     class Metadata
     {
-        private readonly IEnumerable<MetadataItem> metadata;
+        private readonly List<MetadataItem> metadataItems;
 
         public Metadata(IEnumerable<MetadataItem> metadata)
         {
-            this.metadata = metadata;
+            this.metadataItems = metadata.ToList();
 
             this.Name = GetItem(MetadataItem.KeyName)?.Value;
             this.Format = GetItem(MetadataItem.KeyFormat)?.Value;
+
+            var bounds = GetItem(MetadataItem.KeyBounds);
+            if (bounds != null)
+            {
+                if (!String.IsNullOrEmpty(bounds.Value))
+                {
+                    this.Bounds = Models.Bounds.FromMBTilesMetadataString(bounds.Value);
+                }
+            }
+
+            var center = GetItem(MetadataItem.KeyCenter);
+            if (center != null)
+            {
+                if (!String.IsNullOrEmpty(center.Value))
+                {
+                    this.Center = Models.GeographicalPointWithZoom.FromMBTilesMetadataString(center.Value);
+                }
+            }
 
             var minzoom = GetItem(MetadataItem.KeyMinZoom);
             if (minzoom != null)
@@ -41,14 +59,16 @@ namespace TileMapService.MBTiles
             this.Description = GetItem(MetadataItem.KeyDescription)?.Value;
             this.Type = GetItem(MetadataItem.KeyType)?.Value;
 
-            // TODO: read all metadata values, use for capabilities document
+            // TODO: version, json
         }
-
-        // TODO: bounds, center, version, json
 
         public string Name { get; private set; }
 
         public string Format { get; private set; }
+
+        public Models.Bounds Bounds { get; private set; }
+
+        public Models.GeographicalPointWithZoom Center { get; private set; }
 
         public int? MinZoom { get; private set; }
 
@@ -62,7 +82,7 @@ namespace TileMapService.MBTiles
 
         private MetadataItem GetItem(string name)
         {
-            return this.metadata.FirstOrDefault(i => i.Name == name);
+            return this.metadataItems.FirstOrDefault(i => i.Name == name);
         }
     }
 }

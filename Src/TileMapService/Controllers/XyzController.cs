@@ -19,54 +19,75 @@ namespace TileMapService.Controllers
 
         /// <summary>
         /// Get tile from tileset with specified coordinates.
+        /// Url template: xyz/{tileset}/?x={x}&y={y}&z={z}
         /// </summary>
-        /// <param name="tileset">Tileset (source) name.</param>
+        /// <param name="id">Tileset identifier.</param>
         /// <param name="x">Tile X coordinate (column).</param>
         /// <param name="y">Tile Y coordinate (row), Y axis goes down from the top.</param>
         /// <param name="z">Tile Z coordinate (zoom level).</param>
         /// <returns>Response with tile contents.</returns>
-        [HttpGet("{tileset}")]
-        public async Task<IActionResult> GetTileWithUrlQueryParametersAsync(string tileset, int x, int y, int z)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetTileWithUrlQueryParametersAsync(string id, int x, int y, int z)
         {
-            if (String.IsNullOrEmpty(tileset))
+            if (String.IsNullOrEmpty(id))
             {
                 return BadRequest();
             }
 
-            return await this.ReadTileAsync(tileset, x, y, z);
+            return await this.ReadTileAsync(id, x, y, z);
         }
 
         /// <summary>
         /// Get tile from tileset with specified coordinates.
+        /// Url template: xyz/{tileset}/{z}/{x}/{y}.{extension}
         /// </summary>
-        /// <param name="tileset">Tileset name</param>
-        /// <param name="x">Tile X coordinate (column)</param>
-        /// <param name="y">Tile Y coordinate (row), Y axis goes down from the top</param>
-        /// <param name="z">Tile Z coordinate (zoom level)</param>
+        /// <param name="id">Tileset identifier.</param>
+        /// <param name="x">Tile X coordinate (column).</param>
+        /// <param name="y">Tile Y coordinate (row), Y axis goes down from the top.</param>
+        /// <param name="z">Tile Z coordinate (zoom level).</param>
         /// <param name="extension">File extension.</param>
         /// <returns>Response with tile contents.</returns>
-        [HttpGet("{tileset}/{z}/{x}/{y}.{extension}")]
-        public async Task<IActionResult> GetTileWithUrlPathAsync(string tileset, int x, int y, int z, string extension)
+        [HttpGet("{id}/{z}/{x}/{y}.{extension}")]
+        public async Task<IActionResult> GetTileWithUrlPathAsync(string id, int x, int y, int z, string extension)
         {
-            if (String.IsNullOrEmpty(tileset) || String.IsNullOrEmpty(extension))
+            if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(extension))
             {
                 return BadRequest();
             }
 
             // TODO: check extension == tileset.Configuration.Format
-            return await this.ReadTileAsync(tileset, x, y, z);
+            return await this.ReadTileAsync(id, x, y, z);
         }
 
-        private async Task<IActionResult> ReadTileAsync(string tileset, int x, int y, int z)
+        /// <summary>
+        /// Get tile from tileset with specified coordinates.
+        /// Url template: xyz/{tileset}/{z}/{x}/{y}
+        /// </summary>
+        /// <param name="id">Tileset identifier.</param>
+        /// <param name="x">Tile X coordinate (column).</param>
+        /// <param name="y">Tile Y coordinate (row), Y axis goes down from the top.</param>
+        /// <param name="z">Tile Z coordinate (zoom level).</param>
+        /// <returns>Response with tile contents.</returns>
+        [HttpGet("{tileset}/{z}/{x}/{y}")]
+        public async Task<IActionResult> GetTileWithUrlPathAsync(string id, int x, int y, int z)
         {
-            if (String.IsNullOrEmpty(tileset))
+            if (String.IsNullOrEmpty(id))
             {
                 return BadRequest();
             }
 
-            if (this.tileSourceFabric.Contains(tileset))
+            return await this.ReadTileAsync(id, x, y, z);
+        }
+
+        private async Task<IActionResult> ReadTileAsync(string id, int x, int y, int z)
+        {
+            if (String.IsNullOrEmpty(id))
             {
-                var tileSource = this.tileSourceFabric.Get(tileset);
+                return BadRequest();
+            }
+            else if (this.tileSourceFabric.Contains(id))
+            {
+                var tileSource = this.tileSourceFabric.Get(id);
                 var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z);
                 if (data != null)
                 {
@@ -79,7 +100,7 @@ namespace TileMapService.Controllers
             }
             else
             {
-                return NotFound($"Specified tileset '{tileset}' not found");
+                return NotFound($"Specified tileset '{id}' not found");
             }
         }
     }

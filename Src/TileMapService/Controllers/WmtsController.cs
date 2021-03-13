@@ -59,10 +59,11 @@ namespace TileMapService.Controllers
 
         private IActionResult ProcessGetCapabilitiesRequest()
         {
-            var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts", this.tileSourceFabric)
+            var layers = Utils.SourcesToLayers(this.tileSourceFabric.Sources);
+            var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts", layers)
                 .GetCapabilities(); // TODO: fix base URL
 
-            return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
+            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
 
         private async Task<IActionResult> ProcessGetTileRequestAsync(string tileset, int x, int y, int z)

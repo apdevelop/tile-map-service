@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace TileMapService.Controllers
@@ -21,27 +22,31 @@ namespace TileMapService.Controllers
         public IActionResult GetCapabilitiesServices()
         {
             // TODO: services/root.xml
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSourceFabric).GetServices();
+            var layers = Utils.SourcesToLayers(this.tileSourceFabric.Sources);
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetServices();
 
-            return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
+            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0")]
         public IActionResult GetCapabilitiesTileMaps()
         {
             // TODO: services/tilemapservice.xml
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSourceFabric).GetTileMaps();
+            var layers = Utils.SourcesToLayers(this.tileSourceFabric.Sources);
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileMaps();
 
-            return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
+            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0/{tileset}")]
         public IActionResult GetCapabilitiesTileSets(string tileset)
         {
             // TODO: services/basemap.xml
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, this.tileSourceFabric).GetTileSets(tileset);
+            var layers = Utils.SourcesToLayers(this.tileSourceFabric.Sources);
+            var layer = layers.SingleOrDefault(l => l.Identifier == tileset);
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileSets(layer);
 
-            return File(xmlDoc.ToUTF8ByteArray(), Utils.MediaTypeNames.Text.Xml);
+            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
 
         /// <summary>

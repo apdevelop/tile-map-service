@@ -1,23 +1,57 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Xml;
 
 namespace TileMapService.Tms
 {
+    /// <summary>
+    /// Contains methods for creating XML documents, describing TMS resources.
+    /// </summary>
+    /// <see href="https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification">Tile Map Service Specification</see>
     class CapabilitiesDocumentBuilder
     {
         private readonly string baseUrl;
 
-        private readonly ITileSourceFabric tileSourceFabric;
+        private readonly List<Models.Layer> layers;
+
+        #region Constants
 
         private const string TileMapServiceVersion = "1.0.0";
 
-        private const string EPSG3857 = "EPSG:3857";
+        private const string EPSG4326 = "EPSG:4326";
 
-        public CapabilitiesDocumentBuilder(string baseUrl, ITileSourceFabric tileSourceFabric)
+        /// <summary>
+        /// WGS84 / Simple Mercator - Spherical Mercator (unofficial deprecated OSGEO / Tile Map Service) 
+        /// https://epsg.io/41001
+        /// </summary>
+        private const string OSGEO41001 = "OSGEO:41001";
+
+        private const string ProfileNone = "none";
+
+        /// <summary>
+        /// EPSG:4326
+        /// </summary>
+        private const string ProfileGlobalGeodetic = "global-geodetic";
+
+        /// <summary>
+        /// OSGEO:41001
+        /// </summary>
+        private const string ProfileGlobalMercator = "global-mercator";
+
+        private const string ProfileLocal = "local";
+
+        private const int TileWidth = 256; // TODO: other resolutions
+
+        private const int TileHeight = 256;
+
+        #endregion
+
+        public CapabilitiesDocumentBuilder(string baseUrl, IList<Models.Layer> layers)
         {
             this.baseUrl = baseUrl;
-            this.tileSourceFabric = tileSourceFabric;
+            this.layers = layers.ToList();
         }
 
         /// <summary>
@@ -62,7 +96,7 @@ namespace TileMapService.Tms
             var tileMaps = doc.CreateElement("TileMaps");
             root.AppendChild(tileMaps);
 
-            foreach (var tileSource in this.tileSourceFabric.Sources)
+            foreach (var tileSource in this.layers)
             {
                 var tileMap = doc.CreateElement("TileMap");
 
@@ -70,17 +104,17 @@ namespace TileMapService.Tms
                 titleAttribute.Value = tileSource.Title;
                 tileMap.Attributes.Append(titleAttribute);
 
-                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tileSource.Id}";
+                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tileSource.Identifier}";
                 var hrefAttribute = doc.CreateAttribute("href");
                 hrefAttribute.Value = href;
                 tileMap.Attributes.Append(hrefAttribute);
 
                 var profileAttribute = doc.CreateAttribute("profile");
-                profileAttribute.Value = "global-mercator";
+                profileAttribute.Value = ProfileGlobalMercator;
                 tileMap.Attributes.Append(profileAttribute);
 
                 var srsAttribute = doc.CreateAttribute("srs");
-                srsAttribute.Value = EPSG3857;
+                srsAttribute.Value = OSGEO41001;
                 tileMap.Attributes.Append(srsAttribute);
 
                 tileMaps.AppendChild(tileMap);
@@ -89,10 +123,8 @@ namespace TileMapService.Tms
             return doc;
         }
 
-        public XmlDocument GetTileSets(string id)
+        public XmlDocument GetTileSets(Models.Layer layer)
         {
-            var tileSource = this.tileSourceFabric.Get(id);
-
             var doc = new XmlDocument();
             var root = doc.CreateElement(String.Empty, "TileMap", String.Empty);
             doc.AppendChild(root);
@@ -107,14 +139,13 @@ namespace TileMapService.Tms
             root.Attributes.Append(tilemapserviceAttribute);
 
             var titleNode = doc.CreateElement("Title");
-            titleNode.AppendChild(doc.CreateTextNode(tileSource.Configuration.Title));
+            titleNode.AppendChild(doc.CreateTextNode(layer.Title));
             root.AppendChild(titleNode);
 
             var srs = doc.CreateElement("SRS");
-            srs.AppendChild(doc.CreateTextNode(EPSG3857));
+            srs.AppendChild(doc.CreateTextNode(OSGEO41001));
             root.AppendChild(srs);
 
-            const int TileSize = 256; // TODO: other resolutions
             const double maxy = 20037508.342789;
             const double maxx = 20037508.342789;
             const double miny = -20037508.342789;
@@ -155,19 +186,19 @@ namespace TileMapService.Tms
             var tileFormat = doc.CreateElement("TileFormat");
 
             var extensionAttribute = doc.CreateAttribute("extension");
-            extensionAttribute.Value = tileSource.Configuration.Format;
+            extensionAttribute.Value = layer.Format; // TODO: jpg/jpeg ?
             tileFormat.Attributes.Append(extensionAttribute);
 
             var mimetypeAttribute = doc.CreateAttribute("mime-type");
-            mimetypeAttribute.Value = tileSource.Configuration.ContentType;
+            mimetypeAttribute.Value = layer.ContentType;
             tileFormat.Attributes.Append(mimetypeAttribute);
 
             var heightAttribute = doc.CreateAttribute("height");
-            heightAttribute.Value = TileSize.ToString(CultureInfo.InvariantCulture);
+            heightAttribute.Value = TileHeight.ToString(CultureInfo.InvariantCulture);
             tileFormat.Attributes.Append(heightAttribute);
 
             var widthAttribute = doc.CreateAttribute("width");
-            widthAttribute.Value = TileSize.ToString(CultureInfo.InvariantCulture);
+            widthAttribute.Value = TileWidth.ToString(CultureInfo.InvariantCulture);
             tileFormat.Attributes.Append(widthAttribute);
 
             root.AppendChild(tileFormat);
@@ -175,11 +206,11 @@ namespace TileMapService.Tms
             var tileSets = doc.CreateElement("TileSets");
             root.AppendChild(tileSets);
 
-            for (var level = tileSource.Configuration.MinZoom.Value; level <= tileSource.Configuration.MaxZoom.Value; level++)
+            for (var level = layer.MinZoom; level <= layer.MaxZoom; level++)
             {
                 var tileSet = doc.CreateElement("TileSet");
 
-                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tileSource.Configuration.Id}/{id}/{level}";
+                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{layer.Identifier}/{level}";
                 var hrefAttribute = doc.CreateAttribute("href");
                 hrefAttribute.Value = href;
                 tileSet.Attributes.Append(hrefAttribute);
@@ -188,7 +219,9 @@ namespace TileMapService.Tms
                 orderAttribute.Value = $"{level}";
                 tileSet.Attributes.Append(orderAttribute);
 
-                var unitsperpixel = (maxx - minx) / (((double)TileSize) * Math.Pow(2, level));
+                // TODO: ? units-per-pixel = 78271.516 / 2^n 
+                // TODO: ? an initial zoom level that consists of four 256x256 pixel tiles covering the whole earth
+                var unitsperpixel = (maxx - minx) / (((double)TileWidth) * Math.Pow(2, level));
                 var unitsperpixelAttribute = doc.CreateAttribute("units-per-pixel");
                 unitsperpixelAttribute.Value = unitsperpixel.ToString(CultureInfo.InvariantCulture);
                 tileSet.Attributes.Append(unitsperpixelAttribute);

@@ -1,5 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace TileMapService.TileSources
@@ -11,7 +10,7 @@ namespace TileMapService.TileSources
     {
         private TileSourceConfiguration configuration;
 
-        private readonly MBTiles.Repository repository;
+        private MBTiles.Repository repository;
 
         public MBTilesTileSource(TileSourceConfiguration configuration)
         {
@@ -26,19 +25,19 @@ namespace TileMapService.TileSources
             }
 
             this.configuration = configuration; // May be changed later in InitAsync
-            this.repository = new MBTiles.Repository(CreateSqliteConnectionString(configuration.Location));
         }
 
         #region ITileSource implementation
 
-        async Task ITileSource.InitAsync()
+        Task ITileSource.InitAsync()
         {
             // Configuration values priority:
             // 1. Default values for MBTiles.
             // 2. Actual values (MBTiles metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            var metadata = new MBTiles.Metadata(await this.repository.ReadMetadataAsync());
+            this.repository = new MBTiles.Repository(configuration.Location);
+            var metadata = new MBTiles.Metadata(this.repository.ReadMetadata());
 
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
                     (!String.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Id) :
@@ -48,6 +47,7 @@ namespace TileMapService.TileSources
                     (!String.IsNullOrEmpty(metadata.Format) ? metadata.Format : "png") :
                     this.configuration.Format;
 
+            // Re-create configuration
             this.configuration = new TileSourceConfiguration
             {
                 Id = this.configuration.Id,
@@ -56,14 +56,16 @@ namespace TileMapService.TileSources
                 Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
                 Location = this.configuration.Location,
                 ContentType = Utils.TileFormatToContentType(format),
-                MinZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? 0,
-                MaxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? 20,
+                MinZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? 0, // TODO: ? Check actual SELECT MIN/MAX(zoom_level) ?
+                MaxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? 24,
             };
+
+            return Task.CompletedTask;
         }
 
-        async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
+        Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            return await this.repository.ReadTileDataAsync(x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z);
+            return Task.FromResult(this.repository.ReadTileData(x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z));
         }
 
         TileSourceConfiguration ITileSource.Configuration
@@ -75,27 +77,5 @@ namespace TileMapService.TileSources
         }
 
         #endregion
-
-        /// <summary>
-        /// Creates connection string for MBTiles database.
-        /// </summary>
-        /// <param name="source">Full path to MBTiles database file.</param>
-        /// <returns>Connection string.</returns>
-        private static string CreateSqliteConnectionString(string source)
-        {
-            return new SqliteConnectionStringBuilder
-            {
-                DataSource = GetLocalFilePath(source),
-                Mode = SqliteOpenMode.ReadOnly,
-            }.ToString();
-        }
-
-        private static string GetLocalFilePath(string source)
-        {
-            var uriString = source.Replace(Utils.MBTilesScheme, Utils.LocalFileScheme, StringComparison.Ordinal);
-            var uri = new Uri(uriString);
-
-            return uri.LocalPath;
-        }
     }
 }
