@@ -36,7 +36,7 @@ namespace TileMapService.TileSources
             // 2. Actual values (MBTiles metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            this.repository = new MBTiles.Repository(configuration.Location);
+            this.repository = new MBTiles.Repository(configuration.Location, false);
             var metadata = new MBTiles.Metadata(this.repository.ReadMetadata());
 
             var title = String.IsNullOrEmpty(this.configuration.Title) ?

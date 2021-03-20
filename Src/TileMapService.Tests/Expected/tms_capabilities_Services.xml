@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Services>
+	<TileMapService version="1.0.0" href="http://localhost:5002/tms/1.0.0/"/>
+</Services>

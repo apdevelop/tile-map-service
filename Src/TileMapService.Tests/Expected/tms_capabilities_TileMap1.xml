@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TileMap version="1.0.0" tilemapservice="http://localhost:5002/tms/1.0.0/">
+	<Title>Tile Source 1</Title>
+	<SRS>EPSG:3857</SRS>
+	<BoundingBox minx="-20037508.342789" miny="-20037508.342789" maxx="20037508.342789" maxy="20037508.342789"/>
+	<Origin x="-20037508.342789" y="-20037508.342789"/>
+	<TileFormat width="256" height="256" mime-type="image/png" extension="png"/>
+	<TileSets>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/0" order="0" units-per-pixel="156543.03392803908"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/1" order="1" units-per-pixel="78271.51696401954"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/2" order="2" units-per-pixel="39135.75848200977"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/3" order="3" units-per-pixel="19567.879241004885"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/4" order="4" units-per-pixel="9783.939620502442"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/5" order="5" units-per-pixel="4891.969810251221"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/6" order="6" units-per-pixel="2445.9849051256106"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/7" order="7" units-per-pixel="1222.9924525628053"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/8" order="8" units-per-pixel="611.4962262814026"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/9" order="9" units-per-pixel="305.7481131407013"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/10" order="10" units-per-pixel="152.87405657035066"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/11" order="11" units-per-pixel="76.43702828517533"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/12" order="12" units-per-pixel="38.218514142587665"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/13" order="13" units-per-pixel="19.109257071293833"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/14" order="14" units-per-pixel="9.554628535646916"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/15" order="15" units-per-pixel="4.777314267823458"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/16" order="16" units-per-pixel="2.388657133911729"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/17" order="17" units-per-pixel="1.1943285669558645"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source1/18" order="18" units-per-pixel="0.5971642834779323"/>
+	</TileSets>
+</TileMap>

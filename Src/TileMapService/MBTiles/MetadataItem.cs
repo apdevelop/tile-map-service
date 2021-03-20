@@ -6,7 +6,7 @@
     /// <remarks>
     /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md#metadata
     /// </remarks>
-    class MetadataItem
+    public class MetadataItem
     {
         /// <summary>
         /// Name (key) of item.
@@ -17,6 +17,17 @@
         /// Value of item.
         /// </summary>
         public string Value { get; set; }
+
+        public MetadataItem()
+        { 
+        
+        }
+
+        public MetadataItem(string name, string value)
+        {
+            this.Name = name;
+            this.Value = value;
+        }
 
         public override string ToString()
         {

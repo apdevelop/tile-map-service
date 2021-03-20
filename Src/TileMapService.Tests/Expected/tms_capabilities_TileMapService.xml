@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TileMapService version="1.0.0">
+	<TileMaps>
+		<TileMap title="Tile Source 1" href="http://localhost:5002/tms/1.0.0/source1" profile="global-mercator" srs="EPSG:3857"/>
+		<TileMap title="Tile Source 2" href="http://localhost:5002/tms/1.0.0/source2" profile="global-mercator" srs="EPSG:3857"/>
+		<TileMap title="Tile Source 3" href="http://localhost:5002/tms/1.0.0/source3" profile="global-mercator" srs="EPSG:3857"/>
+	</TileMaps>
+</TileMapService>

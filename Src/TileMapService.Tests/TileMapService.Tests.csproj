@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Expected\tms_capabilities_Services.xml" />
+    <None Remove="Expected\tms_capabilities_TileMap1.xml" />
+    <None Remove="Expected\tms_capabilities_TileMap2.xml" />
+    <None Remove="Expected\tms_capabilities_TileMapService.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Expected\tms_capabilities_TileMap2.xml" />
+    <EmbeddedResource Include="Expected\tms_capabilities_TileMap1.xml" />
+    <EmbeddedResource Include="Expected\tms_capabilities_TileMapService.xml" />
+    <EmbeddedResource Include="Expected\tms_capabilities_Services.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.13.1" />
+    <PackageReference Include="XMLDiffPatch" Version="1.0.8.28" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TileMapService\TileMapService.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -20,14 +20,6 @@ namespace TileMapService.Tms
 
         private const string TileMapServiceVersion = "1.0.0";
 
-        private const string EPSG4326 = "EPSG:4326";
-
-        /// <summary>
-        /// WGS84 / Simple Mercator - Spherical Mercator (unofficial deprecated OSGEO / Tile Map Service) 
-        /// https://epsg.io/41001
-        /// </summary>
-        private const string OSGEO41001 = "OSGEO:41001";
-
         private const string ProfileNone = "none";
 
         /// <summary>
@@ -45,6 +37,46 @@ namespace TileMapService.Tms
         private const int TileWidth = 256; // TODO: other resolutions
 
         private const int TileHeight = 256;
+
+        #endregion
+
+        #region SRS constants
+
+        /// <summary>
+        /// EPSG:3857
+        /// </summary>
+        /// <remarks>
+        /// WGS 84 / Pseudo-Mercator -- Spherical Mercator, Google Maps, OpenStreetMap, Bing, ArcGIS, ESRI
+        /// https://epsg.io/3857
+        /// </remarks>
+        private const string EPSG3857 = "EPSG:3857";
+
+        /// <summary>
+        /// EPSG:4326
+        /// </summary>
+        /// <remarks>
+        /// WGS 84 -- WGS84 - World Geodetic System 1984, used in GPS
+        /// https://epsg.io/4326
+        /// </remarks>
+        private const string EPSG4326 = "EPSG:4326";
+
+        /// <summary>
+        /// EPSG:900913
+        /// </summary>
+        /// <remarks>
+        /// Google Maps Global Mercator -- Spherical Mercator (unofficial - used in open source projects / OSGEO)
+        /// https://epsg.io/900913
+        /// </remarks>
+        private const string EPSG900913 = "EPSG:900913";
+
+        /// <summary>
+        /// EPSG:41001
+        /// </summary>
+        /// <remarks>
+        /// WGS84 / Simple Mercator - Spherical Mercator (unofficial deprecated OSGEO / Tile Map Service) 
+        /// https://epsg.io/41001
+        /// </remarks>
+        private const string OSGEO41001 = "OSGEO:41001";
 
         #endregion
 
@@ -67,9 +99,10 @@ namespace TileMapService.Tms
             var tileMapService = doc.CreateElement("TileMapService");
             root.AppendChild(tileMapService);
 
-            var titleAttribute = doc.CreateAttribute("title");
-            titleAttribute.Value = "Tile Map Service";
-            tileMapService.Attributes.Append(titleAttribute);
+            // TODO: title from configuration
+            ////var titleAttribute = doc.CreateAttribute("title");
+            ////titleAttribute.Value = "Tile Map Service";
+            ////tileMapService.Attributes.Append(titleAttribute);
 
             var versionAttribute = doc.CreateAttribute("version");
             versionAttribute.Value = TileMapServiceVersion;
@@ -104,6 +137,7 @@ namespace TileMapService.Tms
                 titleAttribute.Value = tileSource.Title;
                 tileMap.Attributes.Append(titleAttribute);
 
+                // TODO one tile source to several tile grids (test@WGS84, test@GoogleMapsCompatible and so on)
                 var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tileSource.Identifier}";
                 var hrefAttribute = doc.CreateAttribute("href");
                 hrefAttribute.Value = href;
@@ -114,7 +148,7 @@ namespace TileMapService.Tms
                 tileMap.Attributes.Append(profileAttribute);
 
                 var srsAttribute = doc.CreateAttribute("srs");
-                srsAttribute.Value = OSGEO41001;
+                srsAttribute.Value = EPSG3857;
                 tileMap.Attributes.Append(srsAttribute);
 
                 tileMaps.AppendChild(tileMap);
@@ -143,42 +177,43 @@ namespace TileMapService.Tms
             root.AppendChild(titleNode);
 
             var srs = doc.CreateElement("SRS");
-            srs.AppendChild(doc.CreateTextNode(OSGEO41001));
+            srs.AppendChild(doc.CreateTextNode(EPSG3857));
             root.AppendChild(srs);
 
-            const double maxy = 20037508.342789;
-            const double maxx = 20037508.342789;
-            const double miny = -20037508.342789;
-            const double minx = -20037508.342789;
+            // GoogleMapsCompatible tile grid
+            const double MinX = -20037508.342789;
+            const double MinY = -20037508.342789;
+            const double MaxX = 20037508.342789;
+            const double MaxY = 20037508.342789;
 
             var boundingBox = doc.CreateElement("BoundingBox");
 
-            var maxyAttribute = doc.CreateAttribute("maxy");
-            maxyAttribute.Value = maxy.ToString("F6", CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(maxyAttribute);
-
-            var maxxAttribute = doc.CreateAttribute("maxx");
-            maxxAttribute.Value = maxx.ToString("F6", CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(maxxAttribute);
+            var minxAttribute = doc.CreateAttribute("minx");
+            minxAttribute.Value = MinX.ToString("F6", CultureInfo.InvariantCulture);
+            boundingBox.Attributes.Append(minxAttribute);
 
             var minyAttribute = doc.CreateAttribute("miny");
-            minyAttribute.Value = miny.ToString("F6", CultureInfo.InvariantCulture);
+            minyAttribute.Value = MinY.ToString("F6", CultureInfo.InvariantCulture);
             boundingBox.Attributes.Append(minyAttribute);
 
-            var minxAttribute = doc.CreateAttribute("minx");
-            minxAttribute.Value = minx.ToString("F6", CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(minxAttribute);
+            var maxxAttribute = doc.CreateAttribute("maxx");
+            maxxAttribute.Value = MaxX.ToString("F6", CultureInfo.InvariantCulture);
+            boundingBox.Attributes.Append(maxxAttribute);
+
+            var maxyAttribute = doc.CreateAttribute("maxy");
+            maxyAttribute.Value = MaxY.ToString("F6", CultureInfo.InvariantCulture);
+            boundingBox.Attributes.Append(maxyAttribute);
 
             root.AppendChild(boundingBox);
 
             var origin = doc.CreateElement("Origin");
 
             var yAttribute = doc.CreateAttribute("y");
-            yAttribute.Value = miny.ToString("F6", CultureInfo.InvariantCulture);
+            yAttribute.Value = MinY.ToString("F6", CultureInfo.InvariantCulture);
             origin.Attributes.Append(yAttribute);
 
             var xAttribute = doc.CreateAttribute("x");
-            xAttribute.Value = minx.ToString("F6", CultureInfo.InvariantCulture);
+            xAttribute.Value = MinX.ToString("F6", CultureInfo.InvariantCulture);
             origin.Attributes.Append(xAttribute);
 
             root.AppendChild(origin);
@@ -221,7 +256,7 @@ namespace TileMapService.Tms
 
                 // TODO: ? units-per-pixel = 78271.516 / 2^n 
                 // TODO: ? an initial zoom level that consists of four 256x256 pixel tiles covering the whole earth
-                var unitsperpixel = (maxx - minx) / (((double)TileWidth) * Math.Pow(2, level));
+                var unitsperpixel = (MaxX - MinX) / (((double)TileWidth) * Math.Pow(2, level));
                 var unitsperpixelAttribute = doc.CreateAttribute("units-per-pixel");
                 unitsperpixelAttribute.Value = unitsperpixel.ToString(CultureInfo.InvariantCulture);
                 tileSet.Attributes.Append(unitsperpixelAttribute);

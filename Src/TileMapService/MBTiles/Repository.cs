@@ -9,7 +9,7 @@ namespace TileMapService.MBTiles
     /// <remarks>
     /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
     /// </remarks>
-    class Repository
+    public class Repository
     {
         /// <summary>
         /// Connection string for SQLite database.
@@ -40,10 +40,18 @@ namespace TileMapService.MBTiles
         /// Initializes a new instance of the <see cref="Repository"/> class.
         /// </summary>
         /// <param name="path">Full path to MBTiles database file.</param>
-        public Repository(string path)
+        /// <param name="isFullAccess">Allows database modification if true.</param>
+        public Repository(string path, bool isFullAccess = false)
         {
-            this.connectionString = CreateSqliteConnectionString(path);
+            this.connectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = path,
+                Mode = isFullAccess ? SqliteOpenMode.ReadWriteCreate : SqliteOpenMode.ReadOnly,
+                Cache = SqliteCacheMode.Shared,
+            }.ToString();
         }
+
+        #region Read methods
 
         /// <summary>
         /// Reads tile image contents with given coordinates from database.
@@ -118,19 +126,53 @@ namespace TileMapService.MBTiles
             }
         }
 
-        /// <summary>
-        /// Creates connection string for MBTiles database.
-        /// </summary>
-        /// <param name="source">Full path to MBTiles database file.</param>
-        /// <returns>Connection string.</returns>
-        private static string CreateSqliteConnectionString(string path)
+        #endregion
+
+        #region Create / Update methods
+
+        public static Repository CreateEmptyDatabase(string path)
         {
-            return new SqliteConnectionStringBuilder
-            {
-                DataSource = path,
-                Mode = SqliteOpenMode.ReadOnly,
-                Cache = SqliteCacheMode.Shared,
-            }.ToString();
+            var repository = new Repository(path, true);
+
+            var createMetadataCommand = $"CREATE TABLE {TableMetadata} ({ColumnMetadataName} text, {ColumnMetadataValue} text);";
+            repository.ExecuteSqlQuery(createMetadataCommand);
+
+            var createTilesCommand = $"CREATE TABLE {TableTiles} ({ColumnZoomLevel} integer, {ColumnTileColumn} integer, {ColumnTileRow} integer, {ColumnTileData} blob);";
+            repository.ExecuteSqlQuery(createTilesCommand);
+
+            return repository;
         }
+
+        public void AddMetadataItem(MetadataItem item)
+        {
+            using (var connection = new SqliteConnection(this.connectionString))
+            {
+                var commandText = @$"INSERT INTO {TableMetadata} 
+                    ({ColumnMetadataName}, {ColumnMetadataValue}) 
+                    VALUES
+                    (@{ColumnMetadataName}, @{ColumnMetadataValue})";
+                using (var command = new SqliteCommand(commandText, connection))
+                {
+                    command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataName}", item.Name));
+                    command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataValue}", item.Value));
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void ExecuteSqlQuery(string commandText)
+        {
+            using (var connection = new SqliteConnection(this.connectionString))
+            {
+                using (var command = new SqliteCommand(commandText, connection))
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        #endregion
     }
 }
