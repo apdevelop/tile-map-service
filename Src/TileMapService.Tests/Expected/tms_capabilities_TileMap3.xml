@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TileMap version="1.0.0" tilemapservice="http://localhost:5002/tms/1.0.0/">
+	<Title>Tile Source 3</Title>
+	<SRS>EPSG:3857</SRS>
+	<BoundingBox minx="-20037508.342789" miny="-20037508.342789" maxx="20037508.342789" maxy="20037508.342789"/>
+	<Origin x="-20037508.342789" y="-20037508.342789"/>
+	<TileFormat width="256" height="256" mime-type="image/png" extension="png"/>
+	<TileSets>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source3/0" order="0" units-per-pixel="156543.03392803908"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source3/1" order="1" units-per-pixel="78271.51696401954"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source3/2" order="2" units-per-pixel="39135.75848200977"/>
+		<TileSet href="http://localhost:5002/tms/1.0.0/source3/3" order="3" units-per-pixel="19567.879241004885"/>
+	</TileSets>
+</TileMap>

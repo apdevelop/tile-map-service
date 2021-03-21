@@ -9,14 +9,18 @@
     <None Remove="Expected\tms_capabilities_Services.xml" />
     <None Remove="Expected\tms_capabilities_TileMap1.xml" />
     <None Remove="Expected\tms_capabilities_TileMap2.xml" />
+    <None Remove="Expected\tms_capabilities_TileMap3.xml" />
     <None Remove="Expected\tms_capabilities_TileMapService.xml" />
+    <None Remove="Expected\wmts_GetCapabilities.xml" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Expected\tms_capabilities_TileMap3.xml" />
     <EmbeddedResource Include="Expected\tms_capabilities_TileMap2.xml" />
     <EmbeddedResource Include="Expected\tms_capabilities_TileMap1.xml" />
     <EmbeddedResource Include="Expected\tms_capabilities_TileMapService.xml" />
     <EmbeddedResource Include="Expected\tms_capabilities_Services.xml" />
+    <EmbeddedResource Include="Expected\wmts_GetCapabilities.xml" />
   </ItemGroup>
 
   <ItemGroup>

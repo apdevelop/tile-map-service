@@ -1,6 +1,7 @@
 ﻿using Microsoft.XmlDiffPatch; // TODO: there is warning to use Microsoft.XmlDiffPatch in net5 project
 using NUnit.Framework;
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -34,7 +35,7 @@ namespace TileMapService.Tests
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_Services.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
 
-            Assert.IsTrue(CompareXml(expectedXml, actualXml));
+            CompareXml(expectedXml, actualXml);
         }
 
         public async Task GetTmsTileMapServiceAsync()
@@ -45,7 +46,7 @@ namespace TileMapService.Tests
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMapService.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
 
-            Assert.IsTrue(CompareXml(expectedXml, actualXml));
+            CompareXml(expectedXml, actualXml);
         }
 
         public async Task GetTmsTileMap1Async()
@@ -56,7 +57,7 @@ namespace TileMapService.Tests
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap1.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
 
-            Assert.IsTrue(CompareXml(expectedXml, actualXml));
+            CompareXml(expectedXml, actualXml);
         }
 
         public async Task GetTmsTileMap2Async()
@@ -67,12 +68,34 @@ namespace TileMapService.Tests
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap2.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
 
-            Assert.IsTrue(CompareXml(expectedXml, actualXml));
+            CompareXml(expectedXml, actualXml);
+        }
+
+        public async Task GetTmsTileMap3Async()
+        {
+            var r = await client.GetAsync("/tms/1.0.0/source3");
+            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+
+            var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap3.xml"));
+            var actualXml = await r.Content.ReadAsStringAsync();
+
+            CompareXml(expectedXml, actualXml);
+        }
+
+        public async Task GetWmtsCapabilitiesAsync()
+        {
+            var r = await client.GetAsync("/wmts?request=GetCapabilities");
+            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+
+            var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.wmts_GetCapabilities.xml"));
+            var actualXml = await r.Content.ReadAsStringAsync();
+
+            CompareXml(expectedXml, actualXml);
         }
 
         #region Utility methods
 
-        private static bool CompareXml(string xml1, string xml2)
+        private static void CompareXml(string xml1, string xml2)
         {
             var xmlDoc1 = new XmlDocument();
             xmlDoc1.LoadXml(xml1);
@@ -88,8 +111,10 @@ namespace TileMapService.Tests
                 {
                     using (var writer = XmlWriter.Create(sb))
                     {
-                        var xmldiff = new XmlDiff(XmlDiffOptions.IgnoreChildOrder | XmlDiffOptions.IgnoreWhitespace);
-                        return xmldiff.Compare(xmlReader1, xmlReader2, writer);
+                        var xmldiff = new XmlDiff(XmlDiffOptions.IgnoreChildOrder | XmlDiffOptions.IgnoreComments | XmlDiffOptions.IgnoreWhitespace);
+                        var result = xmldiff.Compare(xmlReader1, xmlReader2, writer);
+
+                        Assert.IsTrue(result);
                     }
                 }
             }

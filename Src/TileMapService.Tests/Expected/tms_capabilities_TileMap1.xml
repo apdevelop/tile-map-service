@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TileMap version="1.0.0" tilemapservice="http://localhost:5002/tms/1.0.0/">
-	<Title>Tile Source 1</Title>
+	<Title>World Countries</Title>
 	<SRS>EPSG:3857</SRS>
 	<BoundingBox minx="-20037508.342789" miny="-20037508.342789" maxx="20037508.342789" maxy="20037508.342789"/>
 	<Origin x="-20037508.342789" y="-20037508.342789"/>

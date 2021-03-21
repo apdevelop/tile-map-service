@@ -9,10 +9,10 @@ Basic implementation of tile server for .NET 5 platform. Provides access to rast
   * [MBTiles](https://github.com/mapbox/mbtiles-spec).
   * Local file system (each tile in separate file).
 * Supported protocols for serving tiles: 
-  * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)).
-  * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)).
-  * WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)).
-* Coordinate system: currently [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection) only.
+  * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)) [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z}).
+  * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)) [http://localhost:5000/tms](http://localhost:5000/tms).
+  * WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service))  [http://localhost:5000/wmts](http://localhost:5000/wmts?request=GetCapabilities).
+* Coordinate system / tile grid: currently [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection) only.
 * Formats: currently raster (PNG, JPEG) images only.
 * Configuration in JSON file.
 
@@ -60,4 +60,5 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 * [MBTiles Specification](https://github.com/mapbox/mbtiles-spec)
 * [Tile Map Service Specification](https://wiki.osgeo.org/index.php?title=Tile_Map_Service_Specification)
 * [OpenGIS Web Map Tile Service Implementation Standard](https://www.ogc.org/standards/wmts)
-* [Using TMS in Leaflet](http://leafletjs.com/examples/wms/wms.html)
+* [Using TMS in Leaflet](https://leafletjs.com/examples/wms/wms.html)
+* [QGIS as OGC Data Client](https://docs.qgis.org/2.18/en/docs/user_manual/working_with_ogc/ogc_client_support.html)

@@ -24,7 +24,7 @@ namespace TileMapService.TileSources
         {
             foreach (var tileSource in this.tileSources)
             {
-                await tileSource.Value.InitAsync(); // TODO: in parallel ?
+                await tileSource.Value.InitAsync(); // TODO: execute in parallel ?
             }
         }
 
