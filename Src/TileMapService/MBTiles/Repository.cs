@@ -4,9 +4,10 @@ using System.Collections.Generic;
 namespace TileMapService.MBTiles
 {
     /// <summary>
-    /// Repository for MBTiles database access (in read only mode).
+    /// Repository for MBTiles database access.
     /// </summary>
     /// <remarks>
+    /// Supports only Spherical Mercator tile grid and TMS tiling scheme (Y axis is going up).
     /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
     /// </remarks>
     public class Repository
@@ -141,6 +142,26 @@ namespace TileMapService.MBTiles
             repository.ExecuteSqlQuery(createTilesCommand);
 
             return repository;
+        }
+
+        public void AddTile(int tileColumn, int tileRow, int zoomLevel, byte[] tileData)
+        {
+            using (var connection = new SqliteConnection(this.connectionString))
+            {
+                var commandText = @$"INSERT INTO {TableTiles} 
+                    ({ColumnTileColumn}, {ColumnTileRow}, {ColumnZoomLevel}, {ColumnTileData}) 
+                    VALUES
+                    (@{ColumnTileColumn}, @{ColumnTileRow}, @{ColumnZoomLevel}, @{ColumnTileData})";
+                using (var command = new SqliteCommand(commandText, connection))
+                {
+                    command.Parameters.Add(new SqliteParameter($"@{ColumnTileColumn}", tileColumn));
+                    command.Parameters.Add(new SqliteParameter($"@{ColumnTileRow}", tileRow));
+                    command.Parameters.Add(new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel));
+                    command.Parameters.Add(new SqliteParameter($"@{ColumnTileData}", tileData));
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
         }
 
         public void AddMetadataItem(MetadataItem item)

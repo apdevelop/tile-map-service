@@ -1,7 +1,6 @@
 ﻿using Microsoft.XmlDiffPatch; // TODO: there is warning to use Microsoft.XmlDiffPatch in net5 project
 using NUnit.Framework;
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -91,6 +90,69 @@ namespace TileMapService.Tests
             var actualXml = await r.Content.ReadAsStringAsync();
 
             CompareXml(expectedXml, actualXml);
+        }
+
+        public async Task GetTileXyzAsync()
+        {
+            var expected000 = new TileDataStub(0, 0, 0);
+
+            var r1 = await client.GetAsync("/xyz/source1?x=0&y=0&z=0");
+            Assert.AreEqual(HttpStatusCode.OK, r1.StatusCode);
+            var actual1 = new TileDataStub(await r1.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual1);
+
+            var r2 = await client.GetAsync("/xyz/source2/0/0/0.jpg");
+            Assert.AreEqual(HttpStatusCode.OK, r2.StatusCode);
+            var actual2 = new TileDataStub(await r2.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual2);
+
+            var expected312 = new TileDataStub(3, 1, 2);
+            var r3 = await client.GetAsync("/xyz/source3/2/3/1.png");
+            Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
+            var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected312, actual3);
+        }
+
+        public async Task GetTileTmsAsync()
+        {
+            var expected000 = new TileDataStub(0, 0, 0);
+
+            var r1 = await client.GetAsync("/tms/1.0.0/source1/0/0/0.png");
+            Assert.AreEqual(HttpStatusCode.OK, r1.StatusCode);
+            var actual1 = new TileDataStub(await r1.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual1);
+
+            var r2 = await client.GetAsync("/tms/1.0.0/source2/0/0/0.jpg");
+            Assert.AreEqual(HttpStatusCode.OK, r2.StatusCode);
+            var actual2 = new TileDataStub(await r2.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual2);
+
+            var expected312 = new TileDataStub(3, 1, 2);
+            var r3 = await client.GetAsync("/tms/1.0.0/source3/2/3/2.png"); // TMS inverts Y axis
+            Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
+            var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected312, actual3);
+        }
+
+        public async Task GetTileWmtsAsync()
+        {
+            var expected000 = new TileDataStub(0, 0, 0);
+
+            var r1 = await client.GetAsync("/wmts?layer=source1&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=0&TileCol=0&TileRow=0");
+            Assert.AreEqual(HttpStatusCode.OK, r1.StatusCode);
+            var actual1 = new TileDataStub(await r1.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual1);
+
+            var r2 = await client.GetAsync("/wmts?layer=source2&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=0&TileCol=0&TileRow=0");
+            Assert.AreEqual(HttpStatusCode.OK, r2.StatusCode);
+            var actual2 = new TileDataStub(await r2.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual2);
+
+            var expected312 = new TileDataStub(3, 1, 2);
+            var r3 = await client.GetAsync("/wmts?layer=source3&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=2&TileCol=3&TileRow=1");
+            Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
+            var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected312, actual3);
         }
 
         #region Utility methods

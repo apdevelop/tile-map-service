@@ -9,6 +9,5 @@
 		<TileSet href="http://localhost:5002/tms/1.0.0/source3/0" order="0" units-per-pixel="156543.03392803908"/>
 		<TileSet href="http://localhost:5002/tms/1.0.0/source3/1" order="1" units-per-pixel="78271.51696401954"/>
 		<TileSet href="http://localhost:5002/tms/1.0.0/source3/2" order="2" units-per-pixel="39135.75848200977"/>
-		<TileSet href="http://localhost:5002/tms/1.0.0/source3/3" order="3" units-per-pixel="19567.879241004885"/>
 	</TileSets>
 </TileMap>

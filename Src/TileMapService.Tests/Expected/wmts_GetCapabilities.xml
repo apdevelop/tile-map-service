@@ -324,11 +324,11 @@
 				<ows:UpperCorner>180.000000 85.05112878</ows:UpperCorner>
 			</ows:WGS84BoundingBox>
 			<TileMatrixSetLink>
-				<TileMatrixSet>google3857_0-3</TileMatrixSet>
+				<TileMatrixSet>google3857_0-2</TileMatrixSet>
 			</TileMatrixSetLink>
 		</Layer>
 		<TileMatrixSet>
-			<ows:Identifier>google3857_0-3</ows:Identifier>
+			<ows:Identifier>google3857_0-2</ows:Identifier>
 			<ows:BoundingBox crs="urn:ogc:def:crs:EPSG::3857">
 				<ows:LowerCorner>-20037508.342789 -20037508.342789</ows:LowerCorner>
 				<ows:UpperCorner>20037508.342789 20037508.342789</ows:UpperCorner>
@@ -361,15 +361,6 @@
 				<TileHeight>256</TileHeight>
 				<MatrixWidth>4</MatrixWidth>
 				<MatrixHeight>4</MatrixHeight>
-			</TileMatrix>
-			<TileMatrix>
-				<ows:Identifier>3</ows:Identifier>
-				<ScaleDenominator>69885283.00358973</ScaleDenominator>
-				<TopLeftCorner>-20037508.342789 20037508.342789</TopLeftCorner>
-				<TileWidth>256</TileWidth>
-				<TileHeight>256</TileHeight>
-				<MatrixWidth>8</MatrixWidth>
-				<MatrixHeight>8</MatrixHeight>
 			</TileMatrix>
 		</TileMatrixSet>
 	</Contents>
