@@ -1,21 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace TileMapService.TileSources
 {
     /// <summary>
-    /// Represents tile source with tiles stored in separate files.
+    /// Represents tile source with tiles reading from other HTTP service.
     /// </summary>
-    class LocalFilesTileSource : ITileSource
+    class HttpTileSource : ITileSource
     {
         private TileSourceConfiguration configuration;
 
-        public LocalFilesTileSource(TileSourceConfiguration configuration)
+        private HttpClient client;
+
+        public HttpTileSource(TileSourceConfiguration configuration)
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
@@ -35,52 +36,37 @@ namespace TileMapService.TileSources
         Task ITileSource.InitAsync()
         {
             // Configuration values priority:
-            // 1. Default values for local files source.
-            // 2. Actual values (from first found tile properties).
+            // 1. Default values for http source.
+            // 2. Actual values (from source metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            // Detect zoom levels range - build list of folders
-            var zoomLevels = new List<int>();
-            var xIndex = this.configuration.Location.IndexOf("{x}", StringComparison.InvariantCultureIgnoreCase);
-            var yIndex = this.configuration.Location.IndexOf("{y}", StringComparison.InvariantCultureIgnoreCase);
-            var zIndex = this.configuration.Location.IndexOf("{z}", StringComparison.InvariantCultureIgnoreCase);
-            if ((zIndex < yIndex) && (zIndex < xIndex))
-            {
-                var baseFolder = new Uri(this.configuration.Location.Substring(0, zIndex)).LocalPath;
-                foreach (var directory in Directory.GetDirectories(baseFolder))
-                {
-                    if (Int32.TryParse(Path.GetFileName(directory), out int zoomLevel))
-                    {
-                        zoomLevels.Add(zoomLevel);
-                    }
-                }
-            }
+            // TODO: read metadata for TMS and WMTS sources
 
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
                 this.configuration.Id :
                 this.configuration.Title;
 
             var minZoom = this.configuration.MinZoom.HasValue ?
-                this.configuration.MinZoom.Value :
-                zoomLevels.Count > 0 ? zoomLevels.Min(z => z) : 0;
+                this.configuration.MinZoom.Value : 0;
 
             var maxZoom = this.configuration.MaxZoom.HasValue ?
-                this.configuration.MaxZoom.Value :
-                zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 24;
+                this.configuration.MaxZoom.Value : 24;
 
             // Re-create configuration
             this.configuration = new TileSourceConfiguration
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type,
-                Format = this.configuration.Format, // TODO: from file properties (extension)
+                Format = this.configuration.Format, // TODO: from metadata
                 Title = title,
-                Tms = this.configuration.Tms ?? false, // Default is TMS=false for file storage
+                Tms = this.configuration.Tms ?? false, // Default is TMS=false for simple XYZ tile services
                 Location = this.configuration.Location,
-                ContentType = Utils.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
+                ContentType = Utils.TileFormatToContentType(this.configuration.Format), // TODO: from metadata
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
             };
+
+            this.client = new HttpClient(); // TODO: custom headers from configuration
 
             return Task.CompletedTask;
         }
@@ -93,16 +79,21 @@ namespace TileMapService.TileSources
             }
             else
             {
-                var path = GetLocalFilePath(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z);
-                var fileInfo = new FileInfo(path);
-                if (fileInfo.Exists)
+                string url = null;
+                switch (this.configuration.Type.ToLowerInvariant())
                 {
-                    using (var fileStream = fileInfo.OpenRead())
-                    {
-                        var buffer = new byte[fileInfo.Length];
-                        await fileStream.ReadAsync(buffer.AsMemory(0, buffer.Length));
-                        return buffer;
-                    }
+                    case TileSourceConfiguration.TypeHttp: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z);  break; }
+                    // TODO: case TileSourceConfiguration.TypeTms: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
+                    // TODO: case TileSourceConfiguration.TypeWmts: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
+                    default: throw new ArgumentOutOfRangeException(nameof(this.configuration.Type), $"Unknown tile source type '{this.configuration.Type}'");
+                }
+
+                var response = await client.GetAsync(url);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    var buffer = await response.Content.ReadAsByteArrayAsync();
+
+                    return buffer;
                 }
                 else
                 {
@@ -122,8 +113,9 @@ namespace TileMapService.TileSources
         #endregion
 
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
-        private static string GetLocalFilePath(string template, int x, int y, int z)
+        private static string GetTileXyzUrl(string template, int x, int y, int z)
         {
+            // TODO: detailed type http -> TMS, WMTS requests
             return template
                     .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
                     .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)

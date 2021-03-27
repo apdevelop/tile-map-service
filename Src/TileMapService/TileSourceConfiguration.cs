@@ -19,6 +19,15 @@ namespace TileMapService
         [JsonIgnore]
         public const string TypeMBTiles = "mbtiles";
 
+        [JsonIgnore]
+        public const string TypeHttp = "http";
+
+        [JsonIgnore]
+        public const string TypeTms = "tms";
+
+        [JsonIgnore]
+        public const string TypeWmts = "wmts";
+
         /// <summary>
         /// String identifier of tile source (case-sensitive).
         /// </summary>
@@ -38,7 +47,7 @@ namespace TileMapService
         public string Title { get; set; }
 
         /// <summary>
-        /// Location of tiles (path template for "file", full path for "mbtiles").
+        /// Location of tiles (path template for "file", full path for "mbtiles", url template for "http").
         /// </summary>
         [JsonPropertyName("location")]
         public string Location { get; set; }

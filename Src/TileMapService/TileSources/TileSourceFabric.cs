@@ -56,7 +56,10 @@ namespace TileMapService.TileSources
             {
                 case TileSourceConfiguration.TypeLocalFiles: return new LocalFilesTileSource(config);
                 case TileSourceConfiguration.TypeMBTiles: return new MBTilesTileSource(config);
-                default: throw new NotSupportedException();
+                case TileSourceConfiguration.TypeHttp: return new HttpTileSource(config);
+                // TODO: case TileSourceConfiguration.TypeTms: return new HttpTileSource(config);
+                // TODO: case TileSourceConfiguration.TypeWmts: return new HttpTileSource(config);
+                default: throw new ArgumentOutOfRangeException(nameof(config.Type), $"Unknown tile source type '{config.Type}'");
             }
         }
     }

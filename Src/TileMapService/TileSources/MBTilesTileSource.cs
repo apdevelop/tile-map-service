@@ -51,6 +51,7 @@ namespace TileMapService.TileSources
             this.configuration = new TileSourceConfiguration
             {
                 Id = this.configuration.Id,
+                Type = this.configuration.Type,
                 Format = format,
                 Title = title,
                 Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
