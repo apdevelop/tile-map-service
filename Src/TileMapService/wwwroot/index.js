@@ -22,6 +22,10 @@
         'World Countries (XYZ FS)': L.tileLayer('/xyz/world-countries-fs/{z}/{x}/{y}.png', {
             attribution: 'Esri',
             maxZoom: 5
+        }),
+        'Demographics (WMTS)': L.tileLayer('/xyz/arcgisonline-wmts-demo/{z}/{x}/{y}.png', {
+            attribution: 'Esri',
+            maxZoom: 5
         })
     };
 

@@ -11,7 +11,7 @@ Tile sources are defined in `TileSources` section of `appsettings.json` file.
 Type: `String`<br>
 Required: `true`
 
-Used to define source type, must be `file` or `mbtiles` (case insensitive).
+Used to define source type, must be one of `file`, `mbtiles`, `xyz`, `tms`, `wmts` (case insensitive).
 
 #### id
 Type: `String`<br>
@@ -23,7 +23,7 @@ String identifier of tile source (case sensitive).
 Type: `String`<br>
 Required: `false`
 
-Name of tiles image format (must be `png` or `jpg`).
+Name of tiles raster image format (must be `png` or `jpg`).
 
 #### title
 Type: `String`<br>
@@ -35,7 +35,9 @@ User-friendly title (displayed name) of tile source.
 Type: `String`<br>
 Required: `true`
 
-Location of tiles (path template for `file`, full path for `mbtiles` type).
+Location of tiles. 
+Path template for `file`, full path for `mbtiles` type, url template for `xyz` and `tms`, base url for `wmts`.
+Template uses `{x}`, `{y}`, `{z}` as placeholders for corresponding coordinate values.
 
 #### tms
 Type: `Boolean`<br>

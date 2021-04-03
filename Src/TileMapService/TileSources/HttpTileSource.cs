@@ -52,6 +52,9 @@ namespace TileMapService.TileSources
             var maxZoom = this.configuration.MaxZoom.HasValue ?
                 this.configuration.MaxZoom.Value : 24;
 
+            // Default is TMS=false for simple XYZ tile services
+            var tms = this.configuration.Tms ?? (this.configuration.Type.ToLowerInvariant() == TileSourceConfiguration.TypeTms ? true : false);
+
             // Re-create configuration
             this.configuration = new TileSourceConfiguration
             {
@@ -59,7 +62,7 @@ namespace TileMapService.TileSources
                 Type = this.configuration.Type,
                 Format = this.configuration.Format, // TODO: from metadata
                 Title = title,
-                Tms = this.configuration.Tms ?? false, // Default is TMS=false for simple XYZ tile services
+                Tms = tms,
                 Location = this.configuration.Location,
                 ContentType = Utils.TileFormatToContentType(this.configuration.Format), // TODO: from metadata
                 MinZoom = minZoom,
@@ -82,9 +85,9 @@ namespace TileMapService.TileSources
                 string url = null;
                 switch (this.configuration.Type.ToLowerInvariant())
                 {
-                    case TileSourceConfiguration.TypeHttp: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z);  break; }
-                    // TODO: case TileSourceConfiguration.TypeTms: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
-                    // TODO: case TileSourceConfiguration.TypeWmts: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
+                    case TileSourceConfiguration.TypeXyz: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
+                    case TileSourceConfiguration.TypeTms: { url = GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
+                    case TileSourceConfiguration.TypeWmts: { url = GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
                     default: throw new ArgumentOutOfRangeException(nameof(this.configuration.Type), $"Unknown tile source type '{this.configuration.Type}'");
                 }
 
@@ -113,13 +116,35 @@ namespace TileMapService.TileSources
         #endregion
 
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
-        private static string GetTileXyzUrl(string template, int x, int y, int z)
+        private static string GetTileXyzUrl(string location, int x, int y, int z)
         {
-            // TODO: detailed type http -> TMS, WMTS requests
-            return template
+            return location
                     .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
                     .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
                     .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        private static string GetTileTmsUrl(string location, string format, int x, int y, int z)
+        {
+            return location +
+                "/" + z.ToString(CultureInfo.InvariantCulture) +
+                "/" + x.ToString(CultureInfo.InvariantCulture) +
+                "/" + y.ToString(CultureInfo.InvariantCulture) +
+                "." + format; // TODO: get actual source extension
+        }
+
+        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        private static string GetTileWmtsUrl(string location, string format, int x, int y, int z)
+        {
+            return location +
+                "&Service=WMTS" +
+                "&Request=GetTile" +
+                "&Version=1.0.0" +
+                "&Format=" + format.Replace("/", "%2F") +
+                "&TileMatrix=" + z.ToString(CultureInfo.InvariantCulture) +
+                "&TileCol=" + x.ToString(CultureInfo.InvariantCulture) +
+                "&TileRow=" + y.ToString(CultureInfo.InvariantCulture);
         }
     }
 }

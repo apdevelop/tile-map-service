@@ -8,7 +8,7 @@ namespace TileMapService
     public class TileSourceConfiguration
     {
         /// <summary>
-        /// Type of tile source, "file" or "mbtiles".
+        /// Type of tile source, "file", "mbtiles", "xyz", "tms", "wmts".
         /// </summary>
         [JsonPropertyName("type")]
         public string Type { get; set; }
@@ -20,7 +20,7 @@ namespace TileMapService
         public const string TypeMBTiles = "mbtiles";
 
         [JsonIgnore]
-        public const string TypeHttp = "http";
+        public const string TypeXyz = "xyz";
 
         [JsonIgnore]
         public const string TypeTms = "tms";
@@ -58,6 +58,9 @@ namespace TileMapService
         [JsonPropertyName("tms")]
         public bool? Tms { get; set; }
 
+        /// <summary>
+        /// MIME type identifier of image format.
+        /// </summary>
         [JsonIgnore]
         public string ContentType { get; set; }
 

@@ -1,5 +1,5 @@
 # Tile Map Service for .NET 5
-Basic implementation of tile server for .NET 5 platform. Provides access to raster tiles stored in MBTiles database or local file system. Serving tiles using XYZ, TMS and WMTS protocols.
+Basic implementation of tile server for .NET 5 platform. Provides access to raster tiles stored in MBTiles, files and external sources. Serving tiles using XYZ, TMS and WMTS protocols.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
@@ -8,6 +8,7 @@ Basic implementation of tile server for .NET 5 platform. Provides access to rast
 * Supported tile sources:
   * [MBTiles](https://github.com/mapbox/mbtiles-spec).
   * Local file system (each tile in separate file).
+  * External tile services with XYZ, TMS, WMTS access using HTTP/HTTPS.
 * Supported protocols for serving tiles: 
   * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)) [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z}).
   * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)) [http://localhost:5000/tms](http://localhost:5000/tms).
@@ -43,11 +44,10 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 
 ### TODOs
 * Full implementation of MBTiles specification.
-* Support for more formats (vector tiles) and coordinate systems.
+* Support for more formats (vector tiles) and coordinate systems (tile grids).
 * Include test dataset(s) created from free data.
+* Raster images processing.
 * Compare with reference implementations.
-* Integration / end-to-end tests.
-* HTTP tile source.
 * Extended diagnostics and logging.
 * Performance tests.
 * Live demo.
@@ -55,6 +55,7 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 ### Some MBTiles sample datasets
 * [World Countries MBTiles by ArcGIS / EsriAndroidTeam](https://www.arcgis.com/home/item.html?id=7b650618563741ca9a5186c1aa69126e)
 * [Satellite Lowres raster tiles Planet by MapTiler](https://data.maptiler.com/downloads/dataset/satellite-lowres/)
+All external tile sources in the provided `appsettings.json` file are only for test purposes, not for production use.
 
 ### References
 * [MBTiles Specification](https://github.com/mapbox/mbtiles-spec)
