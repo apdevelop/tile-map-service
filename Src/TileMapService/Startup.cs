@@ -7,6 +7,7 @@ namespace TileMapService
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
             services.AddControllers();
             services.AddSingleton<ITileSourceFabric, TileSources.TileSourceFabric>();
         }
@@ -17,6 +18,7 @@ namespace TileMapService
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseRouting();
+            app.UseCors(builder => builder.AllowAnyOrigin());
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
