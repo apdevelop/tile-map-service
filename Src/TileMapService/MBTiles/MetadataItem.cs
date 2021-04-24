@@ -82,12 +82,12 @@
         public const string KeyType = "type";
 
         /// <summary>
-        /// The version (revision) number of the tileset.
+        /// The version (revision) of the tileset.
         /// </summary>
         public const string KeyVersion = "version";
 
         /// <summary>
-        /// Lists the layers that appear in the vector tiles and the names and types of the attributes of features that appear in those layers n case of pbf format.
+        /// Lists the layers that appear in the vector tiles and the names and types of the attributes of features that appear in those layers in case of pbf format.
         /// </summary>
         public const string KeyJson = "json";
 

@@ -15,13 +15,14 @@ namespace TileMapService
     {
         public static string TileFormatToContentType(string format)
         {
-            switch (format)
+            return format switch // TODO: const / enum
             {
-                case "png": return MediaTypeNames.Image.Png;
-                case "jpg": return MediaTypeNames.Image.Jpeg;
-                // TODO: ? other MBTiles possible types
-                default: return format;
-            }
+                "png" => MediaTypeNames.Image.Png,
+                "jpg" => MediaTypeNames.Image.Jpeg,
+                "pbf" => MediaTypeNames.Application.XProtobuf,
+                // TODO: other possible types
+                _ => format,
+            };
         }
 
         public static List<Models.Layer> SourcesToLayers(IList<TileSourceConfiguration> sources)

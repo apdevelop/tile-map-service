@@ -55,10 +55,12 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 ### Some MBTiles sample datasets
 * [World Countries MBTiles by ArcGIS / EsriAndroidTeam](https://www.arcgis.com/home/item.html?id=7b650618563741ca9a5186c1aa69126e)
 * [Satellite Lowres raster tiles Planet by MapTiler](https://data.maptiler.com/downloads/dataset/satellite-lowres/)
+* [Custom vector tiles from Georaphy Class example MVT](https://github.com/klokantech/vector-tiles-sample/releases/tag/v1.0)
+
 All external tile sources in the provided `appsettings.json` file are only for test purposes, not for production use.
 
 ### References
-* [MBTiles Specification](https://github.com/mapbox/mbtiles-spec)
+* [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md)
 * [Tile Map Service Specification](https://wiki.osgeo.org/index.php?title=Tile_Map_Service_Specification)
 * [OpenGIS Web Map Tile Service Implementation Standard](https://www.ogc.org/standards/wmts)
 * [Using TMS in Leaflet](https://leafletjs.com/examples/wms/wms.html)

@@ -1,11 +1,17 @@
 ﻿using System;
+using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 
 namespace TileMapService.TileSources
 {
     /// <summary>
-    /// Represents tile source with tiles stored in MBTiles database.
+    /// Represents tile source with tiles stored in MBTiles SQLite database.
     /// </summary>
+    /// <remarks>
+    /// Supports only Spherical Mercator tile grid and TMS tiling scheme (Y axis is going up).
+    /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
+    /// </remarks>
     class MBTilesTileSource : ITileSource
     {
         private TileSourceConfiguration configuration;
@@ -24,7 +30,7 @@ namespace TileMapService.TileSources
                 throw new ArgumentException();
             }
 
-            this.configuration = configuration; // May be changed later in InitAsync
+            this.configuration = configuration; // Will be changed later in InitAsync
         }
 
         #region ITileSource implementation
@@ -66,7 +72,23 @@ namespace TileMapService.TileSources
 
         Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            return Task.FromResult(this.repository.ReadTileData(x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z));
+            var tileData = this.repository.ReadTileData(x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z);
+
+            // TODO: pass gzipped data as-is with setting HTTP headers?
+            // pbf as a format refers to gzip-compressed vector tile data in Mapbox Vector Tile format, 
+            // which uses Google Protocol Buffers as encoding format.
+            if (this.configuration.Format == "pbf") // TODO: const / enum
+            {
+                using (var compressedStream = new MemoryStream(tileData))
+                using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+                using (var resultStream = new MemoryStream())
+                {
+                    zipStream.CopyTo(resultStream);
+                    tileData = resultStream.ToArray();
+                }
+            }
+
+            return Task.FromResult(tileData);
         }
 
         TileSourceConfiguration ITileSource.Configuration

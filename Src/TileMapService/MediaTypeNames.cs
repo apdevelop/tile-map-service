@@ -19,5 +19,12 @@
         {
             public const string Xml = "text/xml";
         }
+
+        public static class Application
+        {
+            public const string MapboxVectorTile = "application/vnd.mapbox-vector-tile";
+        
+            public const string XProtobuf = "application/x-protobuf"; 
+        }
     }
 }
