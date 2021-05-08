@@ -64,7 +64,7 @@ namespace TileMapService
         /// <param name="y">Tile Y coordinate.</param>
         /// <param name="zoom">Tile zoom level.</param>
         /// <returns>Flipped tile Y coordinate.</returns>
-        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FlipYCoordinate(int y, int zoom)
         {
             return (1 << zoom) - y - 1;

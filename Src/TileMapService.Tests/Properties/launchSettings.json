@@ -1,7 +1,8 @@
 {
   "profiles": {
     "TileMapService.Tests": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "--port 5000"
     }
   }
 }

@@ -13,6 +13,8 @@ namespace TileMapService
         [JsonPropertyName("type")]
         public string Type { get; set; }
 
+        #region Types
+
         [JsonIgnore]
         public const string TypeLocalFiles = "file";
 
@@ -27,6 +29,8 @@ namespace TileMapService
 
         [JsonIgnore]
         public const string TypeWmts = "wmts";
+
+        #endregion
 
         /// <summary>
         /// String identifier of tile source (case-sensitive).

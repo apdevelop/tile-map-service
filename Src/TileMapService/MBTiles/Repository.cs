@@ -7,6 +7,7 @@ namespace TileMapService.MBTiles
     /// Repository for MBTiles database access.
     /// </summary>
     /// <remarks>
+    /// SQLite doesn't support asynchronous I/O. Async ADO.NET methods will execute synchronously in Microsoft.Data.Sqlite.
     /// Supports only Spherical Mercator tile grid and TMS tiling scheme (Y axis is going up).
     /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
     /// </remarks>
@@ -34,6 +35,16 @@ namespace TileMapService.MBTiles
         private const string ColumnMetadataName = "name";
 
         private const string ColumnMetadataValue = "value";
+
+        private const string IndexTile = "tile_index";
+
+        // TODO: Grids / UTFGrid
+
+        private static readonly string ReadTileDataCommandText = 
+            $"SELECT {ColumnTileData} FROM {TableTiles} WHERE (({ColumnZoomLevel} = @zoom_level) AND ({ColumnTileColumn} = @tile_column) AND ({ColumnTileRow} = @tile_row))";
+
+        private static readonly string ReadMetadataCommandText =
+            $"SELECT {ColumnMetadataName}, {ColumnMetadataValue} FROM {TableMetadata}";
 
         #endregion
 
@@ -64,10 +75,9 @@ namespace TileMapService.MBTiles
         /// <returns>Tile image contents.</returns>
         public byte[] ReadTileData(int tileColumn, int tileRow, int zoomLevel)
         {
-            var commandText = $"SELECT {ColumnTileData} FROM {TableTiles} WHERE (({ColumnZoomLevel} = @zoom_level) AND ({ColumnTileColumn} = @tile_column) AND ({ColumnTileRow} = @tile_row))";
             using (var connection = new SqliteConnection(this.connectionString))
             {
-                using (var command = new SqliteCommand(commandText, connection))
+                using (var command = new SqliteCommand(ReadTileDataCommandText, connection))
                 {
                     command.Parameters.AddRange(new[]
                     {
@@ -102,8 +112,7 @@ namespace TileMapService.MBTiles
         {
             using (var connection = new SqliteConnection(this.connectionString))
             {
-                var commandText = $"SELECT {ColumnMetadataName}, {ColumnMetadataValue} FROM {TableMetadata}";
-                using (var command = new SqliteCommand(commandText, connection))
+                using (var command = new SqliteCommand(ReadMetadataCommandText, connection))
                 {
                     var result = new List<MetadataItem>();
 
@@ -135,11 +144,14 @@ namespace TileMapService.MBTiles
         {
             var repository = new Repository(path, true);
 
-            var createMetadataCommand = $"CREATE TABLE {TableMetadata} ({ColumnMetadataName} text, {ColumnMetadataValue} text);";
+            var createMetadataCommand = $"CREATE TABLE {TableMetadata} ({ColumnMetadataName} text, {ColumnMetadataValue} text)";
             repository.ExecuteSqlQuery(createMetadataCommand);
 
-            var createTilesCommand = $"CREATE TABLE {TableTiles} ({ColumnZoomLevel} integer, {ColumnTileColumn} integer, {ColumnTileRow} integer, {ColumnTileData} blob);";
+            var createTilesCommand = $"CREATE TABLE {TableTiles} ({ColumnZoomLevel} integer, {ColumnTileColumn} integer, {ColumnTileRow} integer, {ColumnTileData} blob)";
             repository.ExecuteSqlQuery(createTilesCommand);
+
+            var createTileIndexCommand = $"CREATE UNIQUE INDEX {IndexTile} ON {TableTiles} ({ColumnZoomLevel}, {ColumnTileColumn}, {ColumnTileRow})";
+            repository.ExecuteSqlQuery(createTileIndexCommand);
 
             return repository;
         }

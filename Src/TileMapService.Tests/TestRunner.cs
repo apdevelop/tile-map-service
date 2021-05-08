@@ -1,6 +1,7 @@
 ﻿using Microsoft.XmlDiffPatch; // TODO: there is warning to use Microsoft.XmlDiffPatch in net5 project
 using NUnit.Framework;
 using System;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -11,13 +12,13 @@ namespace TileMapService.Tests
 {
     class TestRunner
     {
-        private readonly string baseUrl;
+        private readonly int port;
 
         private readonly HttpClient client;
 
-        public TestRunner(string baseUrl)
+        public TestRunner(string baseUrl, int port)
         {
-            this.baseUrl = baseUrl;
+            this.port = port;
             this.client = new HttpClient
             {
                 BaseAddress = new Uri(baseUrl),
@@ -25,6 +26,7 @@ namespace TileMapService.Tests
         }
 
         // TODO: compare expected documents with MapCache capabilities output
+        // TODO: check specific XML tags, not entire XML document
 
         public async Task GetTmsServicesAsync()
         {
@@ -33,6 +35,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_Services.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
+            expectedXml = UpdateXmlContents(expectedXml);
 
             CompareXml(expectedXml, actualXml);
         }
@@ -44,6 +47,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMapService.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
+            expectedXml = UpdateXmlContents(expectedXml);
 
             CompareXml(expectedXml, actualXml);
         }
@@ -55,6 +59,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap1.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
+            expectedXml = UpdateXmlContents(expectedXml);
 
             CompareXml(expectedXml, actualXml);
         }
@@ -66,6 +71,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap2.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
+            expectedXml = UpdateXmlContents(expectedXml);
 
             CompareXml(expectedXml, actualXml);
         }
@@ -77,6 +83,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap3.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
+            expectedXml = UpdateXmlContents(expectedXml);
 
             CompareXml(expectedXml, actualXml);
         }
@@ -88,6 +95,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.wmts_GetCapabilities.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
+            expectedXml = UpdateXmlContents(expectedXml);
 
             CompareXml(expectedXml, actualXml);
         }
@@ -111,6 +119,11 @@ namespace TileMapService.Tests
             Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
             var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
             Assert.AreEqual(expected312, actual3);
+
+            var r4 = await client.GetAsync("/xyz/source4/?x=0&y=0&z=0");
+            Assert.AreEqual(HttpStatusCode.OK, r4.StatusCode);
+            var actual4 = new TileDataStub(await r4.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual4);
         }
 
         public async Task GetTileTmsAsync()
@@ -132,6 +145,11 @@ namespace TileMapService.Tests
             Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
             var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
             Assert.AreEqual(expected312, actual3);
+
+            var r4 = await client.GetAsync("/tms/1.0.0/source4/0/0/0.png");
+            Assert.AreEqual(HttpStatusCode.OK, r4.StatusCode);
+            var actual4 = new TileDataStub(await r4.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual4);
         }
 
         public async Task GetTileWmtsAsync()
@@ -153,9 +171,22 @@ namespace TileMapService.Tests
             Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
             var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
             Assert.AreEqual(expected312, actual3);
+
+            var r4 = await client.GetAsync("/wmts?layer=source4&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=0&TileCol=0&TileRow=0");
+            Assert.AreEqual(HttpStatusCode.OK, r4.StatusCode);
+            var actual4 = new TileDataStub(await r4.Content.ReadAsByteArrayAsync());
+            Assert.AreEqual(expected000, actual4);
         }
 
         #region Utility methods
+
+        private string UpdateXmlContents(string xml)
+        {
+            var s11 = "http://localhost:5000";
+            var s12 = "http://localhost:" + this.port.ToString(CultureInfo.InvariantCulture);
+
+            return xml.Replace(s11, s12);
+        }
 
         private static void CompareXml(string xml1, string xml2)
         {
@@ -167,19 +198,14 @@ namespace TileMapService.Tests
 
             var sb = new StringBuilder();
 
-            using (var xmlReader1 = new XmlNodeReader(xmlDoc1))
-            {
-                using (var xmlReader2 = new XmlNodeReader(xmlDoc2))
-                {
-                    using (var writer = XmlWriter.Create(sb))
-                    {
-                        var xmldiff = new XmlDiff(XmlDiffOptions.IgnoreChildOrder | XmlDiffOptions.IgnoreComments | XmlDiffOptions.IgnoreWhitespace);
-                        var result = xmldiff.Compare(xmlReader1, xmlReader2, writer);
+            using var xmlReader1 = new XmlNodeReader(xmlDoc1);
+            using var xmlReader2 = new XmlNodeReader(xmlDoc2);
+            using var writer = XmlWriter.Create(sb);
+           
+            var xmldiff = new XmlDiff(XmlDiffOptions.IgnoreChildOrder | XmlDiffOptions.IgnoreComments | XmlDiffOptions.IgnoreWhitespace);
+            var result = xmldiff.Compare(xmlReader1, xmlReader2, writer);
 
-                        Assert.IsTrue(result);
-                    }
-                }
-            }
+            Assert.IsTrue(result);
         }
 
         private static byte[] ReadResource(string id)

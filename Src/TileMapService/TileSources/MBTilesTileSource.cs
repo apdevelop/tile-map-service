@@ -38,7 +38,7 @@ namespace TileMapService.TileSources
         Task ITileSource.InitAsync()
         {
             // Configuration values priority:
-            // 1. Default values for MBTiles.
+            // 1. Default values for MBTiles source type.
             // 2. Actual values (MBTiles metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 

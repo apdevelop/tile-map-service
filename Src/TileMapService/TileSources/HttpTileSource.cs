@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace TileMapService.TileSources
 {
     /// <summary>
-    /// Represents tile source with tiles reading from other HTTP service.
+    /// Represents tile source with tiles from other HTTP (also TMS, WMTS) service.
     /// </summary>
     class HttpTileSource : ITileSource
     {
@@ -28,7 +28,7 @@ namespace TileMapService.TileSources
                 throw new ArgumentException();
             }
 
-            this.configuration = configuration; // May be changed later in InitAsync
+            this.configuration = configuration; // Will be changed later in InitAsync
         }
 
         #region ITileSource implementation
@@ -36,7 +36,7 @@ namespace TileMapService.TileSources
         Task ITileSource.InitAsync()
         {
             // Configuration values priority:
-            // 1. Default values for http source.
+            // 1. Default values for http source type.
             // 2. Actual values (from source metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
@@ -46,14 +46,11 @@ namespace TileMapService.TileSources
                 this.configuration.Id :
                 this.configuration.Title;
 
-            var minZoom = this.configuration.MinZoom.HasValue ?
-                this.configuration.MinZoom.Value : 0;
+            var minZoom = this.configuration.MinZoom ?? 0;
+            var maxZoom = this.configuration.MaxZoom ?? 24;
 
-            var maxZoom = this.configuration.MaxZoom.HasValue ?
-                this.configuration.MaxZoom.Value : 24;
-
-            // Default is TMS=false for simple XYZ tile services
-            var tms = this.configuration.Tms ?? (this.configuration.Type.ToLowerInvariant() == TileSourceConfiguration.TypeTms ? true : false);
+            // Default is tms=false for simple XYZ tile services
+            var tms = this.configuration.Tms ?? (this.configuration.Type.ToLowerInvariant() == TileSourceConfiguration.TypeTms);
 
             // Re-create configuration
             this.configuration = new TileSourceConfiguration
@@ -82,7 +79,7 @@ namespace TileMapService.TileSources
             }
             else
             {
-                string url = null;
+                string url;
                 switch (this.configuration.Type.ToLowerInvariant())
                 {
                     case TileSourceConfiguration.TypeXyz: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
@@ -94,9 +91,7 @@ namespace TileMapService.TileSources
                 var response = await client.GetAsync(url);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    var buffer = await response.Content.ReadAsByteArrayAsync();
-
-                    return buffer;
+                    return await response.Content.ReadAsByteArrayAsync();
                 }
                 else
                 {
@@ -115,7 +110,7 @@ namespace TileMapService.TileSources
 
         #endregion
 
-        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetTileXyzUrl(string location, int x, int y, int z)
         {
             return location
@@ -124,7 +119,7 @@ namespace TileMapService.TileSources
                     .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase);
         }
 
-        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetTileTmsUrl(string location, string format, int x, int y, int z)
         {
             return location +
@@ -134,7 +129,7 @@ namespace TileMapService.TileSources
                 "." + format; // TODO: get actual source extension
         }
 
-        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetTileWmtsUrl(string location, string format, int x, int y, int z)
         {
             return location +

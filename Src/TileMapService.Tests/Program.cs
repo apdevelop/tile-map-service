@@ -2,12 +2,14 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
-using TileMapService.MBTiles;
+
+using MBT = TileMapService.MBTiles;
 
 namespace TileMapService.Tests
 {
@@ -15,9 +17,11 @@ namespace TileMapService.Tests
     {
         #region Test environment configuration (port number, path to temporary files)
 
-        private const int TestPort = 5002;
+        // Use --port <number> command line argument to override default port number
 
-        private static string BaseUrl => $"http://localhost:{TestPort}";
+        private static int testPortNumber = 5000;
+
+        private static string BaseUrl => $"http://localhost:{testPortNumber}";
 
         private static string TestDataPath => Path.Join(Path.GetTempPath(), "TileMapServiceTestData");
 
@@ -31,15 +35,33 @@ namespace TileMapService.Tests
 
         #endregion
 
-        public static async Task Main()
+        public static async Task Main(string[] args)
         {
-            Cleanup();
+            LoadConfiguration(args);
+            RemoveTestData();
             PrepareTestData();
             await CreateAndRunServiceHostAsync();
             await PerformTestsAsync();
-            Cleanup();
+
+            if (!Debugger.IsAttached)
+            {
+                RemoveTestData();
+            }
 
             Console.ReadKey();
+        }
+
+        private static void LoadConfiguration(string[] args)
+        {
+            var configuration = new ConfigurationBuilder()
+                .AddCommandLine(args)
+                .Build();
+
+            var portNumber = configuration["port"];
+            if (!String.IsNullOrWhiteSpace(portNumber))
+            {
+                testPortNumber = Int32.Parse(portNumber, CultureInfo.InvariantCulture);
+            }
         }
 
         private static void PrepareTestData()
@@ -78,22 +100,32 @@ namespace TileMapService.Tests
                     Format = "png",
                     Tms = false,
                 },
+                new TileSourceConfiguration // HTTP proxy to source1
+                {
+                    Type = TileSourceConfiguration.TypeXyz,
+                    Id = "source4",
+                    Title = "Tile Source 4",
+                    Location = BaseUrl + "/xyz/source1/{z}/{x}/{y}.png",
+                    Format = "png",
+                    MinZoom = 0,
+                    MaxZoom = 2,
+                },
             };
 
             File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(new { TileSources = tileSources }));
 
             // TODO: more tiles into database
             // Create and fill MBTiles databases
-            var db1 = Repository.CreateEmptyDatabase(Mbtiles1FilePath);
-            db1.AddMetadataItem(new MetadataItem(MetadataItem.KeyName, "World Countries"));
-            db1.AddMetadataItem(new MetadataItem(MetadataItem.KeyFormat, "png"));
+            var db1 = MBT.Repository.CreateEmptyDatabase(Mbtiles1FilePath);
+            db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "World Countries"));
+            db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, "png"));
             db1.AddTile(0, 0, 0, new TileDataStub(0, 0, 0).ToByteArray());
 
-            var db2 = Repository.CreateEmptyDatabase(Mbtiles2FilePath);
-            db2.AddMetadataItem(new MetadataItem(MetadataItem.KeyName, "Satellite Imagery"));
-            db2.AddMetadataItem(new MetadataItem(MetadataItem.KeyFormat, "jpg"));
-            db2.AddMetadataItem(new MetadataItem(MetadataItem.KeyMinZoom, "0"));
-            db2.AddMetadataItem(new MetadataItem(MetadataItem.KeyMaxZoom, "5"));
+            var db2 = MBT.Repository.CreateEmptyDatabase(Mbtiles2FilePath);
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "Satellite Imagery"));
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, "jpg"));
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMinZoom, "0"));
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMaxZoom, "5"));
             db2.AddTile(0, 0, 0, new TileDataStub(0, 0, 0).ToByteArray());
 
             // Create files Z\X\Y structure
@@ -133,7 +165,7 @@ namespace TileMapService.Tests
                         webHostBuilder.UseStartup<Startup>();
                         webHostBuilder.UseKestrel(options =>
                         {
-                            options.Listen(IPAddress.Loopback, TestPort);
+                            options.Listen(IPAddress.Loopback, testPortNumber);
                         });
                     })
                     .Build();
@@ -147,7 +179,7 @@ namespace TileMapService.Tests
         {
             // TODO: ? nunit tests console runner
 
-            var testRunner = new TestRunner(BaseUrl);
+            var testRunner = new TestRunner(BaseUrl, testPortNumber);
             await testRunner.GetTmsServicesAsync();
             await testRunner.GetTmsTileMapServiceAsync();
             await testRunner.GetTmsTileMap1Async();
@@ -162,7 +194,7 @@ namespace TileMapService.Tests
             Console.WriteLine("All tests passed");
         }
 
-        private static void Cleanup()
+        private static void RemoveTestData()
         {
             if (Directory.Exists(TestDataPath))
             {

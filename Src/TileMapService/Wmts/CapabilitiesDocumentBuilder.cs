@@ -24,7 +24,7 @@ namespace TileMapService.Wmts
 
         private const string XlinkNamespaceUri = "http://www.w3.org/1999/xlink";
 
-        private const string Version = "1.0.0";
+        private const string Version100 = "1.0.0";
 
         private const int TileWidth = 256; // TODO: other resolutions
 
@@ -37,6 +37,8 @@ namespace TileMapService.Wmts
         private readonly List<Models.Layer> layers;
 
         private XmlDocument doc;
+
+        // TODO: DTO classes for WMTS capabilities description (like Layer)
 
         public CapabilitiesDocumentBuilder(string baseUrl, IList<Models.Layer> layers)
         {
@@ -52,7 +54,7 @@ namespace TileMapService.Wmts
             root.SetAttribute("xmlns:" + XlinkPrefix, XlinkNamespaceUri);
             root.SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             root.SetAttribute("xmlns:gml", "http://www.opengis.net/gml");
-            root.SetAttribute("version", Version);
+            root.SetAttribute("version", Version100);
             doc.AppendChild(root);
 
             var serviceIdentificationElement = doc.CreateElement(OwsPrefix, "ServiceIdentification", OwsNamespaceUri);
@@ -66,7 +68,7 @@ namespace TileMapService.Wmts
             serviceIdentificationElement.AppendChild(serviceTypeElement);
 
             var serviceTypeVersionElement = doc.CreateElement(OwsPrefix, "ServiceTypeVersion", OwsNamespaceUri);
-            serviceTypeVersionElement.InnerText = Version;
+            serviceTypeVersionElement.InnerText = Version100;
             serviceIdentificationElement.AppendChild(serviceTypeVersionElement);
 
             root.AppendChild(serviceIdentificationElement);

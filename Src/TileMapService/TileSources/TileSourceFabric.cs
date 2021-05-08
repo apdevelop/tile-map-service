@@ -52,15 +52,15 @@ namespace TileMapService.TileSources
 
         private static ITileSource CreateTileSource(TileSourceConfiguration config)
         {
-            switch (config.Type.ToLowerInvariant())
+            return (config.Type.ToLowerInvariant()) switch
             {
-                case TileSourceConfiguration.TypeLocalFiles: return new LocalFilesTileSource(config);
-                case TileSourceConfiguration.TypeMBTiles: return new MBTilesTileSource(config);
-                case TileSourceConfiguration.TypeXyz: return new HttpTileSource(config);
-                case TileSourceConfiguration.TypeTms: return new HttpTileSource(config);
-                case TileSourceConfiguration.TypeWmts: return new HttpTileSource(config);
-                default: throw new ArgumentOutOfRangeException(nameof(config.Type), $"Unknown tile source type '{config.Type}'");
-            }
+                TileSourceConfiguration.TypeLocalFiles => new LocalFilesTileSource(config),
+                TileSourceConfiguration.TypeMBTiles => new MBTilesTileSource(config),
+                TileSourceConfiguration.TypeXyz => new HttpTileSource(config),
+                TileSourceConfiguration.TypeTms => new HttpTileSource(config),
+                TileSourceConfiguration.TypeWmts => new HttpTileSource(config),
+                _ => throw new ArgumentOutOfRangeException(nameof(config.Type), $"Unknown tile source type '{config.Type}'"),
+            };
         }
     }
 }

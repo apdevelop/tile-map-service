@@ -14,7 +14,7 @@
 		<ows:Operation name="GetCapabilities">
 			<ows:DCP>
 				<ows:HTTP>
-					<ows:Get xlink:href="http://localhost:5002/wmts?">
+					<ows:Get xlink:href="http://localhost:5000/wmts?">
 						<ows:Constraint name="GetEncoding">
 							<ows:AllowedValues>
 								<ows:Value>KVP</ows:Value>
@@ -27,7 +27,7 @@
 		<ows:Operation name="GetTile">
 			<ows:DCP>
 				<ows:HTTP>
-					<ows:Get xlink:href="http://localhost:5002/wmts?">
+					<ows:Get xlink:href="http://localhost:5000/wmts?">
 						<ows:Constraint name="GetEncoding">
 							<ows:AllowedValues>
 								<ows:Value>KVP</ows:Value>
@@ -363,5 +363,20 @@
 				<MatrixHeight>4</MatrixHeight>
 			</TileMatrix>
 		</TileMatrixSet>
+		<Layer>
+			<ows:Title>Tile Source 4</ows:Title>
+			<ows:Identifier>source4</ows:Identifier>
+			<Style isDefault="true">
+				<ows:Identifier>normal</ows:Identifier>
+			</Style>
+			<Format>image/png</Format>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>-180.000000 -85.05112878</ows:LowerCorner>
+				<ows:UpperCorner>180.000000 85.05112878</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+			<TileMatrixSetLink>
+				<TileMatrixSet>google3857_0-2</TileMatrixSet>
+			</TileMatrixSetLink>
+		</Layer>
 	</Contents>
 </Capabilities>

@@ -27,7 +27,7 @@ namespace TileMapService.TileSources
                 throw new ArgumentException();
             }
 
-            this.configuration = configuration; // May be changed later in InitAsync
+            this.configuration = configuration; // Will be changed later in InitAsync
         }
 
         #region ITileSource implementation
@@ -35,7 +35,7 @@ namespace TileMapService.TileSources
         Task ITileSource.InitAsync()
         {
             // Configuration values priority:
-            // 1. Default values for local files source.
+            // 1. Default values for local files source type.
             // 2. Actual values (from first found tile properties).
             // 3. Values from configuration file - overrides given above, if provided.
 
@@ -60,13 +60,8 @@ namespace TileMapService.TileSources
                 this.configuration.Id :
                 this.configuration.Title;
 
-            var minZoom = this.configuration.MinZoom.HasValue ?
-                this.configuration.MinZoom.Value :
-                zoomLevels.Count > 0 ? zoomLevels.Min(z => z) : 0;
-
-            var maxZoom = this.configuration.MaxZoom.HasValue ?
-                this.configuration.MaxZoom.Value :
-                zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 24;
+            var minZoom = this.configuration.MinZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Min(z => z) : 0);
+            var maxZoom = this.configuration.MaxZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 24);
 
             // Re-create configuration
             this.configuration = new TileSourceConfiguration
@@ -75,7 +70,7 @@ namespace TileMapService.TileSources
                 Type = this.configuration.Type,
                 Format = this.configuration.Format, // TODO: from file properties (extension)
                 Title = title,
-                Tms = this.configuration.Tms ?? false, // Default is TMS=false for file storage
+                Tms = this.configuration.Tms ?? false, // Default is tms=false for file storage
                 Location = this.configuration.Location,
                 ContentType = Utils.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
                 MinZoom = minZoom,
@@ -121,7 +116,7 @@ namespace TileMapService.TileSources
 
         #endregion
 
-        [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetLocalFilePath(string template, int x, int y, int z)
         {
             return template
