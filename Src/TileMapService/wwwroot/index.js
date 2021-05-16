@@ -26,6 +26,10 @@
         'Demographics (WMTS)': L.tileLayer('/xyz/arcgisonline-wmts-demo/{z}/{x}/{y}.png', {
             attribution: 'Esri',
             maxZoom: 5
+        }),
+        'MapServer Demo (WMS)': L.tileLayer('/xyz/wms-demo-mapserver/{z}/{x}/{y}.png', {
+            attribution: 'MapServer',
+            maxZoom: 10
         })
     };
 

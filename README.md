@@ -8,7 +8,7 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 * Supported tile sources:
   * [MBTiles](https://github.com/mapbox/mbtiles-spec) (SQLite database).
   * Local file system (each tile in separate file).
-  * External tile services with XYZ, TMS, WMTS access using HTTP/HTTPS (this server acts as proxy server).
+  * External tile services with XYZ, TMS, WMTS, WMS access using HTTP/HTTPS (this server acts as proxy server, translating requests on-the-fly).
 * Supported protocols for serving tiles: 
   * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)) [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z}).
   * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)) [http://localhost:5000/tms](http://localhost:5000/tms).
@@ -46,9 +46,10 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 * Full implementation of MBTiles specification.
 * Support for more formats (vector tiles) and coordinate systems (tile grids).
 * Include test dataset(s) created from free data.
-* Raster images processing, WMS output.
+* Raster images processing, WMS endpoint.
 * Compare with reference implementations.
 * Extended diagnostics and logging.
+* Caching tiles.
 * Performance tests.
 * Live demo.
 
