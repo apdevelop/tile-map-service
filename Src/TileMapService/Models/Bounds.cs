@@ -13,6 +13,19 @@ namespace TileMapService.Models
 
         public double Top { get; set; }
 
+        public Bounds()
+        { 
+        
+        }
+
+        public Bounds(double left, double bottom, double right, double top)
+        {
+            this.Left = left;
+            this.Bottom = bottom;
+            this.Right = right;
+            this.Top = top;
+        }
+
         /// <summary>
         /// Creates <see cref="Bounds"/> from string.
         /// </summary>
@@ -29,6 +42,17 @@ namespace TileMapService.Models
                 Right = Double.Parse(items[2], CultureInfo.InvariantCulture),
                 Top = Double.Parse(items[3], CultureInfo.InvariantCulture),
             };
+        }
+
+        public string ToBBoxString()
+        {
+            return String.Format(
+                CultureInfo.InvariantCulture,
+                "{0},{1},{2},{3}",
+                this.Left,
+                this.Bottom,
+                this.Right,
+                this.Top);
         }
     }
 }

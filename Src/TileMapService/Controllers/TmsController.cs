@@ -3,6 +3,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
+using TileMapService.Utils;
+
 namespace TileMapService.Controllers
 {
     /// <summary>
@@ -22,7 +24,7 @@ namespace TileMapService.Controllers
         public IActionResult GetCapabilitiesServices()
         {
             // TODO: services/root.xml
-            var layers = Utils.SourcesToLayers(this.tileSourceFabric.Sources);
+            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetServices();
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
@@ -32,7 +34,7 @@ namespace TileMapService.Controllers
         public IActionResult GetCapabilitiesTileMaps()
         {
             // TODO: services/tilemapservice.xml
-            var layers = Utils.SourcesToLayers(this.tileSourceFabric.Sources);
+            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileMaps();
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
@@ -42,7 +44,7 @@ namespace TileMapService.Controllers
         public IActionResult GetCapabilitiesTileSets(string tileset)
         {
             // TODO: services/basemap.xml
-            var layers = Utils.SourcesToLayers(this.tileSourceFabric.Sources);
+            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
             var layer = layers.SingleOrDefault(l => l.Identifier == tileset);
             var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileSets(layer);
 

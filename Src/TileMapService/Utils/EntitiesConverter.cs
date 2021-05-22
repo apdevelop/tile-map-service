@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 
-namespace TileMapService
+namespace TileMapService.Utils
 {
     /// <summary>
-    /// Various utility functions and constants.
+    /// Various utility functions.
     /// </summary>
-    static class Utils
+    static class EntitiesConverter
     {
         public static string TileFormatToContentType(string format)
         {
@@ -56,18 +54,6 @@ namespace TileMapService
 
                 return ms.ToArray();
             }
-        }
-
-        /// <summary>
-        /// Flips tile Y coordinate (according to XYZ/TMS coordinate systems conversion).
-        /// </summary>
-        /// <param name="y">Tile Y coordinate.</param>
-        /// <param name="zoom">Tile zoom level.</param>
-        /// <returns>Flipped tile Y coordinate.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int FlipYCoordinate(int y, int zoom)
-        {
-            return (1 << zoom) - y - 1;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-namespace TileMapService
+namespace TileMapService.Utils
 {
     static class MathHelper
     {

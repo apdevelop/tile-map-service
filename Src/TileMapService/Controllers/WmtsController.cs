@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
+
+using TileMapService.Utils;
 
 namespace TileMapService.Controllers
 {
@@ -59,7 +60,7 @@ namespace TileMapService.Controllers
 
         private IActionResult ProcessGetCapabilitiesRequest()
         {
-            var layers = Utils.SourcesToLayers(this.tileSourceFabric.Sources);
+            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
             var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts", layers)
                 .GetCapabilities(); // TODO: fix base URL
 
@@ -75,7 +76,7 @@ namespace TileMapService.Controllers
             else if (this.tileSourceFabric.Contains(tileset))
             {
                 var tileSource = this.tileSourceFabric.Get(tileset);
-                var data = await tileSource.GetTileAsync(x, Utils.FlipYCoordinate(y, z), z); // Y axis goes down from the top
+                var data = await tileSource.GetTileAsync(x, Utils.WebMercator.FlipYCoordinate(y, z), z); // Y axis goes down from the top
                 if (data != null)
                 {
                     return File(data, tileSource.Configuration.ContentType);

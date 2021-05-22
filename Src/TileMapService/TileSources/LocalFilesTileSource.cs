@@ -72,7 +72,7 @@ namespace TileMapService.TileSources
                 Title = title,
                 Tms = this.configuration.Tms ?? false, // Default is tms=false for file storage
                 Location = this.configuration.Location,
-                ContentType = Utils.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
+                ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
             };
@@ -88,7 +88,7 @@ namespace TileMapService.TileSources
             }
             else
             {
-                var path = GetLocalFilePath(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z);
+                var path = GetLocalFilePath(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
                 var fileInfo = new FileInfo(path);
                 if (fileInfo.Exists)
                 {

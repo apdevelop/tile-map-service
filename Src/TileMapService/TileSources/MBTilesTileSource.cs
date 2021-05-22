@@ -62,7 +62,7 @@ namespace TileMapService.TileSources
                 Title = title,
                 Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
                 Location = this.configuration.Location,
-                ContentType = Utils.TileFormatToContentType(format),
+                ContentType = Utils.EntitiesConverter.TileFormatToContentType(format),
                 MinZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? 0, // TODO: ? Check actual SELECT MIN/MAX(zoom_level) ?
                 MaxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? 24,
             };
@@ -72,7 +72,9 @@ namespace TileMapService.TileSources
 
         Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            var tileData = this.repository.ReadTileData(x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z);
+            var tileData = this.repository.ReadTileData(x, this.configuration.Tms.Value ? 
+                y : 
+                Utils.WebMercator.FlipYCoordinate(y, z), z);
 
             // TODO: pass gzipped data as-is with setting HTTP headers?
             // pbf as a format refers to gzip-compressed vector tile data in Mapbox Vector Tile format, 

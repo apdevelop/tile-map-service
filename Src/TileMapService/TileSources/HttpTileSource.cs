@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.WebUtilities;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
@@ -61,7 +65,7 @@ namespace TileMapService.TileSources
                 Title = title,
                 Tms = tms,
                 Location = this.configuration.Location,
-                ContentType = Utils.TileFormatToContentType(this.configuration.Format), // TODO: from metadata
+                ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from metadata
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
             };
@@ -82,10 +86,10 @@ namespace TileMapService.TileSources
                 string url;
                 switch (this.configuration.Type.ToLowerInvariant())
                 {
-                    case TileSourceConfiguration.TypeXyz: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
-                    case TileSourceConfiguration.TypeTms: { url = GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
-                    case TileSourceConfiguration.TypeWmts: { url = GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
-                    case TileSourceConfiguration.TypeWms: { url = GetTileWmsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.FlipYCoordinate(y, z), z); break; }
+                    case TileSourceConfiguration.TypeXyz: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z); break; }
+                    case TileSourceConfiguration.TypeTms: { url = GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z); break; }
+                    case TileSourceConfiguration.TypeWmts: { url = GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z); break; }
+                    case TileSourceConfiguration.TypeWms: { url = GetTileWmsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z); break; }
                     default: throw new ArgumentOutOfRangeException(nameof(this.configuration.Type), $"Unknown tile source type '{this.configuration.Type}'");
                 }
 
@@ -133,74 +137,119 @@ namespace TileMapService.TileSources
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetTileWmtsUrl(string baseUrl, string format, int x, int y, int z)
         {
-            return baseUrl +
-                "&Service=WMTS" +
-                "&Request=GetTile" +
-                "&Version=1.0.0" +
-                "&Format=" + format.Replace("/", "%2F") +
-                "&TileMatrix=" + z.ToString(CultureInfo.InvariantCulture) +
-                "&TileCol=" + x.ToString(CultureInfo.InvariantCulture) +
-                "&TileRow=" + y.ToString(CultureInfo.InvariantCulture);
+            // TODO: separate WMTS utility class
+            const string WmtsQueryService = "service";
+            const string WmtsQueryVersion = "version";
+            const string WmtsQueryRequest = "request";
+            const string WmtsQueryFormat = "format";
+
+            const string WmtsQueryTileMatrix = "tilematrix";
+            const string WmtsQueryTileCol = "tilecol";
+            const string WmtsQueryTileRow = "tilerow";
+
+            const string WMTS = "WMTS";
+            const string Version100 = "1.0.0";
+            const string GetTile = "GetTile";
+
+            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
+            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
+
+            items.RemoveAll(kvp => kvp.Key == WmtsQueryFormat);
+            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileMatrix);
+            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileCol);
+            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileRow);
+
+            var qb = new QueryBuilder(items);
+            if (!items.Any(kvp => kvp.Key == WmtsQueryService))
+            {
+                qb.Add(WmtsQueryService, WMTS);
+            }
+
+            if (!items.Any(kvp => kvp.Key == WmtsQueryVersion))
+            {
+                qb.Add(WmtsQueryVersion, Version100);
+            }
+
+            if (!items.Any(kvp => kvp.Key == WmtsQueryRequest))
+            {
+                qb.Add(WmtsQueryRequest, GetTile);
+            }
+
+            qb.Add(WmtsQueryFormat, format);
+
+            qb.Add(WmtsQueryTileMatrix, z.ToString(CultureInfo.InvariantCulture));
+            qb.Add(WmtsQueryTileCol, x.ToString(CultureInfo.InvariantCulture));
+            qb.Add(WmtsQueryTileRow, y.ToString(CultureInfo.InvariantCulture));
+
+            return baseUri + qb.ToQueryString();
         }
-
-        // Assumes SRS = EPSG:3857 / Web Mercator / Spherical Mercator
-        // Based on https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system
-
-        // TODO: ? separate class
-
-        private const int TileSize = 256; // TODO: support for high resolution tiles
-
-        private static readonly double EarthRadius = 6378137.0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetTileWmsUrl(string baseUrl, string format, int x, int y, int z)
         {
-            // TODO: EPSG:4326 support
-            // TODO: better url processing, simplify config (srs/crs depending on version), url encode, checking values duplication
-            // version, layers, styles, srs/crs must be defined in url template (location)
-            var minx = TileXtoEpsg3857X(x, z);
-            var maxx = TileXtoEpsg3857X(x + 1, z);
-            var miny = TileXtoEpsg3857Y(y + 1, z);
-            var maxy = TileXtoEpsg3857Y(y, z);
-            var bbox = String.Format(CultureInfo.InvariantCulture, "{0},{1},{2},{3}", minx, miny, maxx, maxy);
+            // TODO: separate WMS utility class
+            const string WmsQueryService = "service";
+            const string WmsQueryVersion = "version";
+            const string WmsQueryRequest = "request";
+            const string WmsQuerySrs = "srs";
+            const string WmsQueryCrs = "crs";
+            const string WmsQueryBBox = "bbox";
+            const string WmsQueryFormat = "format";
 
-            var result = baseUrl +
-                "&service=WMS" +
-                "&request=GetMap" +
-                "&bbox=" + bbox +
-                "&width=" + TileSize.ToString(CultureInfo.InvariantCulture) +
-                "&height=" + TileSize.ToString(CultureInfo.InvariantCulture) +
-                "&format=" + format.Replace("/", "%2F"); // TODO: use GetCapabilities
+            const string WmsQueryWidth = "width";
+            const string WmsQueryHeight = "height";
 
-            return result;
-        }
+            const string WMS = "WMS";
+            const string Version111 = "1.1.1";
+            const string Version130 = "1.3.0";
+            const string GetMap = "GetMap";
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double TileXtoEpsg3857X(int tileX, int zoomLevel)
-        {
-            var mapSize = (double)MapSize(zoomLevel);
-            var pixelX = tileX * TileSize;
-            var x = (MathHelper.Clip(pixelX, 0.0, mapSize) / mapSize) - 0.5;
-            var longitude = 360.0 * x;
+            const string EPSG3857 = "EPSG:3857"; // TODO: EPSG:4326 support
 
-            return EarthRadius * MathHelper.DegreesToRadians(longitude);
-        }
+            // Rebuilding url from configuration  https://stackoverflow.com/a/43407008/1182448
+            // All parameters with values are taken from provided url
+            // Mandatory parameters added if needed, with default (standard) values
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double TileXtoEpsg3857Y(int tileY, int zoomLevel)
-        {
-            var mapSize = (double)MapSize(zoomLevel);
-            var pixelY = tileY * TileSize;
-            var y = 0.5 - (MathHelper.Clip(pixelY, 0.0, mapSize) / mapSize);
-            var latitude = 90.0 - 360.0 * Math.Atan(Math.Exp(-y * 2.0 * Math.PI)) / Math.PI;
+            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
+            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
 
-            return EarthRadius * MathHelper.Artanh(Math.Sin(MathHelper.DegreesToRadians(latitude)));
-        }
+            // Will be replaced
+            items.RemoveAll(kvp => kvp.Key == WmsQuerySrs);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryCrs);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryBBox);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryWidth);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryHeight);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryFormat);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int MapSize(int zoomLevel)
-        {
-            return TileSize << zoomLevel;
+            var qb = new QueryBuilder(items);
+            if (!items.Any(kvp => kvp.Key == WmsQueryService))
+            {
+                qb.Add(WmsQueryService, WMS);
+            }
+
+            var wmsVersion = String.Empty;
+            if (!items.Any(kvp => kvp.Key == WmsQueryVersion))
+            {
+                qb.Add(WmsQueryVersion, Version111); // Default WMS version is 1.1.1
+                wmsVersion = Version111;
+            }
+            else
+            {
+                wmsVersion = items.First(kvp => kvp.Key == WmsQueryVersion).Value;
+            }
+
+            if (!items.Any(kvp => kvp.Key == WmsQueryRequest))
+            {
+                qb.Add(WmsQueryRequest, GetMap);
+            }
+
+            qb.Add((wmsVersion == Version130) ? WmsQueryCrs : WmsQuerySrs, EPSG3857);
+            qb.Add(WmsQueryBBox, Utils.WebMercator.GetTileBounds(x, y, z).ToBBoxString());
+            qb.Add(WmsQueryWidth, Utils.WebMercator.TileSize.ToString(CultureInfo.InvariantCulture));
+            qb.Add(WmsQueryHeight, Utils.WebMercator.TileSize.ToString(CultureInfo.InvariantCulture));
+            qb.Add(WmsQueryFormat, format); // TODO: use WMS GetCapabilities
+
+            return baseUri + qb.ToQueryString();
         }
     }
 }
