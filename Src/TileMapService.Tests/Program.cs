@@ -110,6 +110,7 @@ namespace TileMapService.Tests
                     MinZoom = 0,
                     MaxZoom = 2,
                 },
+                // TODO: EPSG:4326 source
             };
 
             File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(new { TileSources = tileSources }));

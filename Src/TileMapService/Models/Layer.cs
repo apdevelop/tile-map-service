@@ -13,6 +13,7 @@
 
         public string Format { get; set; }
 
+        public string Srs { get; set; }
 
         public int MinZoom { get; set; }
 

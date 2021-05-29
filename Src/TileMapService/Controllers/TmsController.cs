@@ -21,32 +21,32 @@ namespace TileMapService.Controllers
         }
 
         [HttpGet("")]
-        public IActionResult GetCapabilitiesServices()
+        public IActionResult GetRootResource()
         {
             // TODO: services/root.xml
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetServices();
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetRootResource();
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0")]
-        public IActionResult GetCapabilitiesTileMaps()
+        public IActionResult GetTileMapService()
         {
             // TODO: services/tilemapservice.xml
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileMaps();
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileMapService();
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0/{tileset}")]
-        public IActionResult GetCapabilitiesTileSets(string tileset)
+        public IActionResult GetTileMap(string tileset)
         {
             // TODO: services/basemap.xml
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
             var layer = layers.SingleOrDefault(l => l.Identifier == tileset);
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileSets(layer);
+            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileMap(layer);
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }

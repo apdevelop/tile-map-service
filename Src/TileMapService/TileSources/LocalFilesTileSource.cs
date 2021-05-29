@@ -71,6 +71,7 @@ namespace TileMapService.TileSources
                 Format = this.configuration.Format, // TODO: from file properties (extension)
                 Title = title,
                 Tms = this.configuration.Tms ?? false, // Default is tms=false for file storage
+                Srs = Utils.SrsCodes.EPSG3857, // TODO: support for EPSG:4326
                 Location = this.configuration.Location,
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
                 MinZoom = minZoom,

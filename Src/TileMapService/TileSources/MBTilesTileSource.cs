@@ -61,6 +61,7 @@ namespace TileMapService.TileSources
                 Format = format,
                 Title = title,
                 Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
+                Srs = Utils.SrsCodes.EPSG3857, // MBTiles supports only Spherical Mercator tile grid
                 Location = this.configuration.Location,
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(format),
                 MinZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? 0, // TODO: ? Check actual SELECT MIN/MAX(zoom_level) ?
@@ -72,8 +73,8 @@ namespace TileMapService.TileSources
 
         Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            var tileData = this.repository.ReadTileData(x, this.configuration.Tms.Value ? 
-                y : 
+            var tileData = this.repository.ReadTileData(x, this.configuration.Tms.Value ?
+                y :
                 Utils.WebMercator.FlipYCoordinate(y, z), z);
 
             // TODO: pass gzipped data as-is with setting HTTP headers?

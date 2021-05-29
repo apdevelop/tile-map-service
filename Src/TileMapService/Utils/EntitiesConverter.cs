@@ -23,7 +23,7 @@ namespace TileMapService.Utils
             };
         }
 
-        public static List<Models.Layer> SourcesToLayers(IList<TileSourceConfiguration> sources)
+        public static List<Models.Layer> SourcesToLayers(IEnumerable<TileSourceConfiguration> sources)
         {
             return sources
                .Select(c => new Models.Layer
@@ -32,6 +32,7 @@ namespace TileMapService.Utils
                    Title = c.Title,
                    ContentType = c.ContentType,
                    Format = c.Format,
+                   Srs = c.Srs,
                    MinZoom = c.MinZoom.Value,
                    MaxZoom = c.MaxZoom.Value,
                })

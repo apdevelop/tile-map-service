@@ -76,7 +76,7 @@ namespace TileMapService.Controllers
             else if (this.tileSourceFabric.Contains(tileset))
             {
                 var tileSource = this.tileSourceFabric.Get(tileset);
-                var data = await tileSource.GetTileAsync(x, Utils.WebMercator.FlipYCoordinate(y, z), z); // Y axis goes down from the top
+                var data = await tileSource.GetTileAsync(x, WebMercator.FlipYCoordinate(y, z), z); // Y axis goes down from the top
                 if (data != null)
                 {
                     return File(data, tileSource.Configuration.ContentType);

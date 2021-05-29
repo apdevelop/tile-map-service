@@ -16,7 +16,23 @@ namespace TileMapService.Tms
 
         private readonly List<Models.Layer> layers;
 
+        private const int TileWidth = 256; // TODO: other resolutions
+
+        private const int TileHeight = 256;
+
         #region Constants
+
+        private const string Tms = "tms";
+
+        private const string Services = "Services";
+
+        private const string TileMapService = "TileMapService";   
+        
+        private const string TileMap = "TileMap";
+
+        private const string VersionAttribute = "version";
+
+        private const string HrefAttribute = "href";
 
         private const string TileMapServiceVersion = "1.0.0";
 
@@ -34,53 +50,9 @@ namespace TileMapService.Tms
 
         private const string ProfileLocal = "local";
 
-        private const int TileWidth = 256; // TODO: other resolutions
+        #endregion Constants
 
-        private const int TileHeight = 256;
-
-        #endregion
-
-        #region SRS constants
-
-        /// <summary>
-        /// EPSG:3857
-        /// </summary>
-        /// <remarks>
-        /// WGS 84 / Pseudo-Mercator -- Spherical Mercator, Google Maps, OpenStreetMap, Bing, ArcGIS, ESRI
-        /// https://epsg.io/3857
-        /// </remarks>
-        private const string EPSG3857 = "EPSG:3857";
-
-        /// <summary>
-        /// EPSG:4326
-        /// </summary>
-        /// <remarks>
-        /// WGS 84 -- WGS84 - World Geodetic System 1984, used in GPS
-        /// https://epsg.io/4326
-        /// </remarks>
-        private const string EPSG4326 = "EPSG:4326";
-
-        /// <summary>
-        /// EPSG:900913
-        /// </summary>
-        /// <remarks>
-        /// Google Maps Global Mercator -- Spherical Mercator (unofficial - used in open source projects / OSGEO)
-        /// https://epsg.io/900913
-        /// </remarks>
-        private const string EPSG900913 = "EPSG:900913";
-
-        /// <summary>
-        /// EPSG:41001
-        /// </summary>
-        /// <remarks>
-        /// WGS84 / Simple Mercator - Spherical Mercator (unofficial deprecated OSGEO / Tile Map Service) 
-        /// https://epsg.io/41001
-        /// </remarks>
-        private const string OSGEO41001 = "OSGEO:41001";
-
-        #endregion
-
-        public CapabilitiesDocumentBuilder(string baseUrl, IList<Models.Layer> layers)
+        public CapabilitiesDocumentBuilder(string baseUrl, IEnumerable<Models.Layer> layers)
         {
             this.baseUrl = baseUrl;
             this.layers = layers.ToList();
@@ -89,66 +61,84 @@ namespace TileMapService.Tms
         /// <summary>
         /// The root resource describes the available versions of the TileMapService (and possibly other services as well).
         /// </summary>
+        /// <remarks>
+        /// https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#Root_Resource
+        /// </remarks>
         /// <returns>XML document with available versions of the TileMapService.</returns>
-        public XmlDocument GetServices()
+        public XmlDocument GetRootResource()
         {
             var doc = new XmlDocument();
-            var root = doc.CreateElement(String.Empty, "Services", String.Empty);
+            var root = doc.CreateElement(String.Empty, Services, String.Empty);
             doc.AppendChild(root);
 
-            var tileMapService = doc.CreateElement("TileMapService");
+            var tileMapService = doc.CreateElement(TileMapService);
             root.AppendChild(tileMapService);
 
-            // TODO: title from configuration
+            // TODO: title attribute from source configuration
             ////var titleAttribute = doc.CreateAttribute("title");
-            ////titleAttribute.Value = "Tile Map Service";
+            ////titleAttribute.Value = "...";
             ////tileMapService.Attributes.Append(titleAttribute);
 
-            var versionAttribute = doc.CreateAttribute("version");
+            var versionAttribute = doc.CreateAttribute(VersionAttribute);
             versionAttribute.Value = TileMapServiceVersion;
             tileMapService.Attributes.Append(versionAttribute);
 
-            var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/";
-            var hrefAttribute = doc.CreateAttribute("href");
+            var href = $"{this.baseUrl}/{Tms}/{TileMapServiceVersion}/";
+            var hrefAttribute = doc.CreateAttribute(HrefAttribute);
             hrefAttribute.Value = href;
             tileMapService.Attributes.Append(hrefAttribute);
 
             return doc;
         }
 
-        public XmlDocument GetTileMaps()
+        /// <summary>
+        /// The TileMapService resource provides description metadata about the service and lists the available TileMaps.
+        /// </summary>
+        /// <remarks>
+        /// https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMapService_Resource
+        /// </remarks>
+        /// <returns></returns>
+        public XmlDocument GetTileMapService()
         {
             var doc = new XmlDocument();
-            var root = doc.CreateElement(String.Empty, "TileMapService", String.Empty);
+            var root = doc.CreateElement(String.Empty, TileMapService, String.Empty);
             doc.AppendChild(root);
 
-            var versionAttribute = doc.CreateAttribute("version");
+            var versionAttribute = doc.CreateAttribute(VersionAttribute);
             versionAttribute.Value = TileMapServiceVersion;
             root.Attributes.Append(versionAttribute);
 
             var tileMaps = doc.CreateElement("TileMaps");
             root.AppendChild(tileMaps);
 
-            foreach (var tileSource in this.layers)
+            foreach (var layer in this.layers)
             {
-                var tileMap = doc.CreateElement("TileMap");
+                var tileMap = doc.CreateElement(TileMap);
 
                 var titleAttribute = doc.CreateAttribute("title");
-                titleAttribute.Value = tileSource.Title;
+                titleAttribute.Value = layer.Title;
                 tileMap.Attributes.Append(titleAttribute);
 
-                // TODO one tile source to several tile grids (test@WGS84, test@GoogleMapsCompatible and so on)
-                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{tileSource.Identifier}";
-                var hrefAttribute = doc.CreateAttribute("href");
+                // TODO: Title, Abstract for TileMapService
+
+                var href = $"{this.baseUrl}/{Tms}/{TileMapServiceVersion}/{layer.Identifier}";
+                var hrefAttribute = doc.CreateAttribute(HrefAttribute);
                 hrefAttribute.Value = href;
                 tileMap.Attributes.Append(hrefAttribute);
 
+                // https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#Profiles
                 var profileAttribute = doc.CreateAttribute("profile");
-                profileAttribute.Value = ProfileGlobalMercator;
+                switch (layer.Srs)
+                {
+                    case Utils.SrsCodes.EPSG3857: { profileAttribute.Value = ProfileGlobalMercator; break; }
+                    case Utils.SrsCodes.EPSG4326: { profileAttribute.Value = ProfileGlobalGeodetic; break; }
+                    default: { throw new NotImplementedException($"Unknown SRS '{layer.Srs}'"); } // TODO: local/none ?
+                }
+
                 tileMap.Attributes.Append(profileAttribute);
 
                 var srsAttribute = doc.CreateAttribute("srs");
-                srsAttribute.Value = EPSG3857;
+                srsAttribute.Value = layer.Srs;
                 tileMap.Attributes.Append(srsAttribute);
 
                 tileMaps.AppendChild(tileMap);
@@ -157,17 +147,25 @@ namespace TileMapService.Tms
             return doc;
         }
 
-        public XmlDocument GetTileSets(Models.Layer layer)
+        /// <summary>
+        /// The TileMap is a cartographically complete map representation.
+        /// </summary>
+        /// <param name="layer">Properties of layer.</param>
+        /// <remarks>
+        /// https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMap_Resource
+        /// </remarks>
+        /// <returns></returns>
+        public XmlDocument GetTileMap(Models.Layer layer)
         {
             var doc = new XmlDocument();
-            var root = doc.CreateElement(String.Empty, "TileMap", String.Empty);
+            var root = doc.CreateElement(String.Empty, TileMap, String.Empty);
             doc.AppendChild(root);
 
-            var versionAttribute = doc.CreateAttribute("version");
+            var versionAttribute = doc.CreateAttribute(VersionAttribute);
             versionAttribute.Value = TileMapServiceVersion;
             root.Attributes.Append(versionAttribute);
 
-            var tilemapservice = $"{this.baseUrl}/tms/{TileMapServiceVersion}/";
+            var tilemapservice = $"{this.baseUrl}/{Tms}/{TileMapServiceVersion}/";
             var tilemapserviceAttribute = doc.CreateAttribute("tilemapservice");
             tilemapserviceAttribute.Value = tilemapservice;
             root.Attributes.Append(tilemapserviceAttribute);
@@ -176,47 +174,55 @@ namespace TileMapService.Tms
             titleNode.AppendChild(doc.CreateTextNode(layer.Title));
             root.AppendChild(titleNode);
 
+            // TODO: Abstract for TileMap
+
             var srs = doc.CreateElement("SRS");
-            srs.AppendChild(doc.CreateTextNode(EPSG3857));
+            srs.AppendChild(doc.CreateTextNode(layer.Srs));
             root.AppendChild(srs);
 
-            // GoogleMapsCompatible tile grid
-            const double MinX = -20037508.342789;
-            const double MinY = -20037508.342789;
-            const double MaxX = 20037508.342789;
-            const double MaxY = 20037508.342789;
+            // TODO: real boundingBox values (from MBTiles metadata, for example)
+            var unitsWidth = 0.0;
+            var pixelsWidth = 0.0;
+            switch (layer.Srs)
+            {
+                case Utils.SrsCodes.EPSG3857:
+                    {
+                        // GoogleMapsCompatible tile grid
+                        const double MinX = -20037508.342789;
+                        const double MinY = -20037508.342789;
+                        const double MaxX = +20037508.342789;
+                        const double MaxY = +20037508.342789;
+                        var boundingBox = CreateBoundingBox(doc, MinX, MinY, MaxX, MaxY, "F6");
+                        root.AppendChild(boundingBox);
 
-            var boundingBox = doc.CreateElement("BoundingBox");
+                        var origin = CreateOrigin(doc, MinX, MinY, "F6");
+                        root.AppendChild(origin);
 
-            var minxAttribute = doc.CreateAttribute("minx");
-            minxAttribute.Value = MinX.ToString("F6", CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(minxAttribute);
+                        unitsWidth = MaxX - MinX;
+                        pixelsWidth = TileWidth;
+                        break;
+                    }
+                case Utils.SrsCodes.EPSG4326:
+                    {
+                        const double MinX = -180;
+                        const double MinY = -90;
+                        const double MaxX = +180;
+                        const double MaxY = +90;
+                        var boundingBox = CreateBoundingBox(doc, MinX, MinY, MaxX, MaxY, "F0");
+                        root.AppendChild(boundingBox);
 
-            var minyAttribute = doc.CreateAttribute("miny");
-            minyAttribute.Value = MinY.ToString("F6", CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(minyAttribute);
+                        var origin = CreateOrigin(doc, MinX, MinY, "F0");
+                        root.AppendChild(origin);
 
-            var maxxAttribute = doc.CreateAttribute("maxx");
-            maxxAttribute.Value = MaxX.ToString("F6", CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(maxxAttribute);
-
-            var maxyAttribute = doc.CreateAttribute("maxy");
-            maxyAttribute.Value = MaxY.ToString("F6", CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(maxyAttribute);
-
-            root.AppendChild(boundingBox);
-
-            var origin = doc.CreateElement("Origin");
-
-            var yAttribute = doc.CreateAttribute("y");
-            yAttribute.Value = MinY.ToString("F6", CultureInfo.InvariantCulture);
-            origin.Attributes.Append(yAttribute);
-
-            var xAttribute = doc.CreateAttribute("x");
-            xAttribute.Value = MinX.ToString("F6", CultureInfo.InvariantCulture);
-            origin.Attributes.Append(xAttribute);
-
-            root.AppendChild(origin);
+                        unitsWidth = MaxX - MinX;
+                        pixelsWidth = TileWidth * 2;
+                        break;
+                    }
+                default:
+                    {
+                        throw new NotImplementedException($"Unknown SRS '{layer.Srs}'");
+                    }
+            }
 
             var tileFormat = doc.CreateElement("TileFormat");
 
@@ -245,26 +251,62 @@ namespace TileMapService.Tms
             {
                 var tileSet = doc.CreateElement("TileSet");
 
-                var href = $"{this.baseUrl}/tms/{TileMapServiceVersion}/{layer.Identifier}/{level}";
-                var hrefAttribute = doc.CreateAttribute("href");
+                var href = $"{this.baseUrl}/{Tms}/{TileMapServiceVersion}/{layer.Identifier}/{level}";
+                var hrefAttribute = doc.CreateAttribute(HrefAttribute);
                 hrefAttribute.Value = href;
                 tileSet.Attributes.Append(hrefAttribute);
 
                 var orderAttribute = doc.CreateAttribute("order");
-                orderAttribute.Value = $"{level}";
+                orderAttribute.Value = level.ToString(CultureInfo.InvariantCulture);
                 tileSet.Attributes.Append(orderAttribute);
 
-                // TODO: ? units-per-pixel = 78271.516 / 2^n 
-                // TODO: ? an initial zoom level that consists of four 256x256 pixel tiles covering the whole earth
-                var unitsperpixel = (MaxX - MinX) / (((double)TileWidth) * Math.Pow(2, level));
-                var unitsperpixelAttribute = doc.CreateAttribute("units-per-pixel");
-                unitsperpixelAttribute.Value = unitsperpixel.ToString(CultureInfo.InvariantCulture);
-                tileSet.Attributes.Append(unitsperpixelAttribute);
+                var unitsPerPixel = unitsWidth / (pixelsWidth * Math.Pow(2, level));
+                var unitsPerPixelAttribute = doc.CreateAttribute("units-per-pixel");
+                unitsPerPixelAttribute.Value = unitsPerPixel.ToString(CultureInfo.InvariantCulture);
+                tileSet.Attributes.Append(unitsPerPixelAttribute);
 
                 tileSets.AppendChild(tileSet);
             }
 
             return doc;
+        }
+
+        private static XmlElement CreateBoundingBox(XmlDocument doc, double minX, double minY, double maxX, double maxY, string format)
+        {
+            var boundingBox = doc.CreateElement("BoundingBox");
+
+            var minxAttribute = doc.CreateAttribute("minx");
+            minxAttribute.Value = minX.ToString(format, CultureInfo.InvariantCulture);
+            boundingBox.Attributes.Append(minxAttribute);
+
+            var minyAttribute = doc.CreateAttribute("miny");
+            minyAttribute.Value = minY.ToString(format, CultureInfo.InvariantCulture);
+            boundingBox.Attributes.Append(minyAttribute);
+
+            var maxxAttribute = doc.CreateAttribute("maxx");
+            maxxAttribute.Value = maxX.ToString(format, CultureInfo.InvariantCulture);
+            boundingBox.Attributes.Append(maxxAttribute);
+
+            var maxyAttribute = doc.CreateAttribute("maxy");
+            maxyAttribute.Value = maxY.ToString(format, CultureInfo.InvariantCulture);
+            boundingBox.Attributes.Append(maxyAttribute);
+
+            return boundingBox;
+        }
+
+        private static XmlElement CreateOrigin(XmlDocument doc, double originX, double originY, string format)
+        {
+            var origin = doc.CreateElement("Origin");
+
+            var xAttribute = doc.CreateAttribute("x");
+            xAttribute.Value = originX.ToString(format, CultureInfo.InvariantCulture);
+            origin.Attributes.Append(xAttribute);
+
+            var yAttribute = doc.CreateAttribute("y");
+            yAttribute.Value = originY.ToString(format, CultureInfo.InvariantCulture);
+            origin.Attributes.Append(yAttribute);
+
+            return origin;
         }
     }
 }

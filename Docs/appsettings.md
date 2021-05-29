@@ -42,6 +42,13 @@ Template string uses `{x}`, `{y}`, `{z}` as placeholders for corresponding coord
 WMS location should contain base url of WMS service along with `version`, `layers`, `srs`/`crs` values. 
 Other values, like `styles`, `transparent`, `bgcolor` and so on are optional. The only `srs`/`crs` currently supported is `EPSG:3857` or compatible.
 
+#### srs
+Type: `String`<br>
+Required: `false`
+Default: `EPSG:3857`
+
+Spatial reference system (SRS), EPSG code. Possible values are `EPSG:3857` and `EPSG:4326`.
+
 #### tms
 Type: `Boolean`<br>
 Required: `false`

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.WebUtilities;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -44,7 +42,7 @@ namespace TileMapService.TileSources
             // 2. Actual values (from source metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            // TODO: read metadata for TMS, WMTS and WMS sources
+            // TODO: read metadata from TMS, WMTS and WMS sources
 
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
                 this.configuration.Id :
@@ -55,6 +53,7 @@ namespace TileMapService.TileSources
 
             // Default is tms=false for simple XYZ tile services
             var tms = this.configuration.Tms ?? (this.configuration.Type.ToLowerInvariant() == TileSourceConfiguration.TypeTms);
+            var srs = String.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
 
             // Re-create configuration
             this.configuration = new TileSourceConfiguration
@@ -64,6 +63,7 @@ namespace TileMapService.TileSources
                 Format = this.configuration.Format, // TODO: from metadata
                 Title = title,
                 Tms = tms,
+                Srs = srs,
                 Location = this.configuration.Location,
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from metadata
                 MinZoom = minZoom,
@@ -86,11 +86,30 @@ namespace TileMapService.TileSources
                 string url;
                 switch (this.configuration.Type.ToLowerInvariant())
                 {
-                    case TileSourceConfiguration.TypeXyz: { url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z); break; }
-                    case TileSourceConfiguration.TypeTms: { url = GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z); break; }
-                    case TileSourceConfiguration.TypeWmts: { url = GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z); break; }
-                    case TileSourceConfiguration.TypeWms: { url = GetTileWmsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z); break; }
-                    default: throw new ArgumentOutOfRangeException(nameof(this.configuration.Type), $"Unknown tile source type '{this.configuration.Type}'");
+                    case TileSourceConfiguration.TypeXyz:
+                        {
+                            url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
+                            break;
+                        }
+                    case TileSourceConfiguration.TypeTms:
+                        {
+                            url = GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
+                            break;
+                        }
+                    case TileSourceConfiguration.TypeWmts:
+                        {
+                            url = GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
+                            break;
+                        }
+                    case TileSourceConfiguration.TypeWms:
+                        {
+                            url = GetTileWmsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
+                            break;
+                        }
+                    default:
+                        {
+                            throw new ArgumentOutOfRangeException(nameof(this.configuration.Type), $"Unknown tile source type '{this.configuration.Type}'");
+                        }
                 }
 
                 var response = await client.GetAsync(url);
@@ -119,9 +138,9 @@ namespace TileMapService.TileSources
         private static string GetTileXyzUrl(string baseUrl, int x, int y, int z)
         {
             return baseUrl
-                    .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
-                    .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
-                    .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase);
+                .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
+                .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
+                .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -204,7 +223,7 @@ namespace TileMapService.TileSources
             const string Version130 = "1.3.0";
             const string GetMap = "GetMap";
 
-            const string EPSG3857 = "EPSG:3857"; // TODO: EPSG:4326 support
+            const string EPSG3857 = Utils.SrsCodes.EPSG3857; // TODO: EPSG:4326 support
 
             // Rebuilding url from configuration  https://stackoverflow.com/a/43407008/1182448
             // All parameters with values are taken from provided url

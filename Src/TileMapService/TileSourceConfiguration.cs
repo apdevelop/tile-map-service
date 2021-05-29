@@ -8,7 +8,7 @@ namespace TileMapService
     public class TileSourceConfiguration
     {
         /// <summary>
-        /// Type of tile source, "file", "mbtiles", "xyz", "tms", "wmts".
+        /// Type of tile source, "file", "mbtiles", "xyz", "tms", "wmts", "wms".
         /// </summary>
         [JsonPropertyName("type")]
         public string Type { get; set; }
@@ -74,6 +74,12 @@ namespace TileMapService
 
         [JsonPropertyName("maxzoom")]
         public int? MaxZoom { get; set; }
+
+        /// <summary>
+        /// Spatial reference system (SRS), EPSG code.
+        /// </summary>
+        [JsonPropertyName("srs")]
+        public string Srs { get; set; }
 
         // TODO: bounds, center, attribution,.. (MBTiles metadata as example).
     }
