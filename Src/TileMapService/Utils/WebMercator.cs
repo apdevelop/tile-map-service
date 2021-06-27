@@ -16,6 +16,19 @@ namespace TileMapService.Utils
         private static readonly double EarthRadius = 6378137.0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Longitude(double x)
+        {
+            return (x / (EarthRadius * Math.PI / 180.0));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Latitude(double y)
+        {
+            var fi = 2.0 * Math.Atan(Math.Exp(y / EarthRadius)) - Math.PI / 2.0;
+            return MathHelper.RadiansToDegrees(fi);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Models.Bounds GetTileBounds(int tileX, int tileY, int zoomLevel)
         {
             // PostGIS ST_TileEnvelope: https://postgis.net/docs/ST_TileEnvelope.html
@@ -49,9 +62,33 @@ namespace TileMapService.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int MapSize(int zoomLevel)
+        public static int TileCount(int zoomLevel)
+        {
+            return 1 << zoomLevel;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int MapSize(int zoomLevel)
         {
             return TileSize << zoomLevel;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double MapSize(double width, double longitudeMin, double longitudeMax)
+        {
+            if (width <= 0.0)
+            {
+                throw new ArgumentOutOfRangeException("width", width, "width <= 0.0");
+            }
+
+            if (longitudeMin >= longitudeMax)
+            {
+                throw new ArgumentException("longitudeMin >= longitudeMax");
+            }
+
+            var mapSize = width / ((longitudeMax - longitudeMin) / 360.0);
+
+            return mapSize;
         }
 
         /// <summary>
@@ -64,6 +101,41 @@ namespace TileMapService.Utils
         public static int FlipYCoordinate(int y, int zoomLevel)
         {
             return (1 << zoomLevel) - y - 1;
+        }
+
+        public static double TileCoordinateXAtZoom(double longitude, int zoomLevel)
+        {
+            return (LongitudeToPixelXAtZoom(longitude, zoomLevel) / (double)TileSize);
+        }
+
+        public static double TileCoordinateYAtZoom(double latitude, int zoomLevel)
+        {
+            return (LatitudeToPixelYAtZoom(latitude, zoomLevel) / (double)TileSize);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double LongitudeToPixelXAtZoom(double longitude, int zoomLevel)
+        {
+            return LongitudeToPixelX(longitude, (double)MapSize(zoomLevel));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double LatitudeToPixelYAtZoom(double latitude, int zoomLevel)
+        {
+            return LatitudeToPixelY(latitude, (double)MapSize(zoomLevel));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double LongitudeToPixelX(double longitude, double mapSize)
+        {
+            return ((longitude + 180.0) / 360.0) * mapSize;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double LatitudeToPixelY(double latitude, double mapSize)
+        {
+            var sinLatitude = Math.Sin(MathHelper.DegreesToRadians(latitude));
+            return (0.5 - Math.Log((1.0 + sinLatitude) / (1.0 - sinLatitude)) / (4.0 * Math.PI)) * mapSize;
         }
     }
 }

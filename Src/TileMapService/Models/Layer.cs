@@ -9,6 +9,8 @@
 
         public string Title { get; set; }
 
+        // TODO: Abstract
+
         public string ContentType { get; set; }
 
         public string Format { get; set; }

@@ -13,6 +13,7 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
   * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)) [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z}).
   * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)) [http://localhost:5000/tms](http://localhost:5000/tms).
   * WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service))  [http://localhost:5000/wmts](http://localhost:5000/wmts?request=GetCapabilities).
+  * WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))  [http://localhost:5000/wms](http://localhost:5000/wms?request=GetCapabilities).
 * Coordinate system / tile grid: [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection), basic support for geodetic `EPSG:4326`.
 * Formats: raster (`PNG`, `JPEG`) and basic support of `PBF` / `MVT` vector tiles.
 * Configuration in JSON file.
