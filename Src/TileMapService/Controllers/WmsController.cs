@@ -184,7 +184,7 @@ namespace TileMapService.Controllers
 
             if (String.Compare(srs, Identifiers.EPSG3857, StringComparison.OrdinalIgnoreCase) != 0)
             {
-                return BadRequest("srs"); // TODO: EPSG4326
+                return BadRequest("srs"); // TODO: EPSG:4326
             }
 
             var boundingBox = Models.Bounds.FromMBTilesMetadataString(bbox);
@@ -208,7 +208,8 @@ namespace TileMapService.Controllers
         }
 
         private async Task<byte[]> CreateMapImageAsync(
-            int width, int height,
+            int width, 
+            int height,
             Models.Bounds boundingBox,
             string format,
             int backgroundColor,
@@ -221,10 +222,13 @@ namespace TileMapService.Controllers
 
                 foreach (var layerName in layerNames)
                 {
+                    // TODO: ? optimize - single WMS request for WMS source type
+                    // TODO: check SRS support in source
                     if (this.tileSourceFabric.Contains(layerName))
                     {
                         await DrawLayerAsync(
-                            width, boundingBox,
+                            width, 
+                            boundingBox,
                             resultImage,
                             this.tileSourceFabric.Get(layerName),
                             backgroundColor);
@@ -239,7 +243,8 @@ namespace TileMapService.Controllers
         }
 
         private static async Task DrawLayerAsync(
-            int width, Models.Bounds boundingBox,
+            int width, 
+            Models.Bounds boundingBox,
             Bitmap resultImage,
             TileSources.ITileSource source,
             int backgroundColor)
@@ -248,7 +253,7 @@ namespace TileMapService.Controllers
             var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);
             if (sourceTiles.Count > 0)
             {
-                WmsHelper.DrawTilesToRasterCanvas(resultImage, boundingBox, sourceTiles, backgroundColor, WebMercator.TileSize);
+                WmsHelper.DrawWebMercatorTilesToRasterCanvas(resultImage, boundingBox, sourceTiles, backgroundColor, WebMercator.TileSize);
             }
         }
 

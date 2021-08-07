@@ -51,21 +51,18 @@ namespace TileMapService.Utils
 
         public static ImageFormat ImageFormatFromMediaType(string format)
         {
-            var imageFormat = ImageFormat.Png;
             if (format == MediaTypeNames.Image.Png)
             {
-                imageFormat = ImageFormat.Png;
+                return ImageFormat.Png;
             }
             else if (format == MediaTypeNames.Image.Jpeg)
             {
-                imageFormat = ImageFormat.Jpeg;
+                return ImageFormat.Jpeg;
             }
             else
             {
                 throw new ArgumentException("format");
             }
-
-            return imageFormat;
         }
 
         public static byte[] SaveImageToByteArray(Image image, ImageFormat imageFormat, int jpegQuality = 90)

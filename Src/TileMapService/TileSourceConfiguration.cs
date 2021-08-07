@@ -8,7 +8,7 @@ namespace TileMapService
     public class TileSourceConfiguration
     {
         /// <summary>
-        /// Type of tile source, "file", "mbtiles", "xyz", "tms", "wmts", "wms".
+        /// Type of tile source, "file", "mbtiles", "xyz", "tms", "wmts", "wms", "geotiff".
         /// </summary>
         [JsonPropertyName("type")]
         public string Type { get; set; }
@@ -31,6 +31,9 @@ namespace TileMapService
 
         [JsonIgnore]
         public const string TypeWms = "wms";
+
+        [JsonIgnore]
+        public const string TypeGeoTiff = "geotiff";
         #endregion
 
         /// <summary>

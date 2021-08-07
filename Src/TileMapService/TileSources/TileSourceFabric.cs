@@ -60,6 +60,7 @@ namespace TileMapService.TileSources
                 TileSourceConfiguration.TypeTms => new HttpTileSource(config),
                 TileSourceConfiguration.TypeWmts => new HttpTileSource(config),
                 TileSourceConfiguration.TypeWms => new HttpTileSource(config),
+                TileSourceConfiguration.TypeGeoTiff => new RasterTileSource(config),
                 _ => throw new ArgumentOutOfRangeException(nameof(config.Type), $"Unknown tile source type '{config.Type}'"),
             };
         }

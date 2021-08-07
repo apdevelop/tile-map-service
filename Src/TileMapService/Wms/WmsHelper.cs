@@ -23,7 +23,7 @@ namespace TileMapService.Wms
             return wmsVersion;
         }
 
-        public static void DrawTilesToRasterCanvas(
+        public static void DrawWebMercatorTilesToRasterCanvas(
             Bitmap outputImage,
             Models.Bounds boundingBox,
             IList<Models.TileDataset> sourceTiles,
@@ -46,6 +46,7 @@ namespace TileMapService.Wms
                 {
                     using (var graphics = Graphics.FromImage(canvasImage))
                     {
+                        // Draw all tiles without scaling
                         foreach (var sourceTile in sourceTiles)
                         {
                             var offsetX = (sourceTile.X - tileMinX) * tileSize;
@@ -73,18 +74,18 @@ namespace TileMapService.Wms
                     var pixelOffsetY = WebMercator.LatitudeToPixelYAtZoom(geoBBox.MaxLatitude, zoom) - tileSize * tileMinY;
                     var pixelWidth = WebMercator.LongitudeToPixelXAtZoom(geoBBox.MaxLongitude, zoom) - WebMercator.LongitudeToPixelXAtZoom(geoBBox.MinLongitude, zoom);
                     var pixelHeight = WebMercator.LatitudeToPixelYAtZoom(geoBBox.MinLatitude, zoom) - WebMercator.LatitudeToPixelYAtZoom(geoBBox.MaxLatitude, zoom);
-                    var sourceRect = new Rectangle(
+                    var sourceRectangle = new Rectangle(
                         (int)Math.Round(pixelOffsetX),
                         (int)Math.Round(pixelOffsetY),
                         (int)Math.Round(pixelWidth),
                         (int)Math.Round(pixelHeight));
 
-                    // Scale output image
-                    var destRect = new Rectangle(0, 0, outputImage.Width, outputImage.Height);
+                    // Clip and scale to requested size of output image
+                    var destRectangle = new Rectangle(0, 0, outputImage.Width, outputImage.Height);
                     using (var graphics = Graphics.FromImage(outputImage))
                     {
                         graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bicubic;
-                        graphics.DrawImage(canvasImage, destRect, sourceRect, GraphicsUnit.Pixel);
+                        graphics.DrawImage(canvasImage, destRectangle, sourceRectangle, GraphicsUnit.Pixel);
                     }
                 }
             }

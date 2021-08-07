@@ -39,6 +39,21 @@ namespace TileMapService.Utils
                 TileYtoEpsg3857Y(tileY, zoomLevel));
         }
 
+        public static Models.GeographicalBounds GetTileGeographicalBounds(int tileX, int tileY, int zoomLevel)
+        {
+            return new Models.GeographicalBounds(
+                new Models.GeographicalPoint
+                {
+                    Longitude = PixelXToLongitude(TileSize * tileX, zoomLevel),
+                    Latitude = PixelYToLatitude(TileSize * tileY + TileSize, zoomLevel),
+                },
+                new Models.GeographicalPoint
+                {
+                    Longitude = PixelXToLongitude(TileSize * tileX + TileSize, zoomLevel),
+                    Latitude = PixelYToLatitude(TileSize * tileY, zoomLevel),
+                });
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TileXtoEpsg3857X(int tileX, int zoomLevel)
         {
@@ -105,12 +120,12 @@ namespace TileMapService.Utils
 
         public static double TileCoordinateXAtZoom(double longitude, int zoomLevel)
         {
-            return (LongitudeToPixelXAtZoom(longitude, zoomLevel) / (double)TileSize);
+            return LongitudeToPixelXAtZoom(longitude, zoomLevel) / (double)TileSize;
         }
 
         public static double TileCoordinateYAtZoom(double latitude, int zoomLevel)
         {
-            return (LatitudeToPixelYAtZoom(latitude, zoomLevel) / (double)TileSize);
+            return LatitudeToPixelYAtZoom(latitude, zoomLevel) / (double)TileSize;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -136,6 +151,24 @@ namespace TileMapService.Utils
         {
             var sinLatitude = Math.Sin(MathHelper.DegreesToRadians(latitude));
             return (0.5 - Math.Log((1.0 + sinLatitude) / (1.0 - sinLatitude)) / (4.0 * Math.PI)) * mapSize;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double PixelXToLongitude(double pixelX, int zoomLevel)
+        {
+            var mapSize = (double)MapSize(zoomLevel);
+            var x = (MathHelper.Clip(pixelX, 0.0, mapSize) / mapSize) - 0.5;
+
+            return 360.0 * x;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double PixelYToLatitude(double pixelY, int zoomLevel)
+        {
+            var mapSize = (double)MapSize(zoomLevel);
+            var y = 0.5 - (MathHelper.Clip(pixelY, 0.0, mapSize) / mapSize);
+
+            return 90.0 - 360.0 * Math.Atan(Math.Exp(-y * 2.0 * Math.PI)) / Math.PI;
         }
     }
 }

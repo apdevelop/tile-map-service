@@ -30,6 +30,9 @@
         'MapServer Demo (WMS)': L.tileLayer('/xyz/wms-demo-mapserver/{z}/{x}/{y}.png', {
             attribution: 'MapServer',
             maxZoom: 10
+        }),
+        'GeoTIFF': L.tileLayer('/xyz/geotiff/?x={x}&y={y}&z={z}', {
+            maxZoom: 24
         })
     };
 

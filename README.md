@@ -1,5 +1,5 @@
 # Tile Map Service for .NET 5
-Basic implementation of tile server for .NET 5 platform. Provides access to tiles stored in MBTiles, files and external sources. Serving tiles using XYZ, TMS and WMTS protocols.
+Basic implementation of tile server for .NET 5 platform. Provides access to tiles stored in MBTiles, files and external sources. Serving tiles using XYZ, TMS, WMTS and WMS protocols.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
