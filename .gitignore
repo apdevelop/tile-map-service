@@ -1,4 +1,5 @@
 Src/.vs/
+Src/**/.config/
 
 Src/**/[Bb]in/
 Src/**/[Oo]bj/

@@ -1,5 +1,5 @@
 # Tile Map Service for .NET 5
-Basic implementation of tile server for .NET 5 platform. Provides access to tiles stored in MBTiles, files and external sources. Serving tiles using XYZ, TMS, WMTS and WMS protocols.
+Basic implementation of tile server for .NET 5 platform. Provides access to tiles stored in several source types and serving them using various protocols.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
@@ -9,6 +9,7 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
   * [MBTiles](https://github.com/mapbox/mbtiles-spec) (SQLite database).
   * Local file system (each tile in separate file).
   * External tile services with XYZ, TMS, WMTS, WMS access using HTTP/HTTPS (this server acts as proxy server, translating requests on-the-fly).
+  * GeoTIFF image file (EPSG:3857 or EPSG:4326 SRS).
 * Supported protocols for serving tiles: 
   * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)) [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z}).
   * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)) [http://localhost:5000/tms](http://localhost:5000/tms).
@@ -44,10 +45,8 @@ After start, it will listen on default TCP port 5000 (using in-process `Kestrel`
 and tile service with demo page will be available on http://localhost:5000/ address; to enable remote calls allow connections to this port in firewall settings.
 
 ### TODOs
-* Full implementation of MBTiles specification.
 * Support for more formats (vector tiles) and coordinate systems (tile grids).
 * Include test dataset(s) created from free data.
-* Raster images processing, WMS endpoint.
 * Compare with reference implementations.
 * Extended diagnostics and logging.
 * Caching tiles.

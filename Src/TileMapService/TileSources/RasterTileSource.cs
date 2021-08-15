@@ -18,21 +18,21 @@ namespace TileMapService.TileSources
     /// Represents tile source with tiles from GeoTIFF raster image file.
     /// </summary>
     /// <remarks>
-    /// Supports currently only EPSG:4326 coordinate system of input GeoTIFF.
+    /// Supports currently only EPSG:4326 and EPSG:3857 coordinate system of input GeoTIFF.
     /// http://geotiff.maptools.org/spec/geotiff6.html
     /// </remarks>
     class RasterTileSource : ITileSource
     {
         private TileSourceConfiguration configuration;
 
-        private GeoTiffMetadata geoTiffInfo;
+        private M.RasterProperties rasterProperties;
 
         public RasterTileSource(TileSourceConfiguration configuration)
         {
-            // TODO: EPSG:4326 tile response (WMTS)
+            // TODO: report real WMS layer bounds from raster bounds
+            // TODO: EPSG:4326 tile response (for WMTS, WMS)
             // TODO: support for MapInfo RASTER files
             // TODO: support for multiple rasters (directory with rasters)
-            // TODO: report WMS layer bounds from raster bounds
 
             if (String.IsNullOrEmpty(configuration.Id))
             {
@@ -53,14 +53,11 @@ namespace TileMapService.TileSources
         {
             Tiff.SetErrorHandler(new DisableErrorHandler()); // TODO: ? redirect output?
 
-            this.geoTiffInfo = ReadGeoTiffProperties(this.configuration.Location);
+            this.rasterProperties = ReadGeoTiffProperties(this.configuration.Location);
 
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
                 this.configuration.Id :
                 this.configuration.Title;
-
-            var tms = this.configuration.Tms ?? false;
-            var srs = String.IsNullOrWhiteSpace(this.configuration.Srs) ? U.SrsCodes.EPSG4326 : this.configuration.Srs.Trim().ToUpper();
 
             var minZoom = this.configuration.MinZoom ?? 0;
             var maxZoom = this.configuration.MaxZoom ?? 24;
@@ -70,12 +67,12 @@ namespace TileMapService.TileSources
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type,
-                Format = this.configuration.Format, // TODO: from metadata
+                Format = "png", // TODO: ? multiple output formats ?
                 Title = title,
-                Tms = tms,
-                Srs = srs,
+                Tms = false,
+                Srs = U.SrsCodes.EPSG3857, // TODO: only EPSG:3857 'output' SRS currently supported
                 Location = this.configuration.Location,
-                ContentType = U.EntitiesConverter.TileFormatToContentType(this.configuration.Format),
+                ContentType = U.EntitiesConverter.TileFormatToContentType("png"),
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
             };
@@ -91,8 +88,8 @@ namespace TileMapService.TileSources
             }
             else
             {
-                var tileGeoBounds = U.WebMercator.GetTileGeographicalBounds(x, U.WebMercator.FlipYCoordinate(y, z), z);
-                var tileCoordinates = BuildTileCoordinatesList(this.geoTiffInfo, tileGeoBounds);
+                var tileBounds = U.WebMercator.GetTileBounds(x, U.WebMercator.FlipYCoordinate(y, z), z);
+                var tileCoordinates = BuildTileCoordinatesList(this.rasterProperties, tileBounds);
                 if (tileCoordinates.Count == 0)
                 {
                     return null;
@@ -103,7 +100,7 @@ namespace TileMapService.TileSources
                 {
                     using var resultImage = new Bitmap(resultImageStream);
 
-                    DrawGeoTiffTilesToRasterCanvas(resultImage, tileGeoBounds, tileCoordinates, 0, this.geoTiffInfo.TileWidth, this.geoTiffInfo.TileHeight);
+                    DrawGeoTiffTilesToRasterCanvas(resultImage, tileBounds, tileCoordinates, 0, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight);
 
                     var imageFormat = U.ImageHelper.ImageFormatFromMediaType(this.configuration.ContentType);
                     var imageData = U.ImageHelper.SaveImageToByteArray(resultImage, imageFormat);
@@ -123,7 +120,11 @@ namespace TileMapService.TileSources
 
         #endregion
 
-        private static GeoTiffMetadata ReadGeoTiffProperties(string path)
+        #region GeoTIFF files processing
+
+        private const string ModeOpenReadTiff = "r";
+
+        private static M.RasterProperties ReadGeoTiffProperties(string path)
         {
             using (var tiff = Tiff.Open(path, ModeOpenReadTiff))
             {
@@ -152,18 +153,20 @@ namespace TileMapService.TileSources
                 // ModelTiePoints  https://freeimage.sourceforge.io/fnet/html/38F9430A.htm
                 var tiePointTag = tiff.GetField(TiffTag.GEOTIFF_MODELTIEPOINTTAG);
                 var tiePointsCount = tiePointTag[0].ToInt();
-                var tiePoints = tiePointTag[1].ToDoubleArray(); // TODO: ! check format
+                var tiePoints = tiePointTag[1].ToDoubleArray();
 
                 if ((tiePoints.Length != 6) || (tiePoints[0] != 0) || (tiePoints[1] != 0) || (tiePoints[2] != 0) || (tiePoints[5] != 0))
                 {
-                    throw new FormatException($"Only single tie point is supported");
+                    throw new FormatException($"Only single tie point is supported"); // TODO: Only simple tie points scheme is supported
                 }
 
-                var t3 = tiff.GetField(TiffTag.GEOTIFF_MODELTRANSFORMATIONTAG);
-                if (t3 != null)
+                var modelTransformation = tiff.GetField(TiffTag.GEOTIFF_MODELTRANSFORMATIONTAG);
+                if (modelTransformation != null)
                 {
                     throw new FormatException($"Only simple projection without transformation is supported");
                 }
+
+                var srId = 0;
 
                 // Simple check SRS of GeoTIFF tie points
                 var geoKeys = tiff.GetField(TiffTag.GEOTIFF_GEOKEYDIRECTORYTAG);
@@ -194,9 +197,9 @@ namespace TileMapService.TileSources
                                 case (ushort)GeoTiff.Key.GTModelTypeGeoKey:
                                     {
                                         var modelType = (GeoTiff.ModelType)keys[keyIndex + 3];
-                                        if (modelType != GeoTiff.ModelType.Geographic)
+                                        if (!((modelType == GeoTiff.ModelType.Projected) || (modelType == GeoTiff.ModelType.Geographic)))
                                         {
-                                            throw new FormatException("Only geographic coordinate system (ModelTypeGeographic = 2) is supported");
+                                            throw new FormatException("Only coordinate systems ModelTypeProjected (1) or ModelTypeGeographic (2) are supported");
                                         }
 
                                         keyIndex += 4;
@@ -208,21 +211,27 @@ namespace TileMapService.TileSources
                                         keyIndex += 4;
                                         break;
                                     }
+                                case (ushort)GeoTiff.Key.GTCitationGeoKey:
+                                    {
+                                        var gtc = keys[keyIndex + 3];
+                                        keyIndex += 4;
+                                        break;
+                                    }
                                 case (ushort)GeoTiff.Key.GeographicTypeGeoKey:
                                     {
                                         var geographicType = keys[keyIndex + 3];
                                         if (geographicType != 4326)
                                         {
-                                            throw new FormatException("Only EPSG:4326 coordinate system is supported");
+                                            throw new FormatException("Only EPSG:4326 geodetic coordinate system is supported");
                                         }
 
+                                        srId = geographicType;
                                         keyIndex += 4;
                                         break;
                                     }
                                 case (ushort)GeoTiff.Key.GeogCitationGeoKey:
                                     {
                                         var geogCitation = keys[keyIndex + 3];
-
                                         keyIndex += 4;
                                         break;
                                     }
@@ -231,7 +240,7 @@ namespace TileMapService.TileSources
                                         var geogAngularUnit = (GeoTiff.AngularUnits)keys[keyIndex + 3];
                                         if (geogAngularUnit != GeoTiff.AngularUnits.Degree)
                                         {
-                                            throw new FormatException("Only angular degree units is supported");
+                                            throw new FormatException("Only degree angular unit is supported");
                                         }
 
                                         keyIndex += 4;
@@ -255,6 +264,30 @@ namespace TileMapService.TileSources
                                         keyIndex += 4;
                                         break;
                                     }
+                                case (ushort)GeoTiff.Key.ProjectedCSTypeGeoKey:
+                                    {
+                                        var projectedCSType = keys[keyIndex + 3];
+                                        if (projectedCSType != 3857)
+                                        {
+                                            throw new FormatException($"Only EPSG:3857 projected coordinate system is supported (input was: {projectedCSType})");
+                                        }
+
+                                        // TODO: UTM (EPSG:32636 and others) support
+                                        srId = projectedCSType;
+                                        keyIndex += 4;
+                                        break;
+                                    }
+                                case (ushort)GeoTiff.Key.ProjLinearUnitsGeoKey:
+                                    {
+                                        var linearUnit = (GeoTiff.LinearUnits)keys[keyIndex + 3];
+                                        if (linearUnit != GeoTiff.LinearUnits.Meter)
+                                        {
+                                            throw new FormatException("Only meter linear unit is supported");
+                                        }
+
+                                        keyIndex += 4;
+                                        break;
+                                    }
                                 default:
                                     {
                                         break;
@@ -264,29 +297,73 @@ namespace TileMapService.TileSources
                     }
                 }
 
-                // TODO: ? use projected values for internal processing?
-                // Only simple tie points scheme is supported
-                var result = new GeoTiffMetadata
+                M.GeographicalBounds geographicalBounds = null;
+                M.Bounds projectedBounds = null;
+                double pixelWidth = 0, pixelHeight = 0;
+
+                switch (srId)
                 {
+                    case 4326: // TODO: const
+                        {
+                            geographicalBounds = new M.GeographicalBounds(
+                                tiePoints[3],
+                                tiePoints[4] - imageHeight * pixelSizes[1],
+                                tiePoints[3] + imageWidth * pixelSizes[0],
+                                tiePoints[4]);
+
+                            projectedBounds = new M.Bounds(
+                                U.WebMercator.X(tiePoints[3]),
+                                U.WebMercator.Y(tiePoints[4] - imageHeight * pixelSizes[1]),
+                                U.WebMercator.X(tiePoints[3] + imageWidth * pixelSizes[0]),
+                                U.WebMercator.Y(tiePoints[4]));
+
+                            pixelWidth = U.WebMercator.X(tiePoints[3] + pixelSizes[0]) - U.WebMercator.X(tiePoints[3]);
+                            pixelHeight = U.WebMercator.Y(tiePoints[4]) - U.WebMercator.Y(tiePoints[4] - pixelSizes[1]);
+
+                            break;
+                        }
+                    case 3857: // TODO: const
+                        {
+                            projectedBounds = new M.Bounds(
+                                tiePoints[3],
+                                tiePoints[4] - imageHeight * pixelSizes[1],
+                                tiePoints[3] + imageWidth * pixelSizes[0],
+                                tiePoints[4]);
+
+                            geographicalBounds = new M.GeographicalBounds(
+                                U.WebMercator.Longitude(tiePoints[3]),
+                                U.WebMercator.Latitude(tiePoints[4] - imageHeight * pixelSizes[1]),
+                                U.WebMercator.Longitude(tiePoints[3] + imageWidth * pixelSizes[0]),
+                                U.WebMercator.Latitude(tiePoints[4]));
+
+                            pixelWidth = pixelSizes[0];
+                            pixelHeight = pixelSizes[1];
+
+                            break;
+                        }
+                    default:
+                        {
+                            throw new ArgumentException();
+                        }
+                }
+
+                var result = new M.RasterProperties
+                {
+                    Srid = srId,
                     ImageWidth = imageWidth,
                     ImageHeight = imageHeight,
                     TileWidth = tileWidth,
                     TileHeight = tileHeight,
                     TileSize = tiff.TileSize(),
-                    Bounds = new M.GeographicalBounds(
-                        tiePoints[3],
-                        tiePoints[4] - imageHeight * pixelSizes[1],
-                        tiePoints[3] + imageWidth * pixelSizes[0],
-                        tiePoints[4]),
-                    PixelSizeX = pixelSizes[0],
-                    PixelSizeY = pixelSizes[1],
+                    ProjectedBounds = projectedBounds,
+                    GeographicalBounds = geographicalBounds,
+                    PixelWidth = pixelWidth,
+                    PixelHeight = pixelHeight,
                 };
 
                 return result;
             }
         }
-
-        private const string ModeOpenReadTiff = "r";
 
         private static byte[] ReadTiffTile(string path, int tileWidth, int tileHeight, int tileSize, int pixelX, int pixelY)
         {
@@ -330,17 +407,23 @@ namespace TileMapService.TileSources
             return imageBuffer;
         }
 
-        private static List<GeoTiff.TileCoordinates> BuildTileCoordinatesList(GeoTiffMetadata geoTiff, M.GeographicalBounds geoBounds)
-        {
-            var tileCoordMin = GetGeoTiff4326TileCoordinatesAtPoint(
-                geoTiff,
-                Math.Max(geoBounds.MinLongitude, geoTiff.Bounds.MinLongitude),
-                Math.Min(geoBounds.MaxLatitude, geoTiff.Bounds.MaxLatitude));
+        #endregion
 
-            var tileCoordMax = GetGeoTiff4326TileCoordinatesAtPoint(
-                geoTiff,
-                Math.Min(geoBounds.MaxLongitude, geoTiff.Bounds.MaxLongitude),
-                Math.Min(geoBounds.MinLatitude, geoTiff.Bounds.MinLatitude));
+        #region Coordinates utils
+
+        private static List<GeoTiff.TileCoordinates> BuildTileCoordinatesList(
+            M.RasterProperties rasterProperties,
+            M.Bounds bounds)
+        {
+            var tileCoordMin = GetGeoTiffTileCoordinatesAtPoint(
+                rasterProperties,
+                Math.Max(bounds.Left, rasterProperties.ProjectedBounds.Left),
+                Math.Min(bounds.Top, rasterProperties.ProjectedBounds.Top));
+
+            var tileCoordMax = GetGeoTiffTileCoordinatesAtPoint(
+                rasterProperties,
+                Math.Min(bounds.Right, rasterProperties.ProjectedBounds.Right),
+                Math.Min(bounds.Bottom, rasterProperties.ProjectedBounds.Bottom));
 
             var tileCoordinates = new List<GeoTiff.TileCoordinates>();
             for (var tileX = tileCoordMin.X; tileX <= tileCoordMax.X; tileX++)
@@ -354,30 +437,32 @@ namespace TileMapService.TileSources
             return tileCoordinates;
         }
 
-        private static GeoTiff.TileCoordinates GetGeoTiff4326TileCoordinatesAtPoint(
-            GeoTiffMetadata geoTiff,
-            double longitude,
-            double latitude)
+        private static GeoTiff.TileCoordinates GetGeoTiffTileCoordinatesAtPoint(
+            M.RasterProperties rasterProperties,
+            double x,
+            double y)
         {
-            var x = LongitudeToGeoTiffPixelX(geoTiff, longitude) / (double)geoTiff.TileWidth;
-            var y = LatitudeToGeoTiffPixelY(geoTiff, latitude) / (double)geoTiff.TileHeight;
+            var tileX = (int)Math.Floor(XToGeoTiffPixelX(rasterProperties, x) / (double)rasterProperties.TileWidth);
+            var tileY = (int)Math.Floor(YToGeoTiffPixelY(rasterProperties, y) / (double)rasterProperties.TileHeight);
 
-            return new GeoTiff.TileCoordinates((int)Math.Floor(x), (int)Math.Floor(y));
+            return new GeoTiff.TileCoordinates(tileX, tileY);
         }
 
-        private static double LongitudeToGeoTiffPixelX(GeoTiffMetadata geoTiff, double longitude)
+        private static double XToGeoTiffPixelX(M.RasterProperties rasterProperties, double x)
         {
-            return (longitude - geoTiff.Bounds.MinLongitude) / geoTiff.PixelSizeX;
+            return (x - rasterProperties.ProjectedBounds.Left) / rasterProperties.PixelWidth;
         }
 
-        private static double LatitudeToGeoTiffPixelY(GeoTiffMetadata geoTiff, double latitude)
+        private static double YToGeoTiffPixelY(M.RasterProperties rasterProperties, double y)
         {
-            return (geoTiff.Bounds.MaxLatitude - latitude) / geoTiff.PixelSizeY;
+            return (rasterProperties.ProjectedBounds.Top - y) / rasterProperties.PixelHeight;
         }
+
+        #endregion
 
         private void DrawGeoTiffTilesToRasterCanvas(
             Bitmap outputImage,
-            M.GeographicalBounds tileGeoBounds,
+            M.Bounds tileBounds,
             IList<GeoTiff.TileCoordinates> sourceTileCoordinates,
             int backgroundColor,
             int sourceTileWidth,
@@ -404,24 +489,24 @@ namespace TileMapService.TileSources
                         // Draw all source tiles without scaling
                         foreach (var sourceTile in sourceTileCoordinates)
                         {
-                            var pixelX = sourceTile.X * this.geoTiffInfo.TileWidth;
-                            var pixelY = sourceTile.Y * this.geoTiffInfo.TileHeight;
+                            var pixelX = sourceTile.X * this.rasterProperties.TileWidth;
+                            var pixelY = sourceTile.Y * this.rasterProperties.TileHeight;
 
-                            if ((pixelX >= this.geoTiffInfo.ImageWidth) || (pixelY >= this.geoTiffInfo.ImageHeight))
+                            if ((pixelX >= this.rasterProperties.ImageWidth) || (pixelY >= this.rasterProperties.ImageHeight))
                             {
                                 continue;
                             }
 
                             var imageBuffer = ReadTiffTile(
                                 this.configuration.Location,
-                                this.geoTiffInfo.TileWidth,
-                                this.geoTiffInfo.TileHeight,
-                                this.geoTiffInfo.TileSize,
+                                this.rasterProperties.TileWidth,
+                                this.rasterProperties.TileHeight,
+                                this.rasterProperties.TileSize,
                                 pixelX,
                                 pixelY);
 
                             const int PixelDataSize = 4;
-                            var stride = this.geoTiffInfo.TileWidth * PixelDataSize;
+                            var stride = this.rasterProperties.TileWidth * PixelDataSize;
                             var handle = GCHandle.Alloc(imageBuffer, GCHandleType.Pinned);
 
                             Bitmap sourceImage = null;
@@ -430,7 +515,7 @@ namespace TileMapService.TileSources
                                 var offsetX = (sourceTile.X - tileMinX) * sourceTileWidth;
                                 var offsetY = (sourceTile.Y - tileMinY) * sourceTileHeight;
 
-                                sourceImage = new Bitmap(this.geoTiffInfo.TileWidth, this.geoTiffInfo.TileHeight, stride, PixelFormat.Format32bppArgb, handle.AddrOfPinnedObject());
+                                sourceImage = new Bitmap(this.rasterProperties.TileWidth, this.rasterProperties.TileHeight, stride, PixelFormat.Format32bppArgb, handle.AddrOfPinnedObject());
 
                                 if ((sourceImage.HorizontalResolution == canvasImage.HorizontalResolution) &&
                                     (sourceImage.VerticalResolution == canvasImage.VerticalResolution))
@@ -455,11 +540,12 @@ namespace TileMapService.TileSources
                         }
                     }
 
-                    // TODO: ! better image transform between coordinate systems
-                    var pixelOffsetX = LongitudeToGeoTiffPixelX(this.geoTiffInfo, tileGeoBounds.MinLongitude) - sourceTileWidth * tileMinX;
-                    var pixelOffsetY = LatitudeToGeoTiffPixelY(this.geoTiffInfo, tileGeoBounds.MaxLatitude) - sourceTileHeight * tileMinY;
-                    var pixelWidth = LongitudeToGeoTiffPixelX(this.geoTiffInfo, tileGeoBounds.MaxLongitude) - LongitudeToGeoTiffPixelX(this.geoTiffInfo, tileGeoBounds.MinLongitude);
-                    var pixelHeight = LatitudeToGeoTiffPixelY(this.geoTiffInfo, tileGeoBounds.MinLatitude) - LatitudeToGeoTiffPixelY(this.geoTiffInfo, tileGeoBounds.MaxLatitude);
+                    // TODO: ! better image transformation / reprojection between coordinate systems
+                    var pixelOffsetX = XToGeoTiffPixelX(this.rasterProperties, tileBounds.Left) - sourceTileWidth * tileMinX;
+                    var pixelOffsetY = YToGeoTiffPixelY(this.rasterProperties, tileBounds.Top) - sourceTileHeight * tileMinY;
+                    var pixelWidth = XToGeoTiffPixelX(this.rasterProperties, tileBounds.Right) - XToGeoTiffPixelX(this.rasterProperties, tileBounds.Left);
+                    var pixelHeight = YToGeoTiffPixelY(this.rasterProperties, tileBounds.Bottom) - YToGeoTiffPixelY(this.rasterProperties, tileBounds.Top);
+
                     var sourceRectangle = new Rectangle(
                         (int)Math.Round(pixelOffsetX),
                         (int)Math.Round(pixelOffsetY),
@@ -475,25 +561,6 @@ namespace TileMapService.TileSources
                     }
                 }
             }
-        }
-
-        class GeoTiffMetadata // TODO: store source parameters as-is
-        {
-            public int ImageWidth { get; set; }
-
-            public int ImageHeight { get; set; }
-
-            public int TileWidth { get; set; }
-
-            public int TileHeight { get; set; }
-
-            public int TileSize { get; set; }
-
-            public M.GeographicalBounds Bounds { get; set; }
-
-            public double PixelSizeX { get; set; }
-
-            public double PixelSizeY { get; set; }
         }
 
         class DisableErrorHandler : TiffErrorHandler

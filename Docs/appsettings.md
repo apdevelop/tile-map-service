@@ -11,7 +11,7 @@ Tile sources are defined in `TileSources` section of `appsettings.json` file.
 Type: `String`<br>
 Required: `true`
 
-Used to define source type, must be one of `file`, `mbtiles`, `xyz`, `tms`, `wmts`, `wms` (case insensitive).
+Used to define source type, must be one of `file`, `mbtiles`, `xyz`, `tms`, `wmts`, `wms`, `geotiff` (case insensitive).
 
 #### id
 Type: `String`<br>
@@ -36,7 +36,7 @@ Type: `String`<br>
 Required: `true`
 
 Location of tiles. 
-Path template for `file`, full path for `mbtiles` type, url template for `xyz` and `tms`, base url for `wmts` and `wms`.
+Path template for `file`, full path for `mbtiles`, `geotiff` types, url template for `xyz` and `tms`, base url for `wmts` and `wms`.
 Template string uses `{x}`, `{y}`, `{z}` as placeholders for corresponding coordinate values.
 
 WMS location should contain base url of WMS service along with `version`, `layers`, `srs`/`crs` values. 

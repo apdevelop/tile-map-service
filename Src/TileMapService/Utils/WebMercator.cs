@@ -15,6 +15,8 @@ namespace TileMapService.Utils
 
         private static readonly double EarthRadius = 6378137.0;
 
+        private static readonly double MaxLatitude = 85.0511287798;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Longitude(double x)
         {
@@ -26,6 +28,19 @@ namespace TileMapService.Utils
         {
             var fi = 2.0 * Math.Atan(Math.Exp(y / EarthRadius)) - Math.PI / 2.0;
             return MathHelper.RadiansToDegrees(fi);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double X(double longitude)
+        {
+            return EarthRadius * MathHelper.DegreesToRadians(longitude);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Y(double latitude)
+        {
+            var lat = Math.Max(Math.Min(MaxLatitude, latitude), -MaxLatitude);
+            return EarthRadius * MathHelper.Artanh(Math.Sin(MathHelper.DegreesToRadians(lat)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
