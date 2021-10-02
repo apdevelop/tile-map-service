@@ -4,12 +4,11 @@ using System.Collections.Generic;
 namespace TileMapService.MBTiles
 {
     /// <summary>
-    /// Repository for MBTiles database access.
+    /// Repository for MBTiles (<see href="https://github.com/mapbox/mbtiles-spec">MBTiles Specification</see>) database access.
     /// </summary>
     /// <remarks>
-    /// SQLite doesn't support asynchronous I/O. Async ADO.NET methods will execute synchronously in Microsoft.Data.Sqlite.
     /// Supports only Spherical Mercator tile grid and TMS tiling scheme (Y axis is going up).
-    /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
+    /// SQLite doesn't support asynchronous I/O. so the async ADO.NET methods will execute synchronously in Microsoft.Data.Sqlite.
     /// </remarks>
     public class Repository
     {
@@ -40,7 +39,7 @@ namespace TileMapService.MBTiles
 
         // TODO: Grids / UTFGrid
 
-        private static readonly string ReadTileDataCommandText = 
+        private static readonly string ReadTileDataCommandText =
             $"SELECT {ColumnTileData} FROM {TableTiles} WHERE (({ColumnZoomLevel} = @zoom_level) AND ({ColumnTileColumn} = @tile_column) AND ({ColumnTileRow} = @tile_row))";
 
         private static readonly string ReadMetadataCommandText =
