@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using TileMapService.Utils;
+using Microsoft.AspNetCore.Mvc;
+using SkiaSharp;
+
 using TileMapService.Wms;
+using U = TileMapService.Utils;
 
 namespace TileMapService.Controllers
 {
@@ -113,8 +113,8 @@ namespace TileMapService.Controllers
 
         private IActionResult ProcessGetCapabilitiesRequest(Wms.Version version)
         {
-            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources)
-                .Where(l => l.Srs == SrsCodes.EPSG3857) // TODO: EPSG:4326 support
+            var layers = U.EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources)
+                .Where(l => l.Srs == U.SrsCodes.EPSG3857) // TODO: EPSG:4326 support
                 .Select(l => new Layer
                 {
                     Name = l.Identifier,
@@ -142,17 +142,17 @@ namespace TileMapService.Controllers
                     MediaTypeNames.Text.Plain,
                 });
 
-            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
+            return File(U.EntitiesConverter.ToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
         private async Task<IActionResult> ProcessGetMapRequestAsync(
             string layers,
-            string srs, 
+            string srs,
             string bbox,
-            int width, 
+            int width,
             int height,
-            string format, 
-            bool? transparent, 
+            string format,
+            bool? transparent,
             string bgcolor)
         {
             // TODO: config ?
@@ -201,51 +201,56 @@ namespace TileMapService.Controllers
             var layersList = layers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
             var isTransparent = transparent.HasValue ? transparent.Value : false;
-            var backgroundColor = EntitiesConverter.GetArgbColorFromString(bgcolor, isTransparent);
+            var backgroundColor = U.EntitiesConverter.GetArgbColorFromString(bgcolor, isTransparent);
             var imageData = await CreateMapImageAsync(width, height, boundingBox, format, backgroundColor, layersList);
 
             return File(imageData, format);
         }
 
         private async Task<byte[]> CreateMapImageAsync(
-            int width, 
+            int width,
             int height,
             Models.Bounds boundingBox,
             string format,
             int backgroundColor,
             IList<string> layerNames)
         {
-            var emptyImage = ImageHelper.CreateEmptyPngImage(width, height, backgroundColor);
-            using (var resultImageStream = new MemoryStream(emptyImage))
+            var imageInfo = new SKImageInfo(
+                width: width,
+                height: height,
+                colorType: SKColorType.Rgba8888,
+                alphaType: SKAlphaType.Premul);
+
+            using var surface = SKSurface.Create(imageInfo);
+            using var canvas = surface.Canvas;
+            canvas.Clear(new SKColor((uint)backgroundColor)); // TODO: ? uint parameter
+
+            foreach (var layerName in layerNames)
             {
-                using var resultImage = new Bitmap(resultImageStream);
-
-                foreach (var layerName in layerNames)
+                // TODO: ? optimize - single WMS request for WMS source type
+                // TODO: check SRS support in source
+                if (this.tileSourceFabric.Contains(layerName))
                 {
-                    // TODO: ? optimize - single WMS request for WMS source type
-                    // TODO: check SRS support in source
-                    if (this.tileSourceFabric.Contains(layerName))
-                    {
-                        await DrawLayerAsync(
-                            width, 
-                            boundingBox,
-                            resultImage,
-                            this.tileSourceFabric.Get(layerName),
-                            backgroundColor);
-                    }
+                    await DrawLayerAsync(
+                        width, height,
+                        boundingBox,
+                        canvas,
+                        this.tileSourceFabric.Get(layerName),
+                        backgroundColor);
                 }
-
-                var imageFormat = ImageHelper.ImageFormatFromMediaType(format);
-                var imageData = ImageHelper.SaveImageToByteArray(resultImage, imageFormat);
-
-                return imageData;
             }
+
+            var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(format);
+            using SKImage image = surface.Snapshot();
+            using SKData data = image.Encode(imageFormat, 90); // TODO: ? parameter
+
+            return data.ToArray();
         }
 
         private static async Task DrawLayerAsync(
-            int width, 
+            int width, int height,
             Models.Bounds boundingBox,
-            Bitmap resultImage,
+            SKCanvas outputCanvas,
             TileSources.ITileSource source,
             int backgroundColor)
         {
@@ -253,7 +258,7 @@ namespace TileMapService.Controllers
             var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);
             if (sourceTiles.Count > 0)
             {
-                WmsHelper.DrawWebMercatorTilesToRasterCanvas(resultImage, boundingBox, sourceTiles, backgroundColor, WebMercator.TileSize);
+                WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, U.WebMercator.TileSize);
             }
         }
 
@@ -273,10 +278,10 @@ namespace TileMapService.Controllers
             foreach (var tc in tileCoordinates)
             {
                 // 180 degrees
-                var tileCount = WebMercator.TileCount(tc.Z);
+                var tileCount = U.WebMercator.TileCount(tc.Z);
                 var tileX = tc.X % tileCount;
 
-                var tileData = await source.GetTileAsync(tileX, WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
+                var tileData = await source.GetTileAsync(tileX, U.WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
                 if (tileData != null)
                 {
                     sourceTiles.Add(new Models.TileDataset(tc.X, tc.Y, tc.Z, tileData));

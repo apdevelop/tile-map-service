@@ -1,7 +1,6 @@
-﻿using System;
+﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 
 using TileMapService.Utils;
@@ -15,8 +14,8 @@ namespace TileMapService.Wms
             Version wmsVersion;
             switch (version)
             {
-                case Identifiers.Version111: { wmsVersion = Wms.Version.Version111; break; }
-                case Identifiers.Version130: { wmsVersion = Wms.Version.Version130; break; }
+                case Identifiers.Version111: { wmsVersion = Version.Version111; break; }
+                case Identifiers.Version130: { wmsVersion = Version.Version130; break; }
                 default: throw new ArgumentOutOfRangeException();
             }
 
@@ -24,7 +23,8 @@ namespace TileMapService.Wms
         }
 
         public static void DrawWebMercatorTilesToRasterCanvas(
-            Bitmap outputImage,
+            SKCanvas outputCanvas,
+            int width, int height,
             Models.Bounds boundingBox,
             IList<Models.TileDataset> sourceTiles,
             int backgroundColor,
@@ -38,57 +38,41 @@ namespace TileMapService.Wms
             var canvasWidth = tilesCountX * tileSize;
             var canvasHeight = tilesCountY * tileSize;
 
-            var canvas = ImageHelper.CreateEmptyPngImage(canvasWidth, canvasHeight, backgroundColor);
+            var imageInfo = new SKImageInfo(
+                width: canvasWidth,
+                height: canvasHeight,
+                colorType: SKColorType.Rgba8888,
+                alphaType: SKAlphaType.Premul);
 
-            using (var canvasImageStream = new MemoryStream(canvas))
+            using var surface = SKSurface.Create(imageInfo);
+            using var canvas = surface.Canvas;
+            canvas.Clear(new SKColor((uint)backgroundColor)); // TODO: ? uint parameter
+
+            // Draw all tiles without scaling
+            foreach (var sourceTile in sourceTiles)
             {
-                using (var canvasImage = new Bitmap(canvasImageStream))
-                {
-                    using (var graphics = Graphics.FromImage(canvasImage))
-                    {
-                        // Draw all tiles without scaling
-                        foreach (var sourceTile in sourceTiles)
-                        {
-                            var offsetX = (sourceTile.X - tileMinX) * tileSize;
-                            var offsetY = (sourceTile.Y - tileMinY) * tileSize;
-                            using (var sourceStream = new MemoryStream(sourceTile.ImageData))
-                            {
-                                using (var sourceImage = Image.FromStream(sourceStream))
-                                {
-                                    if ((sourceImage.HorizontalResolution == canvasImage.HorizontalResolution) &&
-                                        (sourceImage.VerticalResolution == canvasImage.VerticalResolution))
-                                    {
-                                        graphics.DrawImageUnscaled(sourceImage, offsetX, offsetY);
-                                    }
-                                    else
-                                    {
-                                        graphics.DrawImage(sourceImage, new Rectangle(offsetX, offsetY, sourceImage.Width, sourceImage.Height));
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    var geoBBox = EntitiesConverter.MapRectangleToGeographicalBounds(boundingBox);
-                    var pixelOffsetX = WebMercator.LongitudeToPixelXAtZoom(geoBBox.MinLongitude, zoom) - tileSize * tileMinX;
-                    var pixelOffsetY = WebMercator.LatitudeToPixelYAtZoom(geoBBox.MaxLatitude, zoom) - tileSize * tileMinY;
-                    var pixelWidth = WebMercator.LongitudeToPixelXAtZoom(geoBBox.MaxLongitude, zoom) - WebMercator.LongitudeToPixelXAtZoom(geoBBox.MinLongitude, zoom);
-                    var pixelHeight = WebMercator.LatitudeToPixelYAtZoom(geoBBox.MinLatitude, zoom) - WebMercator.LatitudeToPixelYAtZoom(geoBBox.MaxLatitude, zoom);
-                    var sourceRectangle = new Rectangle(
-                        (int)Math.Round(pixelOffsetX),
-                        (int)Math.Round(pixelOffsetY),
-                        (int)Math.Round(pixelWidth),
-                        (int)Math.Round(pixelHeight));
-
-                    // Clip and scale to requested size of output image
-                    var destRectangle = new Rectangle(0, 0, outputImage.Width, outputImage.Height);
-                    using (var graphics = Graphics.FromImage(outputImage))
-                    {
-                        graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bicubic;
-                        graphics.DrawImage(canvasImage, destRectangle, sourceRectangle, GraphicsUnit.Pixel);
-                    }
-                }
+                var offsetX = (sourceTile.X - tileMinX) * tileSize;
+                var offsetY = (sourceTile.Y - tileMinY) * tileSize;
+                using var sourceImage = SKImage.FromEncodedData(sourceTile.ImageData);
+                canvas.DrawImage(sourceImage, new SKRect(offsetX, offsetY, offsetX + sourceImage.Width, offsetY + sourceImage.Height));
             }
+
+            var geoBBox = EntitiesConverter.MapRectangleToGeographicalBounds(boundingBox);
+            var pixelOffsetX = WebMercator.LongitudeToPixelXAtZoom(geoBBox.MinLongitude, zoom) - tileSize * tileMinX;
+            var pixelOffsetY = WebMercator.LatitudeToPixelYAtZoom(geoBBox.MaxLatitude, zoom) - tileSize * tileMinY;
+            var pixelWidth = WebMercator.LongitudeToPixelXAtZoom(geoBBox.MaxLongitude, zoom) - WebMercator.LongitudeToPixelXAtZoom(geoBBox.MinLongitude, zoom);
+            var pixelHeight = WebMercator.LatitudeToPixelYAtZoom(geoBBox.MinLatitude, zoom) - WebMercator.LatitudeToPixelYAtZoom(geoBBox.MaxLatitude, zoom);
+            var sourceRectangle = new SKRect(
+                (int)Math.Round(pixelOffsetX),
+                (int)Math.Round(pixelOffsetY),
+                (int)Math.Round(pixelOffsetX) + (int)Math.Round(pixelWidth),
+                (int)Math.Round(pixelOffsetY) + (int)Math.Round(pixelHeight));
+
+            using SKImage canvasImage = surface.Snapshot();
+
+            // Clip and scale to requested size of output image
+            var destRectangle = new SKRect(0, 0, width, height);
+            outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle);
         }
 
         public static List<Models.TileCoordinates> BuildTileCoordinatesList(Models.Bounds boundingBox, int width)
