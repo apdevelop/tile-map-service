@@ -54,25 +54,20 @@ namespace TileMapService.Wms
                 var offsetX = (sourceTile.X - tileMinX) * tileSize;
                 var offsetY = (sourceTile.Y - tileMinY) * tileSize;
                 using var sourceImage = SKImage.FromEncodedData(sourceTile.ImageData);
-                canvas.DrawImage(sourceImage, new SKRect(offsetX, offsetY, offsetX + sourceImage.Width, offsetY + sourceImage.Height));
+                canvas.DrawImage(sourceImage, SKRect.Create(offsetX, offsetY, sourceImage.Width, sourceImage.Height));
             }
 
+            // Clip and scale to requested size of output image
             var geoBBox = EntitiesConverter.MapRectangleToGeographicalBounds(boundingBox);
             var pixelOffsetX = WebMercator.LongitudeToPixelXAtZoom(geoBBox.MinLongitude, zoom) - tileSize * tileMinX;
             var pixelOffsetY = WebMercator.LatitudeToPixelYAtZoom(geoBBox.MaxLatitude, zoom) - tileSize * tileMinY;
             var pixelWidth = WebMercator.LongitudeToPixelXAtZoom(geoBBox.MaxLongitude, zoom) - WebMercator.LongitudeToPixelXAtZoom(geoBBox.MinLongitude, zoom);
             var pixelHeight = WebMercator.LatitudeToPixelYAtZoom(geoBBox.MinLatitude, zoom) - WebMercator.LatitudeToPixelYAtZoom(geoBBox.MaxLatitude, zoom);
-            var sourceRectangle = new SKRect(
-                (int)Math.Round(pixelOffsetX),
-                (int)Math.Round(pixelOffsetY),
-                (int)Math.Round(pixelOffsetX) + (int)Math.Round(pixelWidth),
-                (int)Math.Round(pixelOffsetY) + (int)Math.Round(pixelHeight));
+            var sourceRectangle = SKRect.Create((float)pixelOffsetX, (float)pixelOffsetY, (float)pixelWidth, (float)pixelHeight);
+            var destRectangle = SKRect.Create(0, 0, width, height);
 
             using SKImage canvasImage = surface.Snapshot();
-
-            // Clip and scale to requested size of output image
-            var destRectangle = new SKRect(0, 0, width, height);
-            outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle);
+            outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKPaint { FilterQuality = SKFilterQuality.High, });
         }
 
         public static List<Models.TileCoordinates> BuildTileCoordinatesList(Models.Bounds boundingBox, int width)

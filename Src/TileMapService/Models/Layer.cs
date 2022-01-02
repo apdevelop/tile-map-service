@@ -13,6 +13,9 @@
 
         public string ContentType { get; set; }
 
+        /// <summary>
+        /// Name of image format ("png", "jpg", "pbf").
+        /// </summary>
         public string Format { get; set; }
 
         public string Srs { get; set; }

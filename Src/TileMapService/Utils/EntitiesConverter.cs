@@ -14,11 +14,11 @@ namespace TileMapService.Utils
     {
         public static string TileFormatToContentType(string format)
         {
-            return format switch // TODO: const / enum
+            return format switch
             {
-                "png" => MediaTypeNames.Image.Png,
-                "jpg" => MediaTypeNames.Image.Jpeg,
-                "pbf" => MediaTypeNames.Application.XProtobuf,
+                ImageFormats.Png => MediaTypeNames.Image.Png,
+                ImageFormats.Jpeg => MediaTypeNames.Image.Jpeg,
+                ImageFormats.Protobuf => MediaTypeNames.Application.XProtobuf,
                 // TODO: other possible types
                 _ => format,
             };

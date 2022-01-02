@@ -43,7 +43,7 @@ namespace TileMapService
         public string Id { get; set; }
 
         /// <summary>
-        /// Name of tiles image format (png, jpg).
+        /// Name of image format ("png", "jpg", "pbf").
         /// </summary>
         [JsonPropertyName("format")]
         public string Format { get; set; }

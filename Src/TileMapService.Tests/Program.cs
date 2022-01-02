@@ -97,7 +97,7 @@ namespace TileMapService.Tests
                     Location = LocalFilesPath + "\\{z}\\{x}\\{y}.png",
                     MinZoom = 0,
                     MaxZoom = 2,
-                    Format = "png",
+                    Format = ImageFormats.Png,
                     Tms = false,
                 },
                 new TileSourceConfiguration // HTTP proxy to source1
@@ -106,7 +106,7 @@ namespace TileMapService.Tests
                     Id = "source4",
                     Title = "Tile Source 4",
                     Location = BaseUrl + "/xyz/source1/{z}/{x}/{y}.png",
-                    Format = "png",
+                    Format = ImageFormats.Png,
                     MinZoom = 0,
                     MaxZoom = 2,
                 },
@@ -119,12 +119,12 @@ namespace TileMapService.Tests
             // Create and fill MBTiles databases
             var db1 = MBT.Repository.CreateEmptyDatabase(Mbtiles1FilePath);
             db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "World Countries"));
-            db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, "png"));
+            db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Png));
             db1.AddTile(0, 0, 0, new TileDataStub(0, 0, 0).ToByteArray());
 
             var db2 = MBT.Repository.CreateEmptyDatabase(Mbtiles2FilePath);
             db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "Satellite Imagery"));
-            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, "jpg"));
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Jpeg));
             db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMinZoom, "0"));
             db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMaxZoom, "5"));
             db2.AddTile(0, 0, 0, new TileDataStub(0, 0, 0).ToByteArray());

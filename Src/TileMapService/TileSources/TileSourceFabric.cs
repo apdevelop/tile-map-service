@@ -52,6 +52,11 @@ namespace TileMapService.TileSources
 
         private static ITileSource CreateTileSource(TileSourceConfiguration config)
         {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
             return (config.Type.ToLowerInvariant()) switch
             {
                 TileSourceConfiguration.TypeLocalFiles => new LocalFilesTileSource(config),

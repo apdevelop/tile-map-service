@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml;
 
 namespace TileMapService.Wms
@@ -51,64 +52,60 @@ namespace TileMapService.Wms
             var serviceElement = doc.CreateElement(Identifiers.Service);
             root.AppendChild(serviceElement);
 
-            {
-                var serviceName = doc.CreateElement("Name");
-                serviceName.InnerText = "OGC:WMS";
-                serviceElement.AppendChild(serviceName);
+            var serviceName = doc.CreateElement("Name");
+            serviceName.InnerText = "OGC:WMS";
+            serviceElement.AppendChild(serviceName);
 
-                var serviceTitle = doc.CreateElement("Title");
-                serviceTitle.InnerText = service.Title;
-                serviceElement.AppendChild(serviceTitle);
+            var serviceTitle = doc.CreateElement("Title");
+            serviceTitle.InnerText = service.Title;
+            serviceElement.AppendChild(serviceTitle);
 
-                var serviceAbstract = doc.CreateElement("Abstract");
-                serviceAbstract.InnerText = service.Abstract;
-                serviceElement.AppendChild(serviceAbstract);
+            var serviceAbstract = doc.CreateElement("Abstract");
+            serviceAbstract.InnerText = service.Abstract;
+            serviceElement.AppendChild(serviceAbstract);
 
-                var serviceOnlineResource = CreateOnlineResourceElement(this.baseUrl);
-                serviceElement.AppendChild(serviceOnlineResource);
-            }
+            var serviceOnlineResource = CreateOnlineResourceElement(this.baseUrl);
+            serviceElement.AppendChild(serviceOnlineResource);
 
             var capability = doc.CreateElement(Identifiers.Capability);
             root.AppendChild(capability);
 
+            var capabilitiesFormat = String.Empty;
+            switch (version)
             {
-                var capabilitiesFormat = String.Empty;
-                switch (version)
-                {
-                    case Version.Version111: { capabilitiesFormat = MediaTypeNames.Application.OgcWmsCapabilitiesXml; break; }
-                    case Version.Version130: { capabilitiesFormat = MediaTypeNames.Text.Xml; break; }
-                    default: throw new ArgumentOutOfRangeException();
-                }
+                case Version.Version111: { capabilitiesFormat = MediaTypeNames.Application.OgcWmsCapabilitiesXml; break; }
+                case Version.Version130: { capabilitiesFormat = MediaTypeNames.Text.Xml; break; }
+                default: throw new ArgumentOutOfRangeException();
+            }
 
-                var capabilityRequest = doc.CreateElement("Request");
-                capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetCapabilities, new[] { capabilitiesFormat }));
-                capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetMap, getMapFormats));
-                // TODO: ? capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetFeatureInfo, getFeatureInfoFormats));
-                capability.AppendChild(capabilityRequest);
+            var capabilityRequest = doc.CreateElement("Request");
+            capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetCapabilities, new[] { capabilitiesFormat }));
+            capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetMap, getMapFormats));
+            // TODO: ? capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetFeatureInfo, getFeatureInfoFormats));
+            capability.AppendChild(capabilityRequest);
 
-                var capabilityException = doc.CreateElement("Exception");
-                var capabilityExceptionFormat = doc.CreateElement("Format");
+            var capabilityException = doc.CreateElement("Exception");
+            var capabilityExceptionFormat = doc.CreateElement("Format");
 
-                switch (version)
-                {
-                    case Version.Version111: { capabilityExceptionFormat.InnerText = MediaTypeNames.Application.OgcServiceExceptionXml; break; }
-                    case Version.Version130: { capabilityExceptionFormat.InnerText = "XML"; break; }
-                    default: throw new ArgumentOutOfRangeException();
-                }
+            switch (version)
+            {
+                case Version.Version111: { capabilityExceptionFormat.InnerText = MediaTypeNames.Application.OgcServiceExceptionXml; break; }
+                case Version.Version130: { capabilityExceptionFormat.InnerText = "XML"; break; }
+                default: throw new ArgumentOutOfRangeException();
+            }
 
-                capabilityException.AppendChild(capabilityExceptionFormat);
-                capability.AppendChild(capabilityException);
+            capabilityException.AppendChild(capabilityExceptionFormat);
+            capability.AppendChild(capabilityException);
 
-                foreach (var layer in layers)
-                {
-                    capability.AppendChild(CreateLayerElement(version, layer));
-                }
+            foreach (var layer in layers)
+            {
+                capability.AppendChild(CreateLayerElement(version, layer));
             }
 
             return doc;
         }
 
-        private XmlElement CreateRequestElement(string name, IList<string> formats)
+        private XmlElement CreateRequestElement(string name, IEnumerable<string> formats)
         {
             var request = doc.CreateElement(name);
 
@@ -169,7 +166,7 @@ namespace TileMapService.Wms
             layerAbstract.InnerText = layerProperties.Abstract;
             layer.AppendChild(layerAbstract);
 
-            var layerSrsNodeName = String.Empty;
+            string layerSrsNodeName;
             switch (version)
             {
                 case Version.Version111: { layerSrsNodeName = Identifiers.Srs; break; }
@@ -181,6 +178,8 @@ namespace TileMapService.Wms
             layerSrs.InnerText = Identifiers.EPSG3857;
             layer.AppendChild(layerSrs);
 
+            var geoBounds = new Models.GeographicalBounds(-180, -90, 180, 90); // TODO: from layer properties
+
             switch (version)
             {
                 case Version.Version111:
@@ -188,19 +187,19 @@ namespace TileMapService.Wms
                         var latlonBoundingBox = doc.CreateElement("LatLonBoundingBox");
 
                         var minxAttribute = doc.CreateAttribute("minx");
-                        minxAttribute.Value = "-180.0";
+                        minxAttribute.Value = geoBounds.MinLongitude.ToString(CultureInfo.InvariantCulture);
                         latlonBoundingBox.Attributes.Append(minxAttribute);
 
                         var minyAttribute = doc.CreateAttribute("miny");
-                        minyAttribute.Value = "-90.0";
+                        minyAttribute.Value = geoBounds.MinLatitude.ToString(CultureInfo.InvariantCulture);
                         latlonBoundingBox.Attributes.Append(minyAttribute);
 
                         var maxxAttribute = doc.CreateAttribute("maxx");
-                        maxxAttribute.Value = "180.0";
+                        maxxAttribute.Value = geoBounds.MaxLongitude.ToString(CultureInfo.InvariantCulture);
                         latlonBoundingBox.Attributes.Append(maxxAttribute);
 
                         var maxyAttribute = doc.CreateAttribute("maxy");
-                        maxyAttribute.Value = "90.0";
+                        maxyAttribute.Value = geoBounds.MaxLatitude.ToString(CultureInfo.InvariantCulture);
                         latlonBoundingBox.Attributes.Append(maxyAttribute);
 
                         layer.AppendChild(latlonBoundingBox);
@@ -211,24 +210,27 @@ namespace TileMapService.Wms
                         var geographicBoundingBox = doc.CreateElement("EX_GeographicBoundingBox");
 
                         var westBoundLongitude = doc.CreateElement("westBoundLongitude");
-                        westBoundLongitude.InnerText = "-180";
+                        westBoundLongitude.InnerText = geoBounds.MinLongitude.ToString(CultureInfo.InvariantCulture);
                         geographicBoundingBox.AppendChild(westBoundLongitude);
 
                         var eastBoundLongitude = doc.CreateElement("eastBoundLongitude");
-                        eastBoundLongitude.InnerText = "180";
+                        eastBoundLongitude.InnerText = geoBounds.MaxLongitude.ToString(CultureInfo.InvariantCulture);
                         geographicBoundingBox.AppendChild(eastBoundLongitude);
 
                         var southBoundLatitude = doc.CreateElement("southBoundLatitude");
-                        southBoundLatitude.InnerText = "-90";
+                        southBoundLatitude.InnerText = geoBounds.MinLatitude.ToString(CultureInfo.InvariantCulture);
                         geographicBoundingBox.AppendChild(southBoundLatitude);
 
                         var northBoundLatitude = doc.CreateElement("northBoundLatitude");
-                        northBoundLatitude.InnerText = "90";
+                        northBoundLatitude.InnerText = geoBounds.MaxLatitude.ToString(CultureInfo.InvariantCulture);
                         geographicBoundingBox.AppendChild(northBoundLatitude);
 
                         layer.AppendChild(geographicBoundingBox);
-
                         break;
+                    }
+                default:
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(version));
                     }
             }
 
@@ -240,27 +242,27 @@ namespace TileMapService.Wms
                 {
                     case Version.Version111: { boundingBoxSrsNodeName = Identifiers.Srs; break; }
                     case Version.Version130: { boundingBoxSrsNodeName = Identifiers.Crs; break; }
-                    default: throw new ArgumentOutOfRangeException();
+                    default: throw new ArgumentOutOfRangeException(nameof(version));
                 }
 
                 var boundingBoxSrsAttribute = doc.CreateAttribute(boundingBoxSrsNodeName);
-                boundingBoxSrsAttribute.Value = Identifiers.EPSG3857;
+                boundingBoxSrsAttribute.Value = Identifiers.EPSG3857; // TODO: other CRS
                 boundingBox.Attributes.Append(boundingBoxSrsAttribute);
 
                 var minxAttribute = doc.CreateAttribute("minx");
-                minxAttribute.Value = "-2.0037508342789244E7";
+                minxAttribute.Value = Utils.WebMercator.X(geoBounds.MinLongitude).ToString("E16", CultureInfo.InvariantCulture);
                 boundingBox.Attributes.Append(minxAttribute);
 
                 var minyAttribute = doc.CreateAttribute("miny");
-                minyAttribute.Value = "-2.5776731363158423E7";
+                minyAttribute.Value = Utils.WebMercator.Y(geoBounds.MinLatitude).ToString("E16", CultureInfo.InvariantCulture);
                 boundingBox.Attributes.Append(minyAttribute);
 
                 var maxxAttribute = doc.CreateAttribute("maxx");
-                maxxAttribute.Value = "2.0037508342789244E7";
+                maxxAttribute.Value = Utils.WebMercator.X(geoBounds.MaxLongitude).ToString("E16", CultureInfo.InvariantCulture);
                 boundingBox.Attributes.Append(maxxAttribute);
 
                 var maxyAttribute = doc.CreateAttribute("maxy");
-                maxyAttribute.Value = "2.57767313631584E7";
+                maxyAttribute.Value = Utils.WebMercator.Y(geoBounds.MaxLatitude).ToString("E16", CultureInfo.InvariantCulture);
                 boundingBox.Attributes.Append(maxyAttribute);
 
                 layer.AppendChild(boundingBox);

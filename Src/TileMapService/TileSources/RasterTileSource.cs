@@ -65,12 +65,12 @@ namespace TileMapService.TileSources
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type,
-                Format = "png", // TODO: ? multiple output formats ?
+                Format = ImageFormats.Png, // TODO: ? multiple output formats ?
                 Title = title,
                 Tms = false,
                 Srs = U.SrsCodes.EPSG3857, // TODO: only EPSG:3857 'output' SRS currently supported
                 Location = this.configuration.Location,
-                ContentType = U.EntitiesConverter.TileFormatToContentType("png"),
+                ContentType = U.EntitiesConverter.TileFormatToContentType(ImageFormats.Png),
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
             };
@@ -529,7 +529,7 @@ namespace TileMapService.TileSources
 
                     using var sourceImage = SKImage.FromPixels(sourceImageInfo, handle.AddrOfPinnedObject());
 
-                    canvas.DrawImage(sourceImage, new SKRect(offsetX, offsetY, offsetX + sourceImage.Width, offsetY + sourceImage.Height));
+                    canvas.DrawImage(sourceImage, SKRect.Create(offsetX, offsetY, sourceImage.Width, sourceImage.Height));
 
                     // For debug
                     ////using var borderPen = new SKPaint { Color = SKColors.Magenta, StrokeWidth = 5.0f, IsStroke = true, };
@@ -543,23 +543,18 @@ namespace TileMapService.TileSources
             }
 
             // TODO: ! better image transformation / reprojection between coordinate systems
+
+            // Clip and scale to requested size of output image
             var pixelOffsetX = XToGeoTiffPixelX(this.rasterProperties, tileBounds.Left) - sourceTileWidth * tileMinX;
             var pixelOffsetY = YToGeoTiffPixelY(this.rasterProperties, tileBounds.Top) - sourceTileHeight * tileMinY;
             var pixelWidth = XToGeoTiffPixelX(this.rasterProperties, tileBounds.Right) - XToGeoTiffPixelX(this.rasterProperties, tileBounds.Left);
             var pixelHeight = YToGeoTiffPixelY(this.rasterProperties, tileBounds.Bottom) - YToGeoTiffPixelY(this.rasterProperties, tileBounds.Top);
-
-            var sourceRectangle = new SKRect(
-                (int)Math.Round(pixelOffsetX),
-                (int)Math.Round(pixelOffsetY),
-                (int)Math.Round(pixelOffsetX) + (int)Math.Round(pixelWidth),
-                (int)Math.Round(pixelOffsetY) + (int)Math.Round(pixelHeight));
+            //var sourceRectangle = SKRect.Create((int)Math.Round(pixelOffsetX), (int)Math.Round(pixelOffsetY), (int)Math.Round(pixelWidth), (int)Math.Round(pixelHeight));
+            var sourceRectangle = SKRect.Create((float)pixelOffsetX, (float)pixelOffsetY, (float)pixelWidth, (float)pixelHeight);
+            var destRectangle = SKRect.Create(0, 0, width, height);
 
             using SKImage canvasImage = surface.Snapshot();
-
-            // Clip and scale to requested size of output image
-            var destRectangle = new SKRect(0, 0, width, height);
-
-            outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle);
+            outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKPaint { FilterQuality = SKFilterQuality.High, });
         }
 
         class DisableErrorHandler : TiffErrorHandler

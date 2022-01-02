@@ -50,7 +50,7 @@ namespace TileMapService.TileSources
                     this.configuration.Title;
 
             var format = String.IsNullOrEmpty(this.configuration.Format) ?
-                    (!String.IsNullOrEmpty(metadata.Format) ? metadata.Format : "png") :
+                    (!String.IsNullOrEmpty(metadata.Format) ? metadata.Format : ImageFormats.Png) :
                     this.configuration.Format;
 
             // Re-create configuration
@@ -80,7 +80,7 @@ namespace TileMapService.TileSources
             // TODO: pass gzipped data as-is with setting HTTP headers?
             // pbf as a format refers to gzip-compressed vector tile data in Mapbox Vector Tile format, 
             // which uses Google Protocol Buffers as encoding format.
-            if (this.configuration.Format == "pbf") // TODO: const / enum
+            if (this.configuration.Format == ImageFormats.Protobuf)
             {
                 using (var compressedStream = new MemoryStream(tileData))
                 using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))

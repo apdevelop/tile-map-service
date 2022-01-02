@@ -115,6 +115,7 @@ namespace TileMapService.Controllers
         {
             var layers = U.EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources)
                 .Where(l => l.Srs == U.SrsCodes.EPSG3857) // TODO: EPSG:4326 support
+                .Where(l => l.Format == ImageFormats.Png || l.Format == ImageFormats.Jpeg) // Only raster formats
                 .Select(l => new Layer
                 {
                     Name = l.Identifier,
