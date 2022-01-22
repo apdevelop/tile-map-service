@@ -252,7 +252,7 @@ namespace TileMapService.Controllers
             int width, int height,
             Models.Bounds boundingBox,
             SKCanvas outputCanvas,
-            TileSources.ITileSource source,
+            ITileSource source,
             int backgroundColor)
         {
             var tileCoordinates = WmsHelper.BuildTileCoordinatesList(boundingBox, width);
@@ -272,7 +272,7 @@ namespace TileMapService.Controllers
         }
 
         private static async Task<List<Models.TileDataset>> GetSourceTilesAsync(
-            TileSources.ITileSource source,
+            ITileSource source,
             IList<Models.TileCoordinates> tileCoordinates)
         {
             var sourceTiles = new List<Models.TileDataset>(tileCoordinates.Count);
@@ -280,9 +280,9 @@ namespace TileMapService.Controllers
             {
                 // 180 degrees
                 var tileCount = U.WebMercator.TileCount(tc.Z);
-                var tileX = tc.X % tileCount;
+                var x = tc.X % tileCount;
 
-                var tileData = await source.GetTileAsync(tileX, U.WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
+                var tileData = await source.GetTileAsync(x, U.WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
                 if (tileData != null)
                 {
                     sourceTiles.Add(new Models.TileDataset(tc.X, tc.Y, tc.Z, tileData));

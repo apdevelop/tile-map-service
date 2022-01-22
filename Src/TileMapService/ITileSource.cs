@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace TileMapService.TileSources
+namespace TileMapService
 {
     /// <summary>
     /// Represents common set of methods of tile source of any type.
@@ -25,6 +25,6 @@ namespace TileMapService.TileSources
         /// <summary>
         /// Gets the actual tile source configuration.
         /// </summary>
-        TileSourceConfiguration Configuration { get; }
+        SourceConfiguration Configuration { get; }
     }
 }

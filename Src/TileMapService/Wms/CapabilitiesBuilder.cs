@@ -25,14 +25,14 @@ namespace TileMapService.Wms
             IList<string> getMapFormats,
             IList<string> getFeatureInfoFormats)
         {
-            // TODO: EPSG4326 support
+            // TODO: EPSG:4326 support
 
-            var rootNodeName = String.Empty;
+            string rootNodeName;
             switch (version)
             {
                 case Version.Version111: { rootNodeName = "WMT_MS_Capabilities"; break; }
                 case Version.Version130: { rootNodeName = "WMS_Capabilities"; break; }
-                default: throw new ArgumentOutOfRangeException();
+                default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
 
             doc = new XmlDocument();
@@ -44,7 +44,7 @@ namespace TileMapService.Wms
             {
                 case Version.Version111: { versionAttribute.Value = Identifiers.Version111; break; }
                 case Version.Version130: { versionAttribute.Value = Identifiers.Version130; break; }
-                default: throw new ArgumentOutOfRangeException();
+                default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
 
             root.Attributes.Append(versionAttribute);
@@ -70,12 +70,12 @@ namespace TileMapService.Wms
             var capability = doc.CreateElement(Identifiers.Capability);
             root.AppendChild(capability);
 
-            var capabilitiesFormat = String.Empty;
+            string capabilitiesFormat;
             switch (version)
             {
                 case Version.Version111: { capabilitiesFormat = MediaTypeNames.Application.OgcWmsCapabilitiesXml; break; }
                 case Version.Version130: { capabilitiesFormat = MediaTypeNames.Text.Xml; break; }
-                default: throw new ArgumentOutOfRangeException();
+                default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
 
             var capabilityRequest = doc.CreateElement("Request");
@@ -91,7 +91,7 @@ namespace TileMapService.Wms
             {
                 case Version.Version111: { capabilityExceptionFormat.InnerText = MediaTypeNames.Application.OgcServiceExceptionXml; break; }
                 case Version.Version130: { capabilityExceptionFormat.InnerText = "XML"; break; }
-                default: throw new ArgumentOutOfRangeException();
+                default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
 
             capabilityException.AppendChild(capabilityExceptionFormat);
@@ -171,7 +171,7 @@ namespace TileMapService.Wms
             {
                 case Version.Version111: { layerSrsNodeName = Identifiers.Srs; break; }
                 case Version.Version130: { layerSrsNodeName = Identifiers.Crs; break; }
-                default: throw new ArgumentOutOfRangeException();
+                default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
 
             var layerSrs = doc.CreateElement(layerSrsNodeName);
@@ -230,7 +230,7 @@ namespace TileMapService.Wms
                     }
                 default:
                     {
-                        throw new ArgumentOutOfRangeException(nameof(version));
+                        throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
                     }
             }
 
@@ -242,7 +242,7 @@ namespace TileMapService.Wms
                 {
                     case Version.Version111: { boundingBoxSrsNodeName = Identifiers.Srs; break; }
                     case Version.Version130: { boundingBoxSrsNodeName = Identifiers.Crs; break; }
-                    default: throw new ArgumentOutOfRangeException(nameof(version));
+                    default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
                 }
 
                 var boundingBoxSrsAttribute = doc.CreateAttribute(boundingBoxSrsNodeName);

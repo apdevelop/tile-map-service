@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http.Extensions;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TileMapService.MBTiles;
 
 namespace TileMapService.TileSources
 {
@@ -14,11 +16,13 @@ namespace TileMapService.TileSources
     /// </summary>
     class HttpTileSource : ITileSource
     {
-        private TileSourceConfiguration configuration;
+        private SourceConfiguration configuration;
 
         private HttpClient client;
 
-        public HttpTileSource(TileSourceConfiguration configuration)
+        private CacheRepository cache = null;
+
+        public HttpTileSource(SourceConfiguration configuration)
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
@@ -42,7 +46,7 @@ namespace TileMapService.TileSources
             // 2. Actual values (from source metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            // TODO: read metadata from TMS, WMTS and WMS sources
+            // TODO: read and use metadata from TMS, WMTS and WMS sources
 
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
                 this.configuration.Id :
@@ -52,11 +56,11 @@ namespace TileMapService.TileSources
             var maxZoom = this.configuration.MaxZoom ?? 24;
 
             // Default is tms=false for simple XYZ tile services
-            var tms = this.configuration.Tms ?? (this.configuration.Type.ToLowerInvariant() == TileSourceConfiguration.TypeTms);
+            var tms = this.configuration.Tms ?? (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeTms);
             var srs = String.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
 
             // Re-create configuration
-            this.configuration = new TileSourceConfiguration
+            this.configuration = new SourceConfiguration
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type,
@@ -68,9 +72,23 @@ namespace TileMapService.TileSources
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from metadata
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
+                Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only WebMercator is supported due to mbtiles format
             };
 
             this.client = new HttpClient(); // TODO: custom headers from configuration
+
+            if (this.configuration.Cache != null)
+            {
+                var dbpath = this.configuration.Cache.DbFile;
+                if (File.Exists(dbpath))
+                {
+                    this.cache = new CacheRepository(dbpath);
+                }
+                else
+                {
+                    this.cache = CacheRepository.CreateEmpty(dbpath);
+                }
+            }
 
             return Task.CompletedTask;
         }
@@ -83,39 +101,37 @@ namespace TileMapService.TileSources
             }
             else
             {
-                string url;
-                switch (this.configuration.Type.ToLowerInvariant())
+                // Check if exists in cache
+                if (this.cache != null)
                 {
-                    case TileSourceConfiguration.TypeXyz:
-                        {
-                            url = GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
-                            break;
-                        }
-                    case TileSourceConfiguration.TypeTms:
-                        {
-                            url = GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
-                            break;
-                        }
-                    case TileSourceConfiguration.TypeWmts:
-                        {
-                            url = GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
-                            break;
-                        }
-                    case TileSourceConfiguration.TypeWms:
-                        {
-                            url = GetTileWmsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
-                            break;
-                        }
-                    default:
-                        {
-                            throw new ArgumentOutOfRangeException(nameof(this.configuration.Type), $"Unknown tile source type '{this.configuration.Type}'");
-                        }
+                    var data = this.cache.ReadTileData(x, y, z);
+                    if (data != null)
+                    {
+                        return data;
+                    }
                 }
 
+                var url = GetSourceUrl(x, y, z);
                 var response = await client.GetAsync(url);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    return await response.Content.ReadAsByteArrayAsync();
+                    if (response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
+                    {
+                        var message = await response.Content.ReadAsStringAsync();
+                        System.Diagnostics.Debug.WriteLine(message); // TODO: log error
+                        return null;
+                    }
+
+                    // TODO: more types checks of ContentType
+
+                    var data = await response.Content.ReadAsByteArrayAsync();
+
+                    if (this.cache != null)
+                    {
+                        this.cache.AddTile(x, y, z, data);
+                    }
+
+                    return data;
                 }
                 else
                 {
@@ -124,7 +140,20 @@ namespace TileMapService.TileSources
             }
         }
 
-        TileSourceConfiguration ITileSource.Configuration
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string GetSourceUrl(int x, int y, int z)
+        {
+            return (this.configuration.Type.ToLowerInvariant()) switch
+            {
+                SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
+                SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
+                SourceConfiguration.TypeWmts => GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
+                SourceConfiguration.TypeWms => GetTileWmsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
+                _ => throw new InvalidOperationException($"Source type '{this.configuration.Type}' is not supported."),
+            };
+        }
+
+        SourceConfiguration ITileSource.Configuration
         {
             get
             {

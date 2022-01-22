@@ -9,7 +9,7 @@ namespace TileMapService
         {
             services.AddCors();
             services.AddControllers();
-            services.AddSingleton<ITileSourceFabric, TileSources.TileSourceFabric>();
+            services.AddSingleton<ITileSourceFabric, TileSourceFabric>();
         }
 
         public void Configure(IApplicationBuilder app)

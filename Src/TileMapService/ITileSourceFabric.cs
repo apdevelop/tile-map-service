@@ -9,8 +9,8 @@ namespace TileMapService
 
         bool Contains(string id);
 
-        TileSources.ITileSource Get(string id);
+        ITileSource Get(string id);
 
-        List<TileSourceConfiguration> Sources { get; }
+        List<SourceConfiguration> Sources { get; }
     }
 }

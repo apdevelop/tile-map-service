@@ -74,24 +74,24 @@ namespace TileMapService.Tests
             // Create config file
             var tileSources = new[]
             {
-                new TileSourceConfiguration
+                new SourceConfiguration
                 {
-                    Type = TileSourceConfiguration.TypeMBTiles,
+                    Type = SourceConfiguration.TypeMBTiles,
                     Id = "source1",
                     Location = Mbtiles1FilePath,
                     MinZoom = 0,
                     MaxZoom = 18,
                 },
-                new TileSourceConfiguration
+                new SourceConfiguration
                 {
-                    Type = TileSourceConfiguration.TypeMBTiles,
+                    Type = SourceConfiguration.TypeMBTiles,
                     Id = "source2",
                     Title = "Tile Source 2",
                     Location = Mbtiles2FilePath,
                 },
-                new TileSourceConfiguration
+                new SourceConfiguration
                 {
-                    Type = TileSourceConfiguration.TypeLocalFiles,
+                    Type = SourceConfiguration.TypeLocalFiles,
                     Id = "source3",
                     Title = "Tile Source 3",
                     Location = LocalFilesPath + "\\{z}\\{x}\\{y}.png",
@@ -100,9 +100,9 @@ namespace TileMapService.Tests
                     Format = ImageFormats.Png,
                     Tms = false,
                 },
-                new TileSourceConfiguration // HTTP proxy to source1
+                new SourceConfiguration // HTTP proxy to source1
                 {
-                    Type = TileSourceConfiguration.TypeXyz,
+                    Type = SourceConfiguration.TypeXyz,
                     Id = "source4",
                     Title = "Tile Source 4",
                     Location = BaseUrl + "/xyz/source1/{z}/{x}/{y}.png",
@@ -113,7 +113,7 @@ namespace TileMapService.Tests
                 // TODO: EPSG:4326 source
             };
 
-            File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(new { TileSources = tileSources }));
+            File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(new { Sources = tileSources }));
 
             // TODO: more tiles into database
             // Create and fill MBTiles databases

@@ -1,13 +1,17 @@
 ﻿using System;
-using System.IO;
 
 using SkiaSharp;
 
 namespace TileMapService.Utils
 {
-    public class ImageHelper
+    internal class ImageHelper
     {
-        public static byte[] CreateEmptyPngImage(int width, int height, int backgroundColor)
+        public static byte[] CreateEmptyImage(
+            int width,
+            int height,
+            uint color,
+            SKEncodedImageFormat format,
+            int quality)
         {
             var imageInfo = new SKImageInfo(
                 width: width,
@@ -17,28 +21,48 @@ namespace TileMapService.Utils
 
             using var surface = SKSurface.Create(imageInfo);
             using var canvas = surface.Canvas;
-            canvas.Clear(new SKColor((uint)backgroundColor)); // TODO: ? uint parameter
+            canvas.Clear(new SKColor(color));
 
             using SKImage image = surface.Snapshot();
-            using SKData data = image.Encode();
+            using SKData data = image.Encode(format, quality);
 
             return data.ToArray();
         }
 
-        public static SKEncodedImageFormat SKEncodedImageFormatFromMediaType(string format)
+        /// <summary>
+        /// Checks if input image is blank (all pixels are the same color).
+        /// </summary>
+        /// <param name="imageData">Image data.</param>
+        /// <returns>ARGB color value if image is blank or null if not blank.</returns>
+        public static uint? CheckIfImageIsBlank(byte[] imageData)
         {
-            if (format == MediaTypeNames.Image.Png)
+            using var image = SKImage.FromEncodedData(imageData);
+            using var bitmap = SKBitmap.FromImage(image);
+
+            var pixelsize = sizeof(uint);
+            var span = bitmap.GetPixelSpan();
+            var zero = BitConverter.ToUInt32(span.Slice(0, pixelsize));
+
+            for (var i = pixelsize; i < span.Length; i += pixelsize)
             {
-                return SKEncodedImageFormat.Png;
+                var pixel = BitConverter.ToUInt32(span.Slice(i, pixelsize));
+                if (pixel != zero)
+                {
+                    return null;
+                }
             }
-            else if (format == MediaTypeNames.Image.Jpeg)
+
+            return zero;
+        }
+
+        public static SKEncodedImageFormat SKEncodedImageFormatFromMediaType(string mediaType)
+        {
+            return mediaType switch
             {
-                return SKEncodedImageFormat.Jpeg;
-            }
-            else
-            {
-                throw new ArgumentException("format");
-            }
+                MediaTypeNames.Image.Png => SKEncodedImageFormat.Png,
+                MediaTypeNames.Image.Jpeg => SKEncodedImageFormat.Jpeg,
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaType), $"Media type '{mediaType}' is not supported."),
+            };
         }
     }
 }

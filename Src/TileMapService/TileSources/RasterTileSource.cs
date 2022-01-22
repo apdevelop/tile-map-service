@@ -21,11 +21,11 @@ namespace TileMapService.TileSources
     /// </remarks>
     class RasterTileSource : ITileSource
     {
-        private TileSourceConfiguration configuration;
+        private SourceConfiguration configuration;
 
         private M.RasterProperties rasterProperties;
 
-        public RasterTileSource(TileSourceConfiguration configuration)
+        public RasterTileSource(SourceConfiguration configuration)
         {
             // TODO: report real WMS layer bounds from raster bounds
             // TODO: EPSG:4326 tile response (for WMTS, WMS)
@@ -61,7 +61,7 @@ namespace TileMapService.TileSources
             var maxZoom = this.configuration.MaxZoom ?? 24;
 
             // Re-create configuration
-            this.configuration = new TileSourceConfiguration
+            this.configuration = new SourceConfiguration
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type,
@@ -116,7 +116,7 @@ namespace TileMapService.TileSources
             }
         }
 
-        TileSourceConfiguration ITileSource.Configuration
+        SourceConfiguration ITileSource.Configuration
         {
             get
             {
@@ -305,7 +305,7 @@ namespace TileMapService.TileSources
 
             M.GeographicalBounds geographicalBounds = null;
             M.Bounds projectedBounds = null;
-            double pixelWidth = 0, pixelHeight = 0;
+            double pixelWidth = 0.0, pixelHeight = 0.0;
 
             switch (srId)
             {
@@ -349,7 +349,7 @@ namespace TileMapService.TileSources
                     }
                 default:
                     {
-                        throw new ArgumentException();
+                        throw new InvalidOperationException($"SRID '{srId}' is not supported");
                     }
             }
 

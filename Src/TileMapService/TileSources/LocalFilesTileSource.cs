@@ -13,9 +13,9 @@ namespace TileMapService.TileSources
     /// </summary>
     class LocalFilesTileSource : ITileSource
     {
-        private TileSourceConfiguration configuration;
+        private SourceConfiguration configuration;
 
-        public LocalFilesTileSource(TileSourceConfiguration configuration)
+        public LocalFilesTileSource(SourceConfiguration configuration)
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
@@ -64,7 +64,7 @@ namespace TileMapService.TileSources
             var maxZoom = this.configuration.MaxZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 24);
 
             // Re-create configuration
-            this.configuration = new TileSourceConfiguration
+            this.configuration = new SourceConfiguration
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type,
@@ -107,7 +107,7 @@ namespace TileMapService.TileSources
             }
         }
 
-        TileSourceConfiguration ITileSource.Configuration
+        SourceConfiguration ITileSource.Configuration
         {
             get
             {

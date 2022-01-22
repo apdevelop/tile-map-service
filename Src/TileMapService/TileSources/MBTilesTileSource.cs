@@ -14,11 +14,11 @@ namespace TileMapService.TileSources
     /// </remarks>
     class MBTilesTileSource : ITileSource
     {
-        private TileSourceConfiguration configuration;
+        private SourceConfiguration configuration;
 
         private MBTiles.Repository repository;
 
-        public MBTilesTileSource(TileSourceConfiguration configuration)
+        public MBTilesTileSource(SourceConfiguration configuration)
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
@@ -54,7 +54,7 @@ namespace TileMapService.TileSources
                     this.configuration.Format;
 
             // Re-create configuration
-            this.configuration = new TileSourceConfiguration
+            this.configuration = new SourceConfiguration
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type,
@@ -94,7 +94,7 @@ namespace TileMapService.TileSources
             return Task.FromResult(tileData);
         }
 
-        TileSourceConfiguration ITileSource.Configuration
+        SourceConfiguration ITileSource.Configuration
         {
             get
             {

@@ -8,22 +8,25 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 * Supported tile sources:
   * [MBTiles](https://github.com/mapbox/mbtiles-spec) (SQLite database).
   * Local file system (each tile in separate file).
-  * External tile services with XYZ, TMS, WMTS, WMS access using HTTP/HTTPS (this server acts as proxy server, translating requests on-the-fly).
-  * GeoTIFF image file (EPSG:3857 or EPSG:4326 SRS).
+  * External tile services with XYZ, TMS, WMTS, WMS access using HTTP/HTTPS (this server acts as proxy server, translating requests on-the-fly, with caching feature).
+  * GeoTIFF image file (with `EPSG:3857` or `EPSG:4326` SRS only).
 * Supported protocols for serving tiles: 
   * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)) [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z}).
   * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)) [http://localhost:5000/tms](http://localhost:5000/tms).
   * WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service))  [http://localhost:5000/wmts](http://localhost:5000/wmts?request=GetCapabilities).
   * WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))  [http://localhost:5000/wms](http://localhost:5000/wms?request=GetCapabilities).
-* Coordinate system / tile grid: [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection), basic support for geodetic `EPSG:4326`.
-* Formats: raster (`PNG`, `JPEG`) and basic support of `PBF` / `MVT` vector tiles.
+* Coordinate system / tile grid support: [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection), basic support for geodetic `EPSG:4326`.
+* Tile image formats: raster (`PNG`, `JPEG`) 256&#215;256 pixels tiles and basic support of `PBF` / `MVT` vector tiles.
+* Local cache for external tile services sources (modified `mbtiles` format database file, `EPSG:3857` only), with blank tiles detection support.
 * Configuration in JSON file.
 
 ### Technologies
-Developed using MS Visual Studio 2019 (v16.8.5) with .NET 5 SDK (v5.0.103).
+Developed using MS Visual Studio 2019 with .NET 5 SDK.
 Using
-* [Microsoft.Data.Sqlite](https://docs.microsoft.com/ru-ru/dotnet/standard/data/sqlite/) for working with SQLite database
-* [Leaflet](https://github.com/Leaflet) for map demo page
+* [Microsoft.Data.Sqlite](https://docs.microsoft.com/ru-ru/dotnet/standard/data/sqlite/) for working with SQLite database.
+* [SkiaSharp](https://github.com/mono/SkiaSharp) for raster images processing.
+* [BitMiracle.LibTiff.NET](https://github.com/BitMiracle/libtiff.net) for reading `GeoTIFF` source files.
+* [Leaflet](https://github.com/Leaflet) for map demo page.
 
 ### Configuration file
 
@@ -48,8 +51,8 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 * Support for more formats (vector tiles) and coordinate systems (tile grids).
 * Include test dataset(s) created from free data.
 * Compare with reference implementations.
-* Extended diagnostics and logging.
-* Caching tiles.
+* Configuration Web UI.
+* Extended diagnostics, error handling and logging.
 * Performance tests.
 * Live demo.
 

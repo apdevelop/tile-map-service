@@ -33,7 +33,11 @@
         }),
         'GeoTIFF': L.tileLayer('/xyz/geotiff/?x={x}&y={y}&z={z}', {
             maxZoom: 24
-        })
+        }),
+        'WMS with Caching': L.tileLayer('/xyz/wms-with-caching/{z}/{x}/{y}.png', {
+            attribution: '',
+            maxZoom: 10
+        }),
     };
 
     var tileGrid = L.gridLayer.tileGrid({

@@ -3,12 +3,12 @@
 namespace TileMapService
 {
     /// <summary>
-    /// Represents tile source configuration and properties.
+    /// Represents source configuration and properties.
     /// </summary>
-    public class TileSourceConfiguration
+    public class SourceConfiguration
     {
         /// <summary>
-        /// Type of tile source, "file", "mbtiles", "xyz", "tms", "wmts", "wms", "geotiff".
+        /// Type of source, "file", "mbtiles", "xyz", "tms", "wmts", "wms", "geotiff".
         /// </summary>
         [JsonPropertyName("type")]
         public string Type { get; set; }
@@ -85,5 +85,20 @@ namespace TileMapService
         public string Srs { get; set; }
 
         // TODO: bounds, center, attribution,.. (MBTiles metadata as example).
+
+        /// <summary>
+        /// Cache configuration, if used.
+        /// </summary>
+        [JsonPropertyName("cache")]
+        public SourceCacheConfiguration Cache { get; set; }
+    }
+
+    public class SourceCacheConfiguration
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("dbfile")]
+        public string DbFile { get; set; }
     }
 }

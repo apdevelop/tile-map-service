@@ -108,7 +108,7 @@ namespace TileMapService.Utils
         {
             if (width <= 0.0)
             {
-                throw new ArgumentOutOfRangeException("width", width, "width <= 0.0");
+                throw new ArgumentOutOfRangeException(nameof(width), width, "Width must be greater than zero.");
             }
 
             if (longitudeMin >= longitudeMax)
@@ -122,7 +122,7 @@ namespace TileMapService.Utils
         }
 
         /// <summary>
-        /// Flips tile Y coordinate (according to XYZ/TMS coordinate systems conversion).
+        /// Flips tile Y coordinate (according to XYZ-TMS coordinate systems conversion).
         /// </summary>
         /// <param name="y">Tile Y coordinate.</param>
         /// <param name="zoom">Tile zoom level.</param>

@@ -34,7 +34,7 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            return await this.ReadTileAsync(id, x, y, z);
+            return await this.GetTileAsync(id, x, y, z);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace TileMapService.Controllers
             }
 
             // TODO: check extension == tileset.Configuration.Format
-            return await this.ReadTileAsync(id, x, y, z);
+            return await this.GetTileAsync(id, x, y, z);
         }
 
         /// <summary>
@@ -76,10 +76,10 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            return await this.ReadTileAsync(id, x, y, z);
+            return await this.GetTileAsync(id, x, y, z);
         }
 
-        private async Task<IActionResult> ReadTileAsync(string id, int x, int y, int z)
+        private async Task<IActionResult> GetTileAsync(string id, int x, int y, int z)
         {
             if (String.IsNullOrEmpty(id))
             {

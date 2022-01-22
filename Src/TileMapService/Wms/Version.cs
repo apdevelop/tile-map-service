@@ -6,12 +6,12 @@
     enum Version
     {
         /// <summary>
-        /// 1.1.1
+        /// Version 1.1.1
         /// </summary>
         Version111,
 
         /// <summary>
-        /// 1.3.0
+        /// Version 1.3.0
         /// </summary>
         Version130,
     }

@@ -5,7 +5,7 @@ Configuration values priority:
 * Actual values (`MBTiles` metadata, files properties).
 * Values from configuration file - highest priority, overrides given above, if provided.
 
-Tile sources are defined in `TileSources` section of `appsettings.json` file.
+Tile sources are defined in `Sources` section of `appsettings.json` file.
 
 #### type
 Type: `String`<br>
@@ -66,3 +66,19 @@ Type: `Number`<br>
 Required: `false`
 
 Maximum zoom of tile source.
+
+#### cache
+Type: `Object`<br>
+Required: `false`
+
+Caching option for sources of type `xyz`, `tms`, `wmts`, `wms`.
+
+#### type
+Type: `String`<br>
+Required: `false`
+Must be `mbtiles` string.
+
+#### dbfile
+Type: `String`<br>
+Required: `true`
+Full path to `mbtiles` database file to store cached tiles. File will be created automatically, if not exists.

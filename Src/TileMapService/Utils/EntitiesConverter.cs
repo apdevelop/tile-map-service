@@ -24,7 +24,7 @@ namespace TileMapService.Utils
             };
         }
 
-        public static List<Models.Layer> SourcesToLayers(IEnumerable<TileSourceConfiguration> sources)
+        public static List<Models.Layer> SourcesToLayers(IEnumerable<SourceConfiguration> sources)
         {
             return sources
                .Select(c => new Models.Layer

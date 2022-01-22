@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TileMapService.TileSources
+using TileMapService.TileSources;
+
+namespace TileMapService
 {
     public class TileSourceFabric : ITileSourceFabric
     {
@@ -13,8 +15,8 @@ namespace TileMapService.TileSources
         public TileSourceFabric(IConfiguration configuration)
         {
             this.tileSources = configuration
-                    .GetSection("TileSources")
-                    .Get<IList<TileSourceConfiguration>>()
+                    .GetSection("Sources")
+                    .Get<IList<SourceConfiguration>>()
                     .ToDictionary(c => c.Id, c => CreateTileSource(c));
         }
 
@@ -38,7 +40,7 @@ namespace TileMapService.TileSources
             return this.tileSources[id];
         }
 
-        List<TileSourceConfiguration> ITileSourceFabric.Sources
+        List<SourceConfiguration> ITileSourceFabric.Sources
         {
             get
             {
@@ -50,7 +52,7 @@ namespace TileMapService.TileSources
 
         #endregion
 
-        private static ITileSource CreateTileSource(TileSourceConfiguration config)
+        private static ITileSource CreateTileSource(SourceConfiguration config)
         {
             if (config == null)
             {
@@ -59,13 +61,13 @@ namespace TileMapService.TileSources
 
             return (config.Type.ToLowerInvariant()) switch
             {
-                TileSourceConfiguration.TypeLocalFiles => new LocalFilesTileSource(config),
-                TileSourceConfiguration.TypeMBTiles => new MBTilesTileSource(config),
-                TileSourceConfiguration.TypeXyz => new HttpTileSource(config),
-                TileSourceConfiguration.TypeTms => new HttpTileSource(config),
-                TileSourceConfiguration.TypeWmts => new HttpTileSource(config),
-                TileSourceConfiguration.TypeWms => new HttpTileSource(config),
-                TileSourceConfiguration.TypeGeoTiff => new RasterTileSource(config),
+                SourceConfiguration.TypeLocalFiles => new LocalFilesTileSource(config),
+                SourceConfiguration.TypeMBTiles => new MBTilesTileSource(config),
+                SourceConfiguration.TypeXyz => new HttpTileSource(config),
+                SourceConfiguration.TypeTms => new HttpTileSource(config),
+                SourceConfiguration.TypeWmts => new HttpTileSource(config),
+                SourceConfiguration.TypeWms => new HttpTileSource(config),
+                SourceConfiguration.TypeGeoTiff => new RasterTileSource(config),
                 _ => throw new ArgumentOutOfRangeException(nameof(config.Type), $"Unknown tile source type '{config.Type}'"),
             };
         }
