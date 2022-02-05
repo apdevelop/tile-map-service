@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 namespace TileMapService.TileSources
 {
     /// <summary>
-    /// Represents tile source with tiles stored in MBTiles SQLite database.
+    /// Represents tile source with tiles stored in MBTiles file (SQLite database).
     /// </summary>
     /// <remarks>
-    /// Supports only Spherical Mercator tile grid and TMS tiling scheme (Y axis is going up).
-    /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
+    /// Supports only Spherical Mercator (EPSG:3857) tile grid and TMS tiling scheme (Y axis is going up).
+    /// See MBTiles 1.3 specification: https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
     /// </remarks>
     class MBTilesTileSource : ITileSource
     {
@@ -22,12 +22,12 @@ namespace TileMapService.TileSources
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Source identifier is null or empty string");
             }
 
             if (String.IsNullOrEmpty(configuration.Location))
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Source location is null or empty string");
             }
 
             this.configuration = configuration; // Will be changed later in InitAsync
@@ -39,7 +39,7 @@ namespace TileMapService.TileSources
         {
             // Configuration values priority:
             // 1. Default values for MBTiles source type.
-            // 2. Actual values (MBTiles metadata).
+            // 2. Actual values (MBTiles metadata table values).
             // 3. Values from configuration file - overrides given above, if provided.
 
             this.repository = new MBTiles.Repository(configuration.Location, false);
@@ -66,6 +66,8 @@ namespace TileMapService.TileSources
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(format),
                 MinZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? 0, // TODO: ? Check actual SELECT MIN/MAX(zoom_level) ?
                 MaxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? 24,
+                GeographicalBounds = metadata.Bounds, // Can be null, if no corresponding record in 'metadata' table
+                Cache = null, // Not used for MBTiles source
             };
 
             return Task.CompletedTask;
@@ -73,22 +75,19 @@ namespace TileMapService.TileSources
 
         Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            var tileData = this.repository.ReadTileData(x, this.configuration.Tms.Value ?
-                y :
-                Utils.WebMercator.FlipYCoordinate(y, z), z);
+            var tileRow = this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
+            var tileData = this.repository.ReadTileData(x, tileRow, z);
 
             // TODO: pass gzipped data as-is with setting HTTP headers?
             // pbf as a format refers to gzip-compressed vector tile data in Mapbox Vector Tile format, 
             // which uses Google Protocol Buffers as encoding format.
             if (this.configuration.Format == ImageFormats.Protobuf)
             {
-                using (var compressedStream = new MemoryStream(tileData))
-                using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
-                using (var resultStream = new MemoryStream())
-                {
-                    zipStream.CopyTo(resultStream);
-                    tileData = resultStream.ToArray();
-                }
+                using var compressedStream = new MemoryStream(tileData);
+                using var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress);
+                using var resultStream = new MemoryStream();
+                zipStream.CopyTo(resultStream);
+                tileData = resultStream.ToArray();
             }
 
             return Task.FromResult(tileData);

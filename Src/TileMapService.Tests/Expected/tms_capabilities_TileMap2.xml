@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TileMap version="1.0.0" tilemapservice="http://localhost:5000/tms/1.0.0/">
-	<Title>Tile Source 2</Title>
+	<Title>World Satellite Imagery</Title>
 	<SRS>EPSG:3857</SRS>
 	<BoundingBox minx="-20037508.342789" miny="-20037508.342789" maxx="20037508.342789" maxy="20037508.342789"/>
 	<Origin x="-20037508.342789" y="-20037508.342789"/>
 	<TileFormat width="256" height="256" mime-type="image/jpeg" extension="jpg"/>
 	<TileSets>
-		<TileSet href="http://localhost:5000/tms/1.0.0/source2/0" order="0" units-per-pixel="156543.03392803908"/>
-		<TileSet href="http://localhost:5000/tms/1.0.0/source2/1" order="1" units-per-pixel="78271.51696401954"/>
-		<TileSet href="http://localhost:5000/tms/1.0.0/source2/2" order="2" units-per-pixel="39135.75848200977"/>
-		<TileSet href="http://localhost:5000/tms/1.0.0/source2/3" order="3" units-per-pixel="19567.879241004885"/>
-		<TileSet href="http://localhost:5000/tms/1.0.0/source2/4" order="4" units-per-pixel="9783.939620502442"/>
-		<TileSet href="http://localhost:5000/tms/1.0.0/source2/5" order="5" units-per-pixel="4891.969810251221"/>
+		<TileSet href="http://localhost:5000/tms/1.0.0/world-satellite-imagery/0" order="0" units-per-pixel="156543.03392803908"/>
+		<TileSet href="http://localhost:5000/tms/1.0.0/world-satellite-imagery/1" order="1" units-per-pixel="78271.51696401954"/>
+		<TileSet href="http://localhost:5000/tms/1.0.0/world-satellite-imagery/2" order="2" units-per-pixel="39135.75848200977"/>
+		<TileSet href="http://localhost:5000/tms/1.0.0/world-satellite-imagery/3" order="3" units-per-pixel="19567.879241004885"/>
+		<TileSet href="http://localhost:5000/tms/1.0.0/world-satellite-imagery/4" order="4" units-per-pixel="9783.939620502442"/>
+		<TileSet href="http://localhost:5000/tms/1.0.0/world-satellite-imagery/5" order="5" units-per-pixel="4891.969810251221"/>
 	</TileSets>
 </TileMap>

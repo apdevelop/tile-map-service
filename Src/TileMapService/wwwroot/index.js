@@ -19,17 +19,25 @@
             attribution: 'MapTiler AG',
             maxZoom: 5
         }),
+        'Caspian Sea (XYZ)': L.tileLayer('/xyz/caspiansea/?x={x}&y={y}&z={z}', {
+            attribution: '',
+            maxZoom: 10
+        }),
         'World Countries (XYZ FS)': L.tileLayer('/xyz/world-countries-fs/{z}/{x}/{y}.png', {
             attribution: 'Esri',
             maxZoom: 5
         }),
-        'Demographics (WMTS)': L.tileLayer('/xyz/arcgisonline-wmts-demo/{z}/{x}/{y}.png', {
+        'ArcGis Online MapServer (WMTS)': L.tileLayer('/xyz/arcgisonline-wmts-demo/{z}/{x}/{y}.png', {
             attribution: 'Esri',
-            maxZoom: 5
+            maxZoom: 12
         }),
-        'MapServer Demo (WMS)': L.tileLayer('/xyz/wms-demo-mapserver/{z}/{x}/{y}.png', {
-            attribution: 'MapServer',
+        'GeoServer Demo (WMS)': L.tileLayer('/xyz/wms-demo-geoserver/{z}/{x}/{y}.png', {
+            attribution: 'gis.marine-vts.site',
             maxZoom: 10
+        }),
+        'GeoServer Demo (WMS) SAR GRID': L.tileLayer('/xyz/wms-demo-geoserver-sar-grid/{z}/{x}/{y}.png', {
+            attribution: 'gis.marine-vts.site',
+            maxZoom: 12
         }),
         'GeoTIFF': L.tileLayer('/xyz/geotiff/?x={x}&y={y}&z={z}', {
             maxZoom: 24

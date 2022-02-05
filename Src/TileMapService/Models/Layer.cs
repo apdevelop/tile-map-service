@@ -1,7 +1,7 @@
 ﻿namespace TileMapService.Models
 {
     /// <summary>
-    /// Represents tile source properties in TMS and WMTS Capabilities XML document.
+    /// Represents source properties in TMS and WMTS Capabilities XML document.
     /// </summary>
     class Layer
     {
@@ -23,5 +23,7 @@
         public int MinZoom { get; set; }
 
         public int MaxZoom { get; set; }
+
+        public GeographicalBounds GeographicalBounds { get; set; }
     }
 }

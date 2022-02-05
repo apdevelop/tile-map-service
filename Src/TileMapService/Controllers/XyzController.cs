@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace TileMapService.Controllers
 {
     /// <summary>
-    /// Serving tiles using minimalistic REST API.
+    /// XYZ endpoint - serving tiles using minimalistic REST API, similar to OSM, Google Maps.
     /// </summary>
     [Route("xyz")]
     public class XyzController : Controller
@@ -19,7 +19,7 @@ namespace TileMapService.Controllers
 
         /// <summary>
         /// Get tile from tileset with specified coordinates.
-        /// Url template: xyz/{tileset}/?x={x}&y={y}&z={z}
+        /// Url template: xyz/{tileset}/?x={x}&amp;y={y}&amp;z={z}
         /// </summary>
         /// <param name="id">Tileset identifier.</param>
         /// <param name="x">Tile X coordinate (column).</param>

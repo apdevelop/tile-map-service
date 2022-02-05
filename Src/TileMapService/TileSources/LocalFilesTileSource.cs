@@ -19,12 +19,12 @@ namespace TileMapService.TileSources
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Source identifier is null or empty string");
             }
 
             if (String.IsNullOrEmpty(configuration.Location))
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Source location is null or empty string");
             }
 
             this.configuration = configuration; // Will be changed later in InitAsync
@@ -76,6 +76,8 @@ namespace TileMapService.TileSources
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
+                GeographicalBounds = null, // TODO: compute bounds (need to scan all folders ?)
+                Cache = null, // Not used for local files source
             };
 
             return Task.CompletedTask;
@@ -93,12 +95,10 @@ namespace TileMapService.TileSources
                 var fileInfo = new FileInfo(path);
                 if (fileInfo.Exists)
                 {
-                    using (var fileStream = fileInfo.OpenRead())
-                    {
-                        var buffer = new byte[fileInfo.Length];
-                        await fileStream.ReadAsync(buffer.AsMemory(0, buffer.Length));
-                        return buffer;
-                    }
+                    using var fileStream = fileInfo.OpenRead();
+                    var buffer = new byte[fileInfo.Length];
+                    await fileStream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+                    return buffer;
                 }
                 else
                 {

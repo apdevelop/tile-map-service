@@ -10,13 +10,13 @@ namespace TileMapService.Wmts
     /// WMTS capabilities document builder.
     /// Supports only Web Mercator (EPSG:3857) / "Google Maps Compatible" 256x256 tile sets.
     /// </summary>
-    class CapabilitiesDocumentBuilder
+    class CapabilitiesUtility
     {
         private readonly string baseUrl;
 
         private readonly List<Models.Layer> layers;
 
-        private const int TileWidth = 256; // TODO: other resolutions
+        private const int TileWidth = 256; // TODO: cusom resolution values
 
         private const int TileHeight = 256;
 
@@ -38,7 +38,9 @@ namespace TileMapService.Wmts
 
         // TODO: DTO classes for WMTS capabilities description (like Layer)
 
-        public CapabilitiesDocumentBuilder(string baseUrl, IEnumerable<Models.Layer> layers)
+        public CapabilitiesUtility(
+            string baseUrl,
+            IEnumerable<Models.Layer> layers)
         {
             this.baseUrl = baseUrl;
             this.layers = layers.ToList();
@@ -47,13 +49,13 @@ namespace TileMapService.Wmts
         public XmlDocument GetCapabilities()
         {
             var doc = new XmlDocument();
-            var root = doc.CreateElement(String.Empty, "Capabilities", WmtsNamespaceUri);
-            root.SetAttribute("xmlns:" + OwsPrefix, OwsNamespaceUri);
-            root.SetAttribute("xmlns:" + XlinkPrefix, XlinkNamespaceUri);
-            root.SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-            root.SetAttribute("xmlns:gml", "http://www.opengis.net/gml");
-            root.SetAttribute("version", Version100);
-            doc.AppendChild(root);
+            var rootElement = doc.CreateElement(String.Empty, "Capabilities", WmtsNamespaceUri);
+            rootElement.SetAttribute("xmlns:" + OwsPrefix, OwsNamespaceUri);
+            rootElement.SetAttribute("xmlns:" + XlinkPrefix, XlinkNamespaceUri);
+            rootElement.SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            rootElement.SetAttribute("xmlns:gml", "http://www.opengis.net/gml");
+            rootElement.SetAttribute("version", Version100);
+            doc.AppendChild(rootElement);
 
             var serviceIdentificationElement = doc.CreateElement(OwsPrefix, "ServiceIdentification", OwsNamespaceUri);
 
@@ -69,7 +71,7 @@ namespace TileMapService.Wmts
             serviceTypeVersionElement.InnerText = Version100;
             serviceIdentificationElement.AppendChild(serviceTypeVersionElement);
 
-            root.AppendChild(serviceIdentificationElement);
+            rootElement.AppendChild(serviceIdentificationElement);
 
             var serviceProviderElement = doc.CreateElement(OwsPrefix, "ServiceProvider", OwsNamespaceUri);
             var serviceContactElement = doc.CreateElement(OwsPrefix, "ServiceContact", OwsNamespaceUri);
@@ -78,15 +80,16 @@ namespace TileMapService.Wmts
             serviceContactElement.AppendChild(contactInfoElement);
             serviceProviderElement.AppendChild(serviceContactElement);
 
-            root.AppendChild(serviceProviderElement);
+            rootElement.AppendChild(serviceProviderElement);
 
             var operationsMetadataElement = doc.CreateElement(OwsPrefix, "OperationsMetadata", OwsNamespaceUri);
             operationsMetadataElement.AppendChild(CreateOperationElement(doc, this.baseUrl, "GetCapabilities"));
             operationsMetadataElement.AppendChild(CreateOperationElement(doc, this.baseUrl, "GetTile"));
             // TODO: GetFeatureInfo
-            root.AppendChild(operationsMetadataElement);
+            rootElement.AppendChild(operationsMetadataElement);
 
             var contentsElement = doc.CreateElement(String.Empty, "Contents", WmtsNamespaceUri);
+
             // TODO: EPSG:4326 support
             var identifiers = new HashSet<string>();
             foreach (var layer in this.layers)
@@ -136,7 +139,7 @@ namespace TileMapService.Wmts
                 }
             }
 
-            root.AppendChild(contentsElement);
+            rootElement.AppendChild(contentsElement);
 
             return doc;
         }
@@ -200,18 +203,37 @@ namespace TileMapService.Wmts
             formatElement.InnerText = layer.ContentType;
             layerElement.AppendChild(formatElement);
 
+            const string LowerCornerElementName = "LowerCorner";
+            const string UpperCornerElementName = "UpperCorner";
             var wgs84BoundingBoxElement = doc.CreateElement(OwsPrefix, "WGS84BoundingBox", OwsNamespaceUri);
+
+            static string FormatPoint(Models.GeographicalPoint point)
+            {
+                return String.Format( // TODO: rounding in other implementations ?
+                    CultureInfo.InvariantCulture,
+                    "{0:0.000000##########} {1:0.000000##########}",
+                    point.Longitude,
+                    point.Latitude);
+            }
 
             switch (layer.Srs)
             {
                 case Utils.SrsCodes.EPSG3857:
                     {
-                        var lowerCornerElement = doc.CreateElement(OwsPrefix, "LowerCorner", OwsNamespaceUri);
-                        lowerCornerElement.InnerText = "-180.000000 -85.05112878";
+                        // Default values if source properties unknown
+                        var lowerCorner = layer.GeographicalBounds == null ?
+                            new Models.GeographicalPoint(-180, -85.05112878) :
+                            layer.GeographicalBounds.Min;
+                        var upperCorner = layer.GeographicalBounds == null ?
+                            new Models.GeographicalPoint(180, 85.05112878) :
+                            layer.GeographicalBounds.Max;
+
+                        var lowerCornerElement = doc.CreateElement(OwsPrefix, LowerCornerElementName, OwsNamespaceUri);
+                        lowerCornerElement.InnerText = FormatPoint(lowerCorner);
                         wgs84BoundingBoxElement.AppendChild(lowerCornerElement);
 
-                        var upperCornerElement = doc.CreateElement(OwsPrefix, "UpperCorner", OwsNamespaceUri);
-                        upperCornerElement.InnerText = "180.000000 85.05112878";
+                        var upperCornerElement = doc.CreateElement(OwsPrefix, UpperCornerElementName, OwsNamespaceUri);
+                        upperCornerElement.InnerText = FormatPoint(upperCorner);
                         wgs84BoundingBoxElement.AppendChild(upperCornerElement);
 
                         layerElement.AppendChild(wgs84BoundingBoxElement);
@@ -219,12 +241,16 @@ namespace TileMapService.Wmts
                     }
                 case Utils.SrsCodes.EPSG4326:
                     {
-                        var lowerCornerElement = doc.CreateElement(OwsPrefix, "LowerCorner", OwsNamespaceUri);
-                        lowerCornerElement.InnerText = "-180.000000 -90.000000";
+                        // TODO: custom bounds from source properties
+                        var lowerCorner = new Models.GeographicalPoint(-180, -90);
+                        var upperCorner = new Models.GeographicalPoint(180, 90);
+
+                        var lowerCornerElement = doc.CreateElement(OwsPrefix, LowerCornerElementName, OwsNamespaceUri);
+                        lowerCornerElement.InnerText = FormatPoint(lowerCorner);
                         wgs84BoundingBoxElement.AppendChild(lowerCornerElement);
 
-                        var upperCornerElement = doc.CreateElement(OwsPrefix, "UpperCorner", OwsNamespaceUri);
-                        upperCornerElement.InnerText = "180.000000 90.000000";
+                        var upperCornerElement = doc.CreateElement(OwsPrefix, UpperCornerElementName, OwsNamespaceUri);
+                        upperCornerElement.InnerText = FormatPoint(upperCorner);
                         wgs84BoundingBoxElement.AppendChild(upperCornerElement);
 
                         layerElement.AppendChild(wgs84BoundingBoxElement);
@@ -318,8 +344,8 @@ namespace TileMapService.Wmts
                     case Utils.SrsCodes.EPSG3857:
                         {
                             scaleDenominator = 5.590822640287179E8;
-                            matrixWidth = (1 << zoom);
-                            matrixHeight = (1 << zoom);
+                            matrixWidth = 1 << zoom;
+                            matrixHeight = 1 << zoom;
 
                             var scaleDenominatorElement = doc.CreateElement(String.Empty, "ScaleDenominator", WmtsNamespaceUri);
                             scaleDenominatorElement.InnerText = (scaleDenominator / ((double)(1 << zoom))).ToString(CultureInfo.InvariantCulture);
@@ -334,7 +360,7 @@ namespace TileMapService.Wmts
                         {
                             scaleDenominator = 279541132.01435887813568115234;
                             matrixWidth = 2 * (1 << zoom);
-                            matrixHeight = (1 << zoom);
+                            matrixHeight = 1 << zoom;
 
                             var scaleDenominatorElement = doc.CreateElement(String.Empty, "ScaleDenominator", WmtsNamespaceUri);
                             scaleDenominatorElement.InnerText = (scaleDenominator / ((double)(1 << zoom))).ToString(CultureInfo.InvariantCulture);

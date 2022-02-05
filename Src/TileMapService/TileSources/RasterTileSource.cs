@@ -73,6 +73,8 @@ namespace TileMapService.TileSources
                 ContentType = U.EntitiesConverter.TileFormatToContentType(ImageFormats.Png),
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
+                GeographicalBounds = this.rasterProperties.GeographicalBounds,
+                Cache = null, // Not used for local raster file source
             };
 
             return Task.CompletedTask;

@@ -74,33 +74,27 @@ namespace TileMapService.MBTiles
         /// <returns>Tile image contents.</returns>
         public byte[] ReadTileData(int tileColumn, int tileRow, int zoomLevel)
         {
-            using (var connection = new SqliteConnection(this.connectionString))
+            using var connection = new SqliteConnection(this.connectionString);
+            using var command = new SqliteCommand(ReadTileDataCommandText, connection);
+            command.Parameters.AddRange(new[]
             {
-                using (var command = new SqliteCommand(ReadTileDataCommandText, connection))
-                {
-                    command.Parameters.AddRange(new[]
-                    {
-                        new SqliteParameter("@tile_column", tileColumn),
-                        new SqliteParameter("@tile_row", tileRow),
-                        new SqliteParameter("@zoom_level", zoomLevel),
-                    });
+                new SqliteParameter("@tile_column", tileColumn),
+                new SqliteParameter("@tile_row", tileRow),
+                new SqliteParameter("@zoom_level", zoomLevel),
+            });
 
-                    connection.Open();
-                    using (var dr = command.ExecuteReader())
-                    {
-                        byte[] result = null;
+            connection.Open();
+            using var dr = command.ExecuteReader();
+            byte[] result = null;
 
-                        if (dr.Read())
-                        {
-                            result = (byte[])dr[0];
-                        }
-
-                        dr.Close();
-
-                        return result;
-                    }
-                }
+            if (dr.Read())
+            {
+                result = (byte[])dr[0];
             }
+
+            dr.Close();
+
+            return result;
         }
 
         /// <summary>
@@ -109,30 +103,26 @@ namespace TileMapService.MBTiles
         /// <returns>Metadata records.</returns>
         public MetadataItem[] ReadMetadata()
         {
-            using (var connection = new SqliteConnection(this.connectionString))
+            using var connection = new SqliteConnection(this.connectionString);
+            using var command = new SqliteCommand(ReadMetadataCommandText, connection);
+            var result = new List<MetadataItem>();
+
+            connection.Open();
+            using (var dr = command.ExecuteReader())
             {
-                using (var command = new SqliteCommand(ReadMetadataCommandText, connection))
+                while (dr.Read())
                 {
-                    var result = new List<MetadataItem>();
-
-                    connection.Open();
-                    using (var dr = command.ExecuteReader())
+                    result.Add(new MetadataItem
                     {
-                        while (dr.Read())
-                        {
-                            result.Add(new MetadataItem
-                            {
-                                Name = dr.IsDBNull(0) ? null : dr.GetString(0),
-                                Value = dr.IsDBNull(1) ? null : dr.GetString(1),
-                            });
-                        }
-
-                        dr.Close();
-                    }
-
-                    return result.ToArray();
+                        Name = dr.IsDBNull(0) ? null : dr.GetString(0),
+                        Value = dr.IsDBNull(1) ? null : dr.GetString(1),
+                    });
                 }
+
+                dr.Close();
             }
+
+            return result.ToArray();
         }
 
         #endregion
@@ -155,54 +145,55 @@ namespace TileMapService.MBTiles
             return repository;
         }
 
+        /// <summary>
+        /// Inserts tile image with coordinates into 'tiles' table.
+        /// </summary>
+        /// <param name="tileColumn">Tile X coordinate (column).</param>
+        /// <param name="tileRow">Tile Y coordinate (row), Y axis goes up from the bottom (TMS scheme).</param>
+        /// <param name="zoomLevel">Tile Z coordinate (zoom level).</param>
+        /// <param name="tileData">Tile image contents.</param>
         public void AddTile(int tileColumn, int tileRow, int zoomLevel, byte[] tileData)
         {
-            using (var connection = new SqliteConnection(this.connectionString))
-            {
-                var commandText = @$"INSERT INTO {TableTiles} 
+            var commandText = @$"INSERT INTO {TableTiles} 
                     ({ColumnTileColumn}, {ColumnTileRow}, {ColumnZoomLevel}, {ColumnTileData}) 
                     VALUES
                     (@{ColumnTileColumn}, @{ColumnTileRow}, @{ColumnZoomLevel}, @{ColumnTileData})";
-                using (var command = new SqliteCommand(commandText, connection))
-                {
-                    command.Parameters.Add(new SqliteParameter($"@{ColumnTileColumn}", tileColumn));
-                    command.Parameters.Add(new SqliteParameter($"@{ColumnTileRow}", tileRow));
-                    command.Parameters.Add(new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel));
-                    command.Parameters.Add(new SqliteParameter($"@{ColumnTileData}", tileData));
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                }
-            }
+
+            using var connection = new SqliteConnection(this.connectionString);
+            using var command = new SqliteCommand(commandText, connection);
+            command.Parameters.Add(new SqliteParameter($"@{ColumnTileColumn}", tileColumn));
+            command.Parameters.Add(new SqliteParameter($"@{ColumnTileRow}", tileRow));
+            command.Parameters.Add(new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel));
+            command.Parameters.Add(new SqliteParameter($"@{ColumnTileData}", tileData));
+            connection.Open();
+            command.ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// Inserts given metadata item into 'metadata' table.
+        /// </summary>
+        /// <param name="item">Key/value metadata item.</param>
         public void AddMetadataItem(MetadataItem item)
         {
-            using (var connection = new SqliteConnection(this.connectionString))
-            {
-                var commandText = @$"INSERT INTO {TableMetadata} 
+            using var connection = new SqliteConnection(this.connectionString);
+            var commandText = @$"INSERT INTO {TableMetadata} 
                     ({ColumnMetadataName}, {ColumnMetadataValue}) 
                     VALUES
                     (@{ColumnMetadataName}, @{ColumnMetadataValue})";
-                using (var command = new SqliteCommand(commandText, connection))
-                {
-                    command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataName}", item.Name));
-                    command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataValue}", item.Value));
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                }
-            }
+
+            using var command = new SqliteCommand(commandText, connection);
+            command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataName}", item.Name));
+            command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataValue}", item.Value));
+            connection.Open();
+            command.ExecuteNonQuery();
         }
 
         private void ExecuteSqlQuery(string commandText)
         {
-            using (var connection = new SqliteConnection(this.connectionString))
-            {
-                using (var command = new SqliteCommand(commandText, connection))
-                {
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                }
-            }
+            using var connection = new SqliteConnection(this.connectionString);
+            using var command = new SqliteCommand(commandText, connection);
+            connection.Open();
+            command.ExecuteNonQuery();
         }
 
         #endregion

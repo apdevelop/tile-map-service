@@ -6,7 +6,7 @@ using System.Linq;
 namespace TileMapService.MBTiles
 {
     /// <summary>
-    /// Represents metadata set from MBTiles database.
+    /// Represents metadata set from MBTiles database 'metadata' table.
     /// </summary>
     class Metadata
     {
@@ -24,7 +24,7 @@ namespace TileMapService.MBTiles
             {
                 if (!String.IsNullOrEmpty(bounds.Value))
                 {
-                    this.Bounds = Models.Bounds.FromMBTilesMetadataString(bounds.Value);
+                    this.Bounds = Models.GeographicalBounds.FromCommaSeparatedString(bounds.Value);
                 }
             }
 
@@ -75,7 +75,7 @@ namespace TileMapService.MBTiles
         /// <summary>
         /// The maximum extent of the rendered map area (as WGS 84 latitude and longitude values, in the OpenLayers Bounds format: left, bottom, right, top), string of comma-separated numbers.
         /// </summary>
-        public Models.Bounds Bounds { get; private set; }
+        public Models.GeographicalBounds Bounds { get; private set; }
 
         /// <summary>
         /// The longitude, latitude, and zoom level of the default view of the map, string of comma-separated numbers.

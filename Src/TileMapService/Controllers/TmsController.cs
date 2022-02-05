@@ -8,7 +8,7 @@ using TileMapService.Utils;
 namespace TileMapService.Controllers
 {
     /// <summary>
-    /// Serving tiles using Tile Map Service (TMS) protocol.
+    /// TMS endpoint - serving tiles using Tile Map Service protocol (<see href="https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification">Tile Map Service Specification</see>).
     /// </summary>
     [Route("tms")]
     public class TmsController : Controller
@@ -25,7 +25,7 @@ namespace TileMapService.Controllers
         {
             // TODO: services/root.xml
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetRootResource();
+            var xmlDoc = new Tms.CapabilitiesUtility(this.BaseUrl, layers).GetRootResource();
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
@@ -35,7 +35,7 @@ namespace TileMapService.Controllers
         {
             // TODO: services/tilemapservice.xml
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileMapService();
+            var xmlDoc = new Tms.CapabilitiesUtility(this.BaseUrl, layers).GetTileMapService();
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
@@ -46,7 +46,7 @@ namespace TileMapService.Controllers
             // TODO: services/basemap.xml
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
             var layer = layers.SingleOrDefault(l => l.Identifier == tileset);
-            var xmlDoc = new Tms.CapabilitiesDocumentBuilder(this.BaseUrl, layers).GetTileMap(layer);
+            var xmlDoc = new Tms.CapabilitiesUtility(this.BaseUrl, layers).GetTileMap(layer);
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }

@@ -16,7 +16,7 @@ namespace TileMapService.Wms
             {
                 case Identifiers.Version111: { wmsVersion = Version.Version111; break; }
                 case Identifiers.Version130: { wmsVersion = Version.Version130; break; }
-                default: throw new ArgumentOutOfRangeException();
+                default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
 
             return wmsVersion;
@@ -27,7 +27,7 @@ namespace TileMapService.Wms
             int width, int height,
             Models.Bounds boundingBox,
             IList<Models.TileDataset> sourceTiles,
-            int backgroundColor,
+            uint backgroundColor,
             int tileSize)
         {
             var zoom = sourceTiles[0].Z;
@@ -46,7 +46,7 @@ namespace TileMapService.Wms
 
             using var surface = SKSurface.Create(imageInfo);
             using var canvas = surface.Canvas;
-            canvas.Clear(new SKColor((uint)backgroundColor)); // TODO: ? uint parameter
+            canvas.Clear(new SKColor(backgroundColor));
 
             // Draw all tiles without scaling
             foreach (var sourceTile in sourceTiles)

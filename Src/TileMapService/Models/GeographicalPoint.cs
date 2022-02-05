@@ -1,4 +1,7 @@
-﻿namespace TileMapService.Models
+﻿using System;
+using System.Globalization;
+
+namespace TileMapService.Models
 {
     public class GeographicalPoint
     {
@@ -15,6 +18,11 @@
         {
             this.Longitude = longitude;
             this.Latitude = latitude;
+        }
+
+        public override string ToString()
+        {
+            return String.Format(CultureInfo.InvariantCulture, "{0} {1}", this.Longitude, this.Latitude);
         }
     }
 }

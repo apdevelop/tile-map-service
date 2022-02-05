@@ -1,7 +1,7 @@
 ﻿namespace TileMapService.MBTiles
 {
     /// <summary>
-    /// Represents single key/value item from metadata table.
+    /// Represents single key/value item in 'metadata' table of MBTiles database.
     /// </summary>
     /// <remarks>
     /// See https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md#metadata
@@ -9,26 +9,36 @@
     public class MetadataItem
     {
         /// <summary>
-        /// Name (key) of item.
+        /// Name of item (key).
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Value of item.
+        /// String value of item.
         /// </summary>
         public string Value { get; set; }
 
+        /// <summary>
+        /// Creates new empty metadata item instance.
+        /// </summary>
         public MetadataItem()
-        { 
-        
+        {
+
         }
 
+        /// <summary>
+        /// Creates new metadata item instance with given name and value.
+        /// </summary>
         public MetadataItem(string name, string value)
         {
             this.Name = name;
             this.Value = value;
         }
 
+        /// <summary>
+        /// Converts instance to its string representation.
+        /// </summary>
+        /// <returns>The string representation of the instance.</returns>
         public override string ToString()
         {
             return $"\"{this.Name}\": \"{this.Value}\"";

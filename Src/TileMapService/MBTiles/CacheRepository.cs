@@ -171,79 +171,71 @@ namespace TileMapService.MBTiles
                 TileIdFromCoordinates(tileColumn, tileRow, zoomLevel) :
                 "#" + blankColor.Value.ToString("X8");
 
-            using (var connection = new SqliteConnection(this.connectionString))
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+            var isImageExists = false;
+
+            // Check if image with this id is stored
             {
+                var command0Text = $"SELECT COUNT({ColumnTileId}) FROM {TableImages} WHERE {ColumnTileId} = @{ColumnTileId}";
+                using var command = new SqliteCommand(command0Text, connection, transaction);
+                command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
+
                 connection.Open();
-                using (var transaction = connection.BeginTransaction())
+                using var dr = command.ExecuteReader();
+                if (dr.Read())
                 {
-                    var isImageExists = false;
+                    isImageExists = Convert.ToInt64(dr[0]) == 1;
+                }
 
-                    // Check if image with this id is stored
-                    {
-                        var command0Text = $"SELECT COUNT({ColumnTileId}) FROM {TableImages} WHERE {ColumnTileId} = @{ColumnTileId}";
-                        using var command = new SqliteCommand(command0Text, connection, transaction);
-                        command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
+                dr.Close();
+            }
 
-                        connection.Open();
-                        using var dr = command.ExecuteReader();
-                        if (dr.Read())
-                        {
-                            isImageExists = Convert.ToInt64(dr[0]) == 1;
-                        }
-
-                        dr.Close();
-                    }
-
-                    if (!isImageExists) // Store image if not exists with this id
-                    {
-                        var command1Text = @$"INSERT INTO {TableImages} 
+            if (!isImageExists) // Store image if not exists with this id
+            {
+                var command1Text = @$"INSERT INTO {TableImages} 
                             ({ColumnTileId}, {ColumnTileData}) 
                             VALUES
                             (@{ColumnTileId}, @{ColumnTileData})";
 
-                        using var command = new SqliteCommand(command1Text, connection, transaction);
-                        command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
-                        command.Parameters.Add(new SqliteParameter($"@{ColumnTileData}", tileData));
-                        command.ExecuteNonQuery();
-                    }
+                using var command = new SqliteCommand(command1Text, connection, transaction);
+                command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
+                command.Parameters.Add(new SqliteParameter($"@{ColumnTileData}", tileData));
+                command.ExecuteNonQuery();
+            }
 
-                    {
-                        var command2Text = @$"INSERT OR IGNORE INTO {TableMap} 
+            {
+                var command2Text = @$"INSERT OR IGNORE INTO {TableMap} 
                         ({ColumnTileColumn}, {ColumnTileRow}, {ColumnZoomLevel}, {ColumnTileId}) 
                         VALUES
                         (@{ColumnTileColumn}, @{ColumnTileRow}, @{ColumnZoomLevel}, @{ColumnTileId})";
 
-                        using (var command = new SqliteCommand(command2Text, connection, transaction))
-                        {
-                            command.Parameters.Add(new SqliteParameter($"@{ColumnTileColumn}", tileColumn));
-                            command.Parameters.Add(new SqliteParameter($"@{ColumnTileRow}", tileRow));
-                            command.Parameters.Add(new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel));
-                            command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
-                            command.ExecuteNonQuery();
-                        }
-                    }
-
-                    transaction.Commit();
-                }
+                using var command = new SqliteCommand(command2Text, connection, transaction);
+                command.Parameters.Add(new SqliteParameter($"@{ColumnTileColumn}", tileColumn));
+                command.Parameters.Add(new SqliteParameter($"@{ColumnTileRow}", tileRow));
+                command.Parameters.Add(new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel));
+                command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
+                command.ExecuteNonQuery();
             }
+
+            transaction.Commit();
         }
 
         public void AddMetadataItem(MetadataItem item)
         {
-            using (var connection = new SqliteConnection(this.connectionString))
-            {
-                var commandText = @$"INSERT INTO {TableMetadata} 
+            var commandText = @$"INSERT INTO {TableMetadata} 
                     ({ColumnMetadataName}, {ColumnMetadataValue}) 
                     VALUES
                     (@{ColumnMetadataName}, @{ColumnMetadataValue})";
-                using (var command = new SqliteCommand(commandText, connection))
-                {
-                    command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataName}", item.Name));
-                    command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataValue}", item.Value));
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                }
-            }
+
+            using var connection = new SqliteConnection(this.connectionString);
+            using var command = new SqliteCommand(commandText, connection);
+            command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataName}", item.Name));
+            command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataValue}", item.Value));
+            connection.Open();
+            command.ExecuteNonQuery();
         }
 
         private void ExecuteSqlQuery(string commandText)

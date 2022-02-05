@@ -5,13 +5,11 @@ namespace TileMapService.Utils
 {
     /// <summary>
     /// Various utility functions for EPSG:3857 / Web Mercator SRS and tile system.
+    /// (<see href="https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system">Bing Maps Tile System</see>)
     /// </summary>
     static class WebMercator
     {
-        // Assumes SRS = EPSG:3857 / Web Mercator / Spherical Mercator
-        // Based on https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system
-
-        public const int TileSize = 256; // TODO: support for high resolution tiles
+        public const int TileSize = 256; // TODO: cusom resolution values
 
         private static readonly double EarthRadius = 6378137.0;
 
@@ -125,7 +123,7 @@ namespace TileMapService.Utils
         /// Flips tile Y coordinate (according to XYZ-TMS coordinate systems conversion).
         /// </summary>
         /// <param name="y">Tile Y coordinate.</param>
-        /// <param name="zoom">Tile zoom level.</param>
+        /// <param name="zoomLevel">Tile zoom level.</param>
         /// <returns>Flipped tile Y coordinate.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FlipYCoordinate(int y, int zoomLevel)

@@ -15,7 +15,7 @@ namespace TileMapService.Controllers
     /// Serving tiles using Web Map Service (WMS) protocol.
     /// </summary>
     /// <remarks>
-    /// Supports currently only EPSG:3857; WMS versions 1.1.1 and 1.3.0
+    /// Supports currently only EPSG:3857; WMS versions 1.1.1 and 1.3.0.
     /// </remarks>
     [Route("wms")]
     public class WmsController : Controller
@@ -44,22 +44,23 @@ namespace TileMapService.Controllers
               // Optional GetMap request parameters
               bool? transparent = false,
               string bgcolor = Identifiers.DefaultBackgroundColor,
-              string exceptions = MediaTypeNames.Application.OgcServiceExceptionXml,
-              ////string time = null,
-              ////string sld = null,
-              ////string sld_body = null,
-              // GetFeatureInfo request parameters
-              string query_layers = null,
-              string info_format = MediaTypeNames.Text.Plain,
-              int x = 0,
-              int y = 0,
-              int i = 0, // WMS version 1.3.0
-              int j = 0, // WMS version 1.3.0
-              int feature_count = 1)
+              string exceptions = MediaTypeNames.Application.OgcServiceExceptionXml
+            ////string time = null,
+            ////string sld = null,
+            ////string sld_body = null,
+            // GetFeatureInfo request parameters
+            ////string query_layers = null,
+            ////string info_format = MediaTypeNames.Text.Plain,
+            ////int x = 0,
+            ////int y = 0,
+            ////int i = 0, // WMS version 1.3.0
+            ////int j = 0, // WMS version 1.3.0
+            ////int feature_count = 1
+            )
         {
             // $"WMS [{Request.GetOwinContext().Request.RemoteIpAddress}:{Request.GetOwinContext().Request.RemotePort}] {Request.RequestUri}";
 
-            // TODO: errors in XML format
+            // TODO: return errors in XML format (OGC standard)
 
             if (String.Compare(service, Identifiers.Wms, StringComparison.Ordinal) != 0)
             {
@@ -122,10 +123,11 @@ namespace TileMapService.Controllers
                     Title = String.IsNullOrEmpty(l.Title) ? l.Identifier : l.Title,
                     Abstract = String.Empty, // TODO: Fill Abstract field
                     IsQueryable = false,
+                    GeographicalBounds = l.GeographicalBounds,
                 })
                 .ToList();
 
-            var xmlDoc = new CapabilitiesBuilder(BaseUrl + "/wms").GetCapabilities(
+            var xmlDoc = new CapabilitiesUtility(BaseUrl + "/wms").CreateCapabilitiesDocument(
                 version,
                 new Service
                 {
@@ -137,10 +139,6 @@ namespace TileMapService.Controllers
                 {
                     MediaTypeNames.Image.Png,
                     MediaTypeNames.Image.Jpeg,
-                },
-                new[]
-                {
-                    MediaTypeNames.Text.Plain,
                 });
 
             return File(U.EntitiesConverter.ToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
@@ -188,7 +186,7 @@ namespace TileMapService.Controllers
                 return BadRequest("srs"); // TODO: EPSG:4326
             }
 
-            var boundingBox = Models.Bounds.FromMBTilesMetadataString(bbox);
+            var boundingBox = Models.Bounds.FromCommaSeparatedString(bbox);
             if (boundingBox == null)
             {
                 return BadRequest("bbox");
@@ -201,7 +199,7 @@ namespace TileMapService.Controllers
 
             var layersList = layers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-            var isTransparent = transparent.HasValue ? transparent.Value : false;
+            var isTransparent = transparent ?? false;
             var backgroundColor = U.EntitiesConverter.GetArgbColorFromString(bgcolor, isTransparent);
             var imageData = await CreateMapImageAsync(width, height, boundingBox, format, backgroundColor, layersList);
 
@@ -213,7 +211,7 @@ namespace TileMapService.Controllers
             int height,
             Models.Bounds boundingBox,
             string format,
-            int backgroundColor,
+            uint backgroundColor,
             IList<string> layerNames)
         {
             var imageInfo = new SKImageInfo(
@@ -224,7 +222,7 @@ namespace TileMapService.Controllers
 
             using var surface = SKSurface.Create(imageInfo);
             using var canvas = surface.Canvas;
-            canvas.Clear(new SKColor((uint)backgroundColor)); // TODO: ? uint parameter
+            canvas.Clear(new SKColor(backgroundColor));
 
             foreach (var layerName in layerNames)
             {
@@ -253,7 +251,7 @@ namespace TileMapService.Controllers
             Models.Bounds boundingBox,
             SKCanvas outputCanvas,
             ITileSource source,
-            int backgroundColor)
+            uint backgroundColor)
         {
             var tileCoordinates = WmsHelper.BuildTileCoordinatesList(boundingBox, width);
             var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);

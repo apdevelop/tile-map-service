@@ -8,7 +8,7 @@ using TileMapService.TileSources;
 
 namespace TileMapService
 {
-    public class TileSourceFabric : ITileSourceFabric
+    class TileSourceFabric : ITileSourceFabric
     {
         private readonly Dictionary<string, ITileSource> tileSources;
 
@@ -68,7 +68,7 @@ namespace TileMapService
                 SourceConfiguration.TypeWmts => new HttpTileSource(config),
                 SourceConfiguration.TypeWms => new HttpTileSource(config),
                 SourceConfiguration.TypeGeoTiff => new RasterTileSource(config),
-                _ => throw new ArgumentOutOfRangeException(nameof(config.Type), $"Unknown tile source type '{config.Type}'"),
+                _ => throw new InvalidOperationException($"Unknown tile source type '{config.Type}'"),
             };
         }
     }

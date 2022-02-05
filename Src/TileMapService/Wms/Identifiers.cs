@@ -1,6 +1,6 @@
 ﻿namespace TileMapService.Wms
 {
-    class Identifiers
+    static class Identifiers
     {
         public const string Wms = "WMS";
 
@@ -18,18 +18,26 @@
 
         public const string DefaultBackgroundColor = "0xFFFFFF";
 
+        public const string WMT_MS_CapabilitiesElement = "WMT_MS_Capabilities";
+
+        public const string WMS_CapabilitiesElement = "WMS_Capabilities";
+
         public const string Srs = "SRS";
 
         public const string Crs = "CRS";
 
-        public const string Service = "Service";
+        public const string ServiceElement = "Service";
 
-        public const string Capability = "Capability";
+        public const string CapabilityElement = "Capability";
 
-        public const string Title = "Title";
+        public const string TitleElement = "Title";
 
-        public const string Name = "Name";
+        public const string NameElement = "Name";
 
-        public const string Abstract = "Abstract";
+        public const string AbstractElement = "Abstract";
+
+        public const string LayerElement = "Layer";
+
+        public const string QueryableAttribute = "queryable";
     }
 }

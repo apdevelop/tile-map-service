@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 
+using TileMapService.Models;
+
 namespace TileMapService.Utils
 {
     /// <summary>
@@ -24,20 +26,26 @@ namespace TileMapService.Utils
             };
         }
 
-        public static List<Models.Layer> SourcesToLayers(IEnumerable<SourceConfiguration> sources)
+        public static List<Layer> SourcesToLayers(IEnumerable<SourceConfiguration> sources)
         {
             return sources
-               .Select(c => new Models.Layer
-               {
-                   Identifier = c.Id,
-                   Title = c.Title,
-                   ContentType = c.ContentType,
-                   Format = c.Format,
-                   Srs = c.Srs,
-                   MinZoom = c.MinZoom.Value,
-                   MaxZoom = c.MaxZoom.Value,
-               })
+               .Select(c => SourceConfigurationToLayer(c))
                .ToList();
+        }
+
+        private static Layer SourceConfigurationToLayer(SourceConfiguration c)
+        {
+            return new Layer
+            {
+                Identifier = c.Id,
+                Title = c.Title,
+                ContentType = c.ContentType,
+                Format = c.Format,
+                Srs = c.Srs,
+                MinZoom = c.MinZoom.Value,
+                MaxZoom = c.MaxZoom.Value,
+                GeographicalBounds = c.GeographicalBounds,
+            };
         }
 
         /// <summary>
@@ -47,25 +55,23 @@ namespace TileMapService.Utils
         /// <returns>Contents of XML document.</returns>
         public static byte[] ToUTF8ByteArray(this XmlDocument xml)
         {
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            using (var xw = XmlWriter.Create(new StreamWriter(ms, Encoding.UTF8)))
             {
-                using (var xw = XmlWriter.Create(new StreamWriter(ms, Encoding.UTF8)))
-                {
-                    xml.Save(xw);
-                }
-
-                return ms.ToArray();
+                xml.Save(xw);
             }
+
+            return ms.ToArray();
         }
 
-        public static int GetArgbColorFromString(string rgbHexColor, bool isTransparent)
+        public static uint GetArgbColorFromString(string rgbHexColor, bool isTransparent)
         {
             if (rgbHexColor.StartsWith("0x"))
             {
                 rgbHexColor = rgbHexColor.Substring(2);
             }
 
-            return BitConverter.ToInt32(
+            return BitConverter.ToUInt32(
                 new[]
                 {
                     Convert.ToByte(rgbHexColor.Substring(4, 2), 16),
@@ -76,11 +82,11 @@ namespace TileMapService.Utils
             0);
         }
 
-        public static Models.GeographicalBounds MapRectangleToGeographicalBounds(Models.Bounds rectangle)
+        public static GeographicalBounds MapRectangleToGeographicalBounds(Bounds rectangle)
         {
-            return new Models.GeographicalBounds(
-                new Models.GeographicalPoint(WebMercator.Longitude(rectangle.Left), WebMercator.Latitude(rectangle.Bottom)),
-                new Models.GeographicalPoint(WebMercator.Longitude(rectangle.Right), WebMercator.Latitude(rectangle.Top)));
+            return new GeographicalBounds(
+                new GeographicalPoint(WebMercator.Longitude(rectangle.Left), WebMercator.Latitude(rectangle.Bottom)),
+                new GeographicalPoint(WebMercator.Longitude(rectangle.Right), WebMercator.Latitude(rectangle.Top)));
         }
     }
 }

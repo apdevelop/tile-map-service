@@ -5,39 +5,30 @@ using System.Xml;
 
 namespace TileMapService.Wms
 {
-    class CapabilitiesBuilder
+    class CapabilitiesUtility
     {
-        private const string XlinkNamespaceUri = "http://www.w3.org/1999/xlink";
-
         private readonly string baseUrl;
 
         private XmlDocument doc;
 
-        public CapabilitiesBuilder(string baseUrl)
+        public CapabilitiesUtility(string baseUrl)
         {
             this.baseUrl = baseUrl;
         }
 
-        public XmlDocument GetCapabilities(
+        public XmlDocument CreateCapabilitiesDocument(
             Version version,
             Service service,
             IList<Layer> layers,
-            IList<string> getMapFormats,
-            IList<string> getFeatureInfoFormats)
+            IList<string> getMapFormats)
         {
             // TODO: EPSG:4326 support
 
-            string rootNodeName;
-            switch (version)
-            {
-                case Version.Version111: { rootNodeName = "WMT_MS_Capabilities"; break; }
-                case Version.Version130: { rootNodeName = "WMS_Capabilities"; break; }
-                default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
-            }
+            var rootNodeName = GetRootNodeName(version);
 
             doc = new XmlDocument();
-            var root = doc.CreateElement(String.Empty, rootNodeName, String.Empty);
-            doc.AppendChild(root);
+            var rootElement = doc.CreateElement(String.Empty, rootNodeName, String.Empty);
+            doc.AppendChild(rootElement);
 
             var versionAttribute = doc.CreateAttribute("version");
             switch (version)
@@ -47,10 +38,10 @@ namespace TileMapService.Wms
                 default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
 
-            root.Attributes.Append(versionAttribute);
+            rootElement.Attributes.Append(versionAttribute);
 
-            var serviceElement = doc.CreateElement(Identifiers.Service);
-            root.AppendChild(serviceElement);
+            var serviceElement = doc.CreateElement(Identifiers.ServiceElement);
+            rootElement.AppendChild(serviceElement);
 
             var serviceName = doc.CreateElement("Name");
             serviceName.InnerText = "OGC:WMS";
@@ -67,8 +58,8 @@ namespace TileMapService.Wms
             var serviceOnlineResource = CreateOnlineResourceElement(this.baseUrl);
             serviceElement.AppendChild(serviceOnlineResource);
 
-            var capability = doc.CreateElement(Identifiers.Capability);
-            root.AppendChild(capability);
+            var capability = doc.CreateElement(Identifiers.CapabilityElement);
+            rootElement.AppendChild(capability);
 
             string capabilitiesFormat;
             switch (version)
@@ -103,6 +94,101 @@ namespace TileMapService.Wms
             }
 
             return doc;
+        }
+
+        // TODO: uniform API for build / parse Capabilities XML document
+
+        /// <summary>
+        /// Extracts Layers list from input Capabilities XML document.
+        /// </summary>
+        /// <param name="xmlDoc">Capabilities XML document.</param>
+        /// <returns>List of Layers (flatten, without hierarchy).</returns>
+        public static List<Layer> GetLayers(XmlDocument xmlDoc)
+        {
+            var version = GetVersion(xmlDoc);
+
+            var nsManager = new XmlNamespaceManager(xmlDoc.NameTable);
+            string xpath, defaultNsPrefix, bboxElementName;
+            switch (version)
+            {
+                case Version.Version111:
+                    {
+                        bboxElementName = "LatLonBoundingBox";
+                        defaultNsPrefix = String.Empty;
+                        xpath = @$"/{Identifiers.WMT_MS_CapabilitiesElement}//Capability//{Identifiers.LayerElement}[not(descendant::*[local-name() = '{Identifiers.LayerElement}'])]";
+                        break;
+                    }
+                case Version.Version130:
+                    {
+                        // TODO: ! support for 1.3.0 bboxElementName = "EX_GeographicBoundingBox";
+                        bboxElementName = null;
+                        defaultNsPrefix = "ns:";
+                        nsManager.AddNamespace("ns", "http://www.opengis.net/wms");
+                        xpath = $@"/ns:{Identifiers.WMS_CapabilitiesElement}//ns:Capability//ns:{Identifiers.LayerElement}[not(descendant::*[local-name() = '{Identifiers.LayerElement}'])]";
+                        break;
+                    }
+                default: throw new InvalidOperationException($"WMS version '{version}' is not supported.");
+            }
+
+            var result = new List<Layer>();
+
+            var layers = xmlDoc.SelectNodes(xpath, nsManager);
+            foreach (XmlNode layer in layers)
+            {
+                var bbox = bboxElementName != null ? layer.SelectSingleNode(defaultNsPrefix + bboxElementName, nsManager) : null;
+                result.Add(new Layer
+                {
+                    Name = layer.SelectSingleNode(defaultNsPrefix + "Name", nsManager).InnerText,
+                    Title = layer.SelectSingleNode(defaultNsPrefix + "Title", nsManager).InnerText,
+                    IsQueryable = layer.Attributes[Identifiers.QueryableAttribute] != null && layer.Attributes[Identifiers.QueryableAttribute].Value == "1",
+                    GeographicalBounds = bbox != null ?
+                        new Models.GeographicalBounds(
+                            Double.Parse(bbox.Attributes["minx"].Value, CultureInfo.InvariantCulture),
+                            Double.Parse(bbox.Attributes["miny"].Value, CultureInfo.InvariantCulture),
+                            Double.Parse(bbox.Attributes["maxx"].Value, CultureInfo.InvariantCulture),
+                            Double.Parse(bbox.Attributes["maxy"].Value, CultureInfo.InvariantCulture)) :
+                        null,
+                });
+            }
+
+            return result;
+        }
+
+        private static Version GetVersion(XmlDocument xmlDoc)
+        {
+            var rootElement = xmlDoc.DocumentElement;
+            var versionAttribute = rootElement.Attributes["version"];
+            if (versionAttribute == null)
+            {
+                throw new FormatException("Version attribute was not found");
+            }
+
+            switch (versionAttribute.Value)
+            {
+                case Identifiers.Version111:
+                    {
+                        if (rootElement.Name == Identifiers.WMT_MS_CapabilitiesElement)
+                        {
+                            return Version.Version111;
+                        }
+                        else
+                        {
+                            throw new FormatException();
+                        }
+                    }
+                case Identifiers.Version130:
+                    {
+                        if (rootElement.Name == Identifiers.WMS_CapabilitiesElement)
+                        {
+                            return Version.Version130;
+                        }
+                        else
+                        {
+                            throw new FormatException();
+                        }
+                    }
+                default: throw new FormatException("Version attribute and root node name mismatch");
+            }
         }
 
         private XmlElement CreateRequestElement(string name, IEnumerable<string> formats)
@@ -146,39 +232,39 @@ namespace TileMapService.Wms
             return serviceOnlineResource;
         }
 
-        private XmlElement CreateLayerElement(Version version, Layer layerProperties)
+        private XmlElement CreateLayerElement(Version version, Layer layer)
         {
-            var layer = doc.CreateElement("Layer");
+            var layerElement = doc.CreateElement(Identifiers.LayerElement);
 
-            var queryableAttribute = doc.CreateAttribute("queryable");
-            queryableAttribute.Value = layerProperties.IsQueryable ? "1" : "0";
-            layer.Attributes.Append(queryableAttribute);
+            var queryableAttribute = doc.CreateAttribute(Identifiers.QueryableAttribute);
+            queryableAttribute.Value = layer.IsQueryable ? "1" : "0";
+            layerElement.Attributes.Append(queryableAttribute);
 
-            var layerTitle = doc.CreateElement(Identifiers.Title);
-            layerTitle.InnerText = layerProperties.Title;
-            layer.AppendChild(layerTitle);
+            var layerTitle = doc.CreateElement(Identifiers.TitleElement);
+            layerTitle.InnerText = layer.Title;
+            layerElement.AppendChild(layerTitle);
 
-            var layerName = doc.CreateElement(Identifiers.Name);
-            layerName.InnerText = layerProperties.Name;
-            layer.AppendChild(layerName);
+            var layerName = doc.CreateElement(Identifiers.NameElement);
+            layerName.InnerText = layer.Name;
+            layerElement.AppendChild(layerName);
 
-            var layerAbstract = doc.CreateElement(Identifiers.Abstract);
-            layerAbstract.InnerText = layerProperties.Abstract;
-            layer.AppendChild(layerAbstract);
+            var layerAbstract = doc.CreateElement(Identifiers.AbstractElement);
+            layerAbstract.InnerText = layer.Abstract;
+            layerElement.AppendChild(layerAbstract);
 
-            string layerSrsNodeName;
+            string layerSrsElementName;
             switch (version)
             {
-                case Version.Version111: { layerSrsNodeName = Identifiers.Srs; break; }
-                case Version.Version130: { layerSrsNodeName = Identifiers.Crs; break; }
+                case Version.Version111: { layerSrsElementName = Identifiers.Srs; break; }
+                case Version.Version130: { layerSrsElementName = Identifiers.Crs; break; }
                 default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
 
-            var layerSrs = doc.CreateElement(layerSrsNodeName);
-            layerSrs.InnerText = Identifiers.EPSG3857;
-            layer.AppendChild(layerSrs);
+            var layerSrs = doc.CreateElement(layerSrsElementName);
+            layerSrs.InnerText = Identifiers.EPSG3857; // TODO: EPSG:4326 support
+            layerElement.AppendChild(layerSrs);
 
-            var geoBounds = new Models.GeographicalBounds(-180, -90, 180, 90); // TODO: from layer properties
+            var geoBounds = layer.GeographicalBounds ?? new Models.GeographicalBounds(-180, -90, 180, 90);
 
             switch (version)
             {
@@ -202,7 +288,7 @@ namespace TileMapService.Wms
                         maxyAttribute.Value = geoBounds.MaxLatitude.ToString(CultureInfo.InvariantCulture);
                         latlonBoundingBox.Attributes.Append(maxyAttribute);
 
-                        layer.AppendChild(latlonBoundingBox);
+                        layerElement.AppendChild(latlonBoundingBox);
                         break;
                     }
                 case Version.Version130:
@@ -225,7 +311,7 @@ namespace TileMapService.Wms
                         northBoundLatitude.InnerText = geoBounds.MaxLatitude.ToString(CultureInfo.InvariantCulture);
                         geographicBoundingBox.AppendChild(northBoundLatitude);
 
-                        layer.AppendChild(geographicBoundingBox);
+                        layerElement.AppendChild(geographicBoundingBox);
                         break;
                     }
                 default:
@@ -235,40 +321,52 @@ namespace TileMapService.Wms
             }
 
             {
-                var boundingBox = doc.CreateElement("BoundingBox");
+                var boundingBoxElement = doc.CreateElement("BoundingBox");
 
-                string boundingBoxSrsNodeName;
+                string boundingBoxSrsAttributeName;
                 switch (version)
                 {
-                    case Version.Version111: { boundingBoxSrsNodeName = Identifiers.Srs; break; }
-                    case Version.Version130: { boundingBoxSrsNodeName = Identifiers.Crs; break; }
+                    case Version.Version111: { boundingBoxSrsAttributeName = Identifiers.Srs; break; }
+                    case Version.Version130: { boundingBoxSrsAttributeName = Identifiers.Crs; break; }
                     default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
                 }
 
-                var boundingBoxSrsAttribute = doc.CreateAttribute(boundingBoxSrsNodeName);
+                var boundingBoxSrsAttribute = doc.CreateAttribute(boundingBoxSrsAttributeName);
                 boundingBoxSrsAttribute.Value = Identifiers.EPSG3857; // TODO: other CRS
-                boundingBox.Attributes.Append(boundingBoxSrsAttribute);
+                boundingBoxElement.Attributes.Append(boundingBoxSrsAttribute);
 
                 var minxAttribute = doc.CreateAttribute("minx");
                 minxAttribute.Value = Utils.WebMercator.X(geoBounds.MinLongitude).ToString("E16", CultureInfo.InvariantCulture);
-                boundingBox.Attributes.Append(minxAttribute);
+                boundingBoxElement.Attributes.Append(minxAttribute);
 
                 var minyAttribute = doc.CreateAttribute("miny");
                 minyAttribute.Value = Utils.WebMercator.Y(geoBounds.MinLatitude).ToString("E16", CultureInfo.InvariantCulture);
-                boundingBox.Attributes.Append(minyAttribute);
+                boundingBoxElement.Attributes.Append(minyAttribute);
 
                 var maxxAttribute = doc.CreateAttribute("maxx");
                 maxxAttribute.Value = Utils.WebMercator.X(geoBounds.MaxLongitude).ToString("E16", CultureInfo.InvariantCulture);
-                boundingBox.Attributes.Append(maxxAttribute);
+                boundingBoxElement.Attributes.Append(maxxAttribute);
 
                 var maxyAttribute = doc.CreateAttribute("maxy");
                 maxyAttribute.Value = Utils.WebMercator.Y(geoBounds.MaxLatitude).ToString("E16", CultureInfo.InvariantCulture);
-                boundingBox.Attributes.Append(maxyAttribute);
+                boundingBoxElement.Attributes.Append(maxyAttribute);
 
-                layer.AppendChild(boundingBox);
+                layerElement.AppendChild(boundingBoxElement);
             }
 
-            return layer;
+            return layerElement;
         }
+
+        private static string GetRootNodeName(Version version)
+        {
+            return version switch
+            {
+                Version.Version111 => Identifiers.WMT_MS_CapabilitiesElement,
+                Version.Version130 => Identifiers.WMS_CapabilitiesElement,
+                _ => throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported."),
+            };
+        }
+
+        private const string XlinkNamespaceUri = "http://www.w3.org/1999/xlink";
     }
 }

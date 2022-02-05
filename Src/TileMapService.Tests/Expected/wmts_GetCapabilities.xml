@@ -41,7 +41,7 @@
 	<Contents>
 		<Layer>
 			<ows:Title>World Countries</ows:Title>
-			<ows:Identifier>source1</ows:Identifier>
+			<ows:Identifier>world-countries</ows:Identifier>
 			<Style isDefault="true">
 				<ows:Identifier>normal</ows:Identifier>
 			</Style>
@@ -235,8 +235,8 @@
 			</TileMatrix>
 		</TileMatrixSet>
 		<Layer>
-			<ows:Title>Tile Source 2</ows:Title>
-			<ows:Identifier>source2</ows:Identifier>
+			<ows:Title>World Satellite Imagery</ows:Title>
+			<ows:Identifier>world-satellite-imagery</ows:Identifier>
 			<Style isDefault="true">
 				<ows:Identifier>normal</ows:Identifier>
 			</Style>
@@ -313,6 +313,84 @@
 			</TileMatrix>
 		</TileMatrixSet>
 		<Layer>
+			<ows:Title>Caspian Sea</ows:Title>
+			<ows:Identifier>caspian-sea</ows:Identifier>
+			<Style isDefault="true">
+				<ows:Identifier>normal</ows:Identifier>
+			</Style>
+			<Format>image/png</Format>
+			<ows:WGS84BoundingBox>
+				<ows:LowerCorner>46.4012447459838 35.7953042655815</ows:LowerCorner>
+				<ows:UpperCorner>55.0644489289475 47.4044636344185</ows:UpperCorner>
+			</ows:WGS84BoundingBox>
+			<TileMatrixSetLink>
+				<TileMatrixSet>google3857_5-10</TileMatrixSet>
+			</TileMatrixSetLink>
+		</Layer>
+		<TileMatrixSet>
+			<ows:Identifier>google3857_5-10</ows:Identifier>
+			<ows:BoundingBox crs="urn:ogc:def:crs:EPSG::3857">
+				<ows:LowerCorner>-20037508.342789 -20037508.342789</ows:LowerCorner>
+				<ows:UpperCorner>20037508.342789 20037508.342789</ows:UpperCorner>
+			</ows:BoundingBox>
+			<ows:SupportedCRS>urn:ogc:def:crs:EPSG::3857</ows:SupportedCRS>
+			<WellKnownScaleSet>urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible</WellKnownScaleSet>
+			<TileMatrix>
+				<ows:Identifier>5</ows:Identifier>
+				<ScaleDenominator>17471320.750897434</ScaleDenominator>
+				<TopLeftCorner>-20037508.342789 20037508.342789</TopLeftCorner>
+				<TileWidth>256</TileWidth>
+				<TileHeight>256</TileHeight>
+				<MatrixWidth>32</MatrixWidth>
+				<MatrixHeight>32</MatrixHeight>
+			</TileMatrix>
+			<TileMatrix>
+				<ows:Identifier>6</ows:Identifier>
+				<ScaleDenominator>8735660.375448717</ScaleDenominator>
+				<TopLeftCorner>-20037508.342789 20037508.342789</TopLeftCorner>
+				<TileWidth>256</TileWidth>
+				<TileHeight>256</TileHeight>
+				<MatrixWidth>64</MatrixWidth>
+				<MatrixHeight>64</MatrixHeight>
+			</TileMatrix>
+			<TileMatrix>
+				<ows:Identifier>7</ows:Identifier>
+				<ScaleDenominator>4367830.187724358</ScaleDenominator>
+				<TopLeftCorner>-20037508.342789 20037508.342789</TopLeftCorner>
+				<TileWidth>256</TileWidth>
+				<TileHeight>256</TileHeight>
+				<MatrixWidth>128</MatrixWidth>
+				<MatrixHeight>128</MatrixHeight>
+			</TileMatrix>
+			<TileMatrix>
+				<ows:Identifier>8</ows:Identifier>
+				<ScaleDenominator>2183915.093862179</ScaleDenominator>
+				<TopLeftCorner>-20037508.342789 20037508.342789</TopLeftCorner>
+				<TileWidth>256</TileWidth>
+				<TileHeight>256</TileHeight>
+				<MatrixWidth>256</MatrixWidth>
+				<MatrixHeight>256</MatrixHeight>
+			</TileMatrix>
+			<TileMatrix>
+				<ows:Identifier>9</ows:Identifier>
+				<ScaleDenominator>1091957.5469310896</ScaleDenominator>
+				<TopLeftCorner>-20037508.342789 20037508.342789</TopLeftCorner>
+				<TileWidth>256</TileWidth>
+				<TileHeight>256</TileHeight>
+				<MatrixWidth>512</MatrixWidth>
+				<MatrixHeight>512</MatrixHeight>
+			</TileMatrix>
+			<TileMatrix>
+				<ows:Identifier>10</ows:Identifier>
+				<ScaleDenominator>545978.7734655448</ScaleDenominator>
+				<TopLeftCorner>-20037508.342789 20037508.342789</TopLeftCorner>
+				<TileWidth>256</TileWidth>
+				<TileHeight>256</TileHeight>
+				<MatrixWidth>1024</MatrixWidth>
+				<MatrixHeight>1024</MatrixHeight>
+			</TileMatrix>
+		</TileMatrixSet>
+		<Layer>
 			<ows:Title>Tile Source 3</ows:Title>
 			<ows:Identifier>source3</ows:Identifier>
 			<Style isDefault="true">
@@ -364,8 +442,8 @@
 			</TileMatrix>
 		</TileMatrixSet>
 		<Layer>
-			<ows:Title>Tile Source 4</ows:Title>
-			<ows:Identifier>source4</ows:Identifier>
+			<ows:Title>HTTP proxy to world-countries</ows:Title>
+			<ows:Identifier>httpproxy</ows:Identifier>
 			<Style isDefault="true">
 				<ows:Identifier>normal</ows:Identifier>
 			</Style>

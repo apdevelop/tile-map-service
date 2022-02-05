@@ -7,52 +7,19 @@ using System.Xml;
 namespace TileMapService.Tms
 {
     /// <summary>
-    /// Contains methods for creating XML documents, describing TMS resources.
+    /// Contains methods for creating XML documents, describing TMS resources (<see href="https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification">Tile Map Service Specification</see>).
     /// </summary>
-    /// <see href="https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification">Tile Map Service Specification</see>
-    class CapabilitiesDocumentBuilder
+    class CapabilitiesUtility
     {
         private readonly string baseUrl;
 
         private readonly List<Models.Layer> layers;
 
-        private const int TileWidth = 256; // TODO: other resolutions
+        private const int TileWidth = 256; // TODO: cusom resolution values
 
         private const int TileHeight = 256;
 
-        #region Constants
-
-        private const string Tms = "tms";
-
-        private const string Services = "Services";
-
-        private const string TileMapService = "TileMapService";   
-        
-        private const string TileMap = "TileMap";
-
-        private const string VersionAttribute = "version";
-
-        private const string HrefAttribute = "href";
-
-        private const string TileMapServiceVersion = "1.0.0";
-
-        private const string ProfileNone = "none";
-
-        /// <summary>
-        /// EPSG:4326
-        /// </summary>
-        private const string ProfileGlobalGeodetic = "global-geodetic";
-
-        /// <summary>
-        /// OSGEO:41001
-        /// </summary>
-        private const string ProfileGlobalMercator = "global-mercator";
-
-        private const string ProfileLocal = "local";
-
-        #endregion Constants
-
-        public CapabilitiesDocumentBuilder(string baseUrl, IEnumerable<Models.Layer> layers)
+        public CapabilitiesUtility(string baseUrl, IEnumerable<Models.Layer> layers)
         {
             this.baseUrl = baseUrl;
             this.layers = layers.ToList();
@@ -68,10 +35,10 @@ namespace TileMapService.Tms
         public XmlDocument GetRootResource()
         {
             var doc = new XmlDocument();
-            var root = doc.CreateElement(String.Empty, Services, String.Empty);
+            var root = doc.CreateElement(String.Empty, Identifiers.Services, String.Empty);
             doc.AppendChild(root);
 
-            var tileMapService = doc.CreateElement(TileMapService);
+            var tileMapService = doc.CreateElement(Identifiers.TileMapService);
             root.AppendChild(tileMapService);
 
             // TODO: title attribute from source configuration
@@ -79,12 +46,12 @@ namespace TileMapService.Tms
             ////titleAttribute.Value = "...";
             ////tileMapService.Attributes.Append(titleAttribute);
 
-            var versionAttribute = doc.CreateAttribute(VersionAttribute);
-            versionAttribute.Value = TileMapServiceVersion;
+            var versionAttribute = doc.CreateAttribute(Identifiers.VersionAttribute);
+            versionAttribute.Value = Identifiers.Version100;
             tileMapService.Attributes.Append(versionAttribute);
 
-            var href = $"{this.baseUrl}/{Tms}/{TileMapServiceVersion}/";
-            var hrefAttribute = doc.CreateAttribute(HrefAttribute);
+            var href = $"{this.baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/";
+            var hrefAttribute = doc.CreateAttribute(Identifiers.HrefAttribute);
             hrefAttribute.Value = href;
             tileMapService.Attributes.Append(hrefAttribute);
 
@@ -101,11 +68,11 @@ namespace TileMapService.Tms
         public XmlDocument GetTileMapService()
         {
             var doc = new XmlDocument();
-            var root = doc.CreateElement(String.Empty, TileMapService, String.Empty);
+            var root = doc.CreateElement(String.Empty, Identifiers.TileMapService, String.Empty);
             doc.AppendChild(root);
 
-            var versionAttribute = doc.CreateAttribute(VersionAttribute);
-            versionAttribute.Value = TileMapServiceVersion;
+            var versionAttribute = doc.CreateAttribute(Identifiers.VersionAttribute);
+            versionAttribute.Value = Identifiers.Version100;
             root.Attributes.Append(versionAttribute);
 
             var tileMaps = doc.CreateElement("TileMaps");
@@ -113,7 +80,7 @@ namespace TileMapService.Tms
 
             foreach (var layer in this.layers)
             {
-                var tileMap = doc.CreateElement(TileMap);
+                var tileMap = doc.CreateElement(Identifiers.TileMap);
 
                 var titleAttribute = doc.CreateAttribute("title");
                 titleAttribute.Value = layer.Title;
@@ -121,8 +88,8 @@ namespace TileMapService.Tms
 
                 // TODO: Title, Abstract for TileMapService
 
-                var href = $"{this.baseUrl}/{Tms}/{TileMapServiceVersion}/{layer.Identifier}";
-                var hrefAttribute = doc.CreateAttribute(HrefAttribute);
+                var href = $"{this.baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/{layer.Identifier}";
+                var hrefAttribute = doc.CreateAttribute(Identifiers.HrefAttribute);
                 hrefAttribute.Value = href;
                 tileMap.Attributes.Append(hrefAttribute);
 
@@ -130,8 +97,8 @@ namespace TileMapService.Tms
                 var profileAttribute = doc.CreateAttribute("profile");
                 switch (layer.Srs)
                 {
-                    case Utils.SrsCodes.EPSG3857: { profileAttribute.Value = ProfileGlobalMercator; break; }
-                    case Utils.SrsCodes.EPSG4326: { profileAttribute.Value = ProfileGlobalGeodetic; break; }
+                    case Utils.SrsCodes.EPSG3857: { profileAttribute.Value = Identifiers.ProfileGlobalMercator; break; }
+                    case Utils.SrsCodes.EPSG4326: { profileAttribute.Value = Identifiers.ProfileGlobalGeodetic; break; }
                     default: { throw new NotImplementedException($"Unknown SRS '{layer.Srs}'"); } // TODO: local/none ?
                 }
 
@@ -158,14 +125,14 @@ namespace TileMapService.Tms
         public XmlDocument GetTileMap(Models.Layer layer)
         {
             var doc = new XmlDocument();
-            var root = doc.CreateElement(String.Empty, TileMap, String.Empty);
+            var root = doc.CreateElement(String.Empty, Identifiers.TileMap, String.Empty);
             doc.AppendChild(root);
 
-            var versionAttribute = doc.CreateAttribute(VersionAttribute);
-            versionAttribute.Value = TileMapServiceVersion;
+            var versionAttribute = doc.CreateAttribute(Identifiers.VersionAttribute);
+            versionAttribute.Value = Identifiers.Version100;
             root.Attributes.Append(versionAttribute);
 
-            var tilemapservice = $"{this.baseUrl}/{Tms}/{TileMapServiceVersion}/";
+            var tilemapservice = $"{this.baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/";
             var tilemapserviceAttribute = doc.CreateAttribute("tilemapservice");
             tilemapserviceAttribute.Value = tilemapservice;
             root.Attributes.Append(tilemapserviceAttribute);
@@ -180,38 +147,38 @@ namespace TileMapService.Tms
             srs.AppendChild(doc.CreateTextNode(layer.Srs));
             root.AppendChild(srs);
 
-            // TODO: real boundingBox values (from MBTiles metadata, for example)
-            var unitsWidth = 0.0;
-            var pixelsWidth = 0.0;
+            double unitsWidth, pixelsWidth;
+
             switch (layer.Srs)
             {
                 case Utils.SrsCodes.EPSG3857:
                     {
                         // GoogleMapsCompatible tile grid
-                        const double MinX = -20037508.342789;
-                        const double MinY = -20037508.342789;
-                        const double MaxX = +20037508.342789;
-                        const double MaxY = +20037508.342789;
-                        var boundingBox = CreateBoundingBox(doc, MinX, MinY, MaxX, MaxY, "F6");
+                        var minX = layer.GeographicalBounds == null ? -20037508.342789 : Utils.WebMercator.X(layer.GeographicalBounds.MinLongitude);
+                        var minY = layer.GeographicalBounds == null ? -20037508.342789 : Utils.WebMercator.Y(layer.GeographicalBounds.MinLatitude);
+                        var maxX = layer.GeographicalBounds == null ? +20037508.342789 : Utils.WebMercator.X(layer.GeographicalBounds.MaxLongitude);
+                        var maxY = layer.GeographicalBounds == null ? +20037508.342789 : Utils.WebMercator.Y(layer.GeographicalBounds.MaxLatitude);
+                        var boundingBox = CreateBoundingBoxElement(doc, minX, minY, maxX, maxY, "F6");
                         root.AppendChild(boundingBox);
 
-                        var origin = CreateOrigin(doc, MinX, MinY, "F6");
+                        var origin = CreateOriginElement(doc, minX, minY, "F6");
                         root.AppendChild(origin);
 
-                        unitsWidth = MaxX - MinX;
+                        unitsWidth = maxX - minX;
                         pixelsWidth = TileWidth;
                         break;
                     }
                 case Utils.SrsCodes.EPSG4326:
                     {
+                        // TODO: custom bounds from source properties
                         const double MinX = -180;
                         const double MinY = -90;
                         const double MaxX = +180;
                         const double MaxY = +90;
-                        var boundingBox = CreateBoundingBox(doc, MinX, MinY, MaxX, MaxY, "F0");
+                        var boundingBox = CreateBoundingBoxElement(doc, MinX, MinY, MaxX, MaxY, "F0");
                         root.AppendChild(boundingBox);
 
-                        var origin = CreateOrigin(doc, MinX, MinY, "F0");
+                        var origin = CreateOriginElement(doc, MinX, MinY, "F0");
                         root.AppendChild(origin);
 
                         unitsWidth = MaxX - MinX;
@@ -251,8 +218,8 @@ namespace TileMapService.Tms
             {
                 var tileSet = doc.CreateElement("TileSet");
 
-                var href = $"{this.baseUrl}/{Tms}/{TileMapServiceVersion}/{layer.Identifier}/{level}";
-                var hrefAttribute = doc.CreateAttribute(HrefAttribute);
+                var href = $"{this.baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/{layer.Identifier}/{level}";
+                var hrefAttribute = doc.CreateAttribute(Identifiers.HrefAttribute);
                 hrefAttribute.Value = href;
                 tileSet.Attributes.Append(hrefAttribute);
 
@@ -271,42 +238,42 @@ namespace TileMapService.Tms
             return doc;
         }
 
-        private static XmlElement CreateBoundingBox(XmlDocument doc, double minX, double minY, double maxX, double maxY, string format)
+        private static XmlElement CreateBoundingBoxElement(XmlDocument doc, double minX, double minY, double maxX, double maxY, string format)
         {
-            var boundingBox = doc.CreateElement("BoundingBox");
+            var boundingBoxElement = doc.CreateElement("BoundingBox");
 
             var minxAttribute = doc.CreateAttribute("minx");
             minxAttribute.Value = minX.ToString(format, CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(minxAttribute);
+            boundingBoxElement.Attributes.Append(minxAttribute);
 
             var minyAttribute = doc.CreateAttribute("miny");
             minyAttribute.Value = minY.ToString(format, CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(minyAttribute);
+            boundingBoxElement.Attributes.Append(minyAttribute);
 
             var maxxAttribute = doc.CreateAttribute("maxx");
             maxxAttribute.Value = maxX.ToString(format, CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(maxxAttribute);
+            boundingBoxElement.Attributes.Append(maxxAttribute);
 
             var maxyAttribute = doc.CreateAttribute("maxy");
             maxyAttribute.Value = maxY.ToString(format, CultureInfo.InvariantCulture);
-            boundingBox.Attributes.Append(maxyAttribute);
+            boundingBoxElement.Attributes.Append(maxyAttribute);
 
-            return boundingBox;
+            return boundingBoxElement;
         }
 
-        private static XmlElement CreateOrigin(XmlDocument doc, double originX, double originY, string format)
+        private static XmlElement CreateOriginElement(XmlDocument doc, double originX, double originY, string format)
         {
-            var origin = doc.CreateElement("Origin");
+            var originElement = doc.CreateElement("Origin");
 
             var xAttribute = doc.CreateAttribute("x");
             xAttribute.Value = originX.ToString(format, CultureInfo.InvariantCulture);
-            origin.Attributes.Append(xAttribute);
+            originElement.Attributes.Append(xAttribute);
 
             var yAttribute = doc.CreateAttribute("y");
             yAttribute.Value = originY.ToString(format, CultureInfo.InvariantCulture);
-            origin.Attributes.Append(yAttribute);
+            originElement.Attributes.Append(yAttribute);
 
-            return origin;
+            return originElement;
         }
     }
 }

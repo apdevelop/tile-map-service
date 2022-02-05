@@ -21,18 +21,18 @@ namespace TileMapService.Controllers
 
         [HttpGet("")]
         public async Task<IActionResult> ProcessRequestAsync(
-            string service = null,
+            ////string service = null,
             string request = null,
-            string version = null,
+            ////string version = null,
             string layer = null,
-            string style = null,
-            string format = null,
-            string tileMatrixSet = null,
+            ////string style = null,
+            ////string format = null,
+            ////string tileMatrixSet = null,
             string tileMatrix = null,
             int tileRow = 0,
             int tileCol = 0)
         {
-            // TODO: errors in XML format
+            // TODO: return errors in XML format
 
             ////if (String.Compare(service, "WMTS", StringComparison.Ordinal) != 0)
             ////{
@@ -61,7 +61,7 @@ namespace TileMapService.Controllers
         private IActionResult ProcessGetCapabilitiesRequest()
         {
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var xmlDoc = new Wmts.CapabilitiesDocumentBuilder(BaseUrl + "/wmts", layers)
+            var xmlDoc = new Wmts.CapabilitiesUtility(BaseUrl + "/wmts", layers)
                 .GetCapabilities(); // TODO: fix base URL
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);

@@ -21,11 +21,11 @@ namespace TileMapService.Tests
 
         class TileDataStubCoordinates
         {
-            public int x { get; set; }
+            public int X { get; set; }
 
-            public int y { get; set; }
+            public int Y { get; set; }
 
-            public int z { get; set; }
+            public int Z { get; set; }
         }
 
         public TileDataStub(byte[] tileData)
@@ -33,9 +33,9 @@ namespace TileMapService.Tests
             var s = Encoding.UTF8.GetString(tileData);
             var coodinates = JsonSerializer.Deserialize<TileDataStubCoordinates>(s);
 
-            this.tileColumn = coodinates.x;
-            this.tileRow = coodinates.y;
-            this.zoomLevel = coodinates.z;
+            this.tileColumn = coodinates.X;
+            this.tileRow = coodinates.Y;
+            this.zoomLevel = coodinates.Z;
         }
 
         public byte[] ToByteArray()
@@ -43,9 +43,9 @@ namespace TileMapService.Tests
             // Tiles aren't actually raster images, but stubs (binary raw data with coordinate values)
             var coordinates = new TileDataStubCoordinates
             {
-                x = this.tileColumn,
-                y = this.tileRow,
-                z = this.zoomLevel,
+                X = this.tileColumn,
+                Y = this.tileRow,
+                Z = this.zoomLevel,
             };
 
             var json = JsonSerializer.Serialize(coordinates);

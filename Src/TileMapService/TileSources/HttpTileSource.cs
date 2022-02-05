@@ -7,7 +7,8 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TileMapService.MBTiles;
+
+using MBT = TileMapService.MBTiles;
 
 namespace TileMapService.TileSources
 {
@@ -20,18 +21,18 @@ namespace TileMapService.TileSources
 
         private HttpClient client;
 
-        private CacheRepository cache = null;
+        private MBT.CacheRepository cache = null;
 
         public HttpTileSource(SourceConfiguration configuration)
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Source identifier is null or empty string");
             }
 
             if (String.IsNullOrEmpty(configuration.Location))
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Source location is null or empty string");
             }
 
             this.configuration = configuration; // Will be changed later in InitAsync
@@ -39,14 +40,17 @@ namespace TileMapService.TileSources
 
         #region ITileSource implementation
 
-        Task ITileSource.InitAsync()
+        async Task ITileSource.InitAsync()
         {
             // Configuration values priority:
             // 1. Default values for http source type.
             // 2. Actual values (from source metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            // TODO: read and use metadata from TMS, WMTS and WMS sources
+            this.client = new HttpClient(); // TODO: custom headers from configuration
+
+            // TODO: read and use metadata from TMS, WMTS sources - implement TMS, WMTS capabilities client and DTO classes
+            var geographicalBounds = await GetGeographicalBoundsAsync();
 
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
                 this.configuration.Id :
@@ -63,8 +67,8 @@ namespace TileMapService.TileSources
             this.configuration = new SourceConfiguration
             {
                 Id = this.configuration.Id,
-                Type = this.configuration.Type,
-                Format = this.configuration.Format, // TODO: from metadata
+                Type = this.configuration.Type.ToLowerInvariant(),
+                Format = this.configuration.Format, // TODO: from source metadata
                 Title = title,
                 Tms = tms,
                 Srs = srs,
@@ -72,25 +76,51 @@ namespace TileMapService.TileSources
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from metadata
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
-                Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only WebMercator is supported due to mbtiles format
+                GeographicalBounds = geographicalBounds,
+                Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only Web Mercator is supported due to mbtiles format limits
             };
-
-            this.client = new HttpClient(); // TODO: custom headers from configuration
 
             if (this.configuration.Cache != null)
             {
                 var dbpath = this.configuration.Cache.DbFile;
                 if (File.Exists(dbpath))
                 {
-                    this.cache = new CacheRepository(dbpath);
+                    this.cache = new MBT.CacheRepository(dbpath);
                 }
                 else
                 {
-                    this.cache = CacheRepository.CreateEmpty(dbpath);
+                    this.cache = MBT.CacheRepository.CreateEmpty(dbpath);
+                }
+            }
+        }
+
+        private async Task<Models.GeographicalBounds> GetGeographicalBoundsAsync()
+        {
+            Models.GeographicalBounds geographicalBounds = null;
+
+            if (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeWms)
+            {
+                var sourceLayerName = Utils.UrlHelper.GetQueryParameters(this.configuration.Location).First(p => p.Key == "layers");
+                var url = Wms.QueryUtility.GetCapabilitiesWmsUrl(this.configuration.Location);
+                var r = await this.client.GetAsync(url);
+                if (r.IsSuccessStatusCode)
+                {
+                    var xml = await r.Content.ReadAsStringAsync();
+                    if (!String.IsNullOrEmpty(xml))
+                    {
+                        var doc = new System.Xml.XmlDocument();
+                        doc.LoadXml(xml);
+                        var layers = Wms.CapabilitiesUtility.GetLayers(doc);
+                        var layer = layers.FirstOrDefault(l => l.Name == sourceLayerName.Value);
+                        if (layer != null)
+                        {
+                            geographicalBounds = layer.GeographicalBounds;
+                        }
+                    }
                 }
             }
 
-            return Task.CompletedTask;
+            return geographicalBounds;
         }
 
         async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
@@ -148,7 +178,7 @@ namespace TileMapService.TileSources
                 SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
                 SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
                 SourceConfiguration.TypeWmts => GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
-                SourceConfiguration.TypeWms => GetTileWmsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
+                SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
                 _ => throw new InvalidOperationException($"Source type '{this.configuration.Type}' is not supported."),
             };
         }
@@ -162,6 +192,8 @@ namespace TileMapService.TileSources
         }
 
         #endregion
+
+        #region GetTile urls
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetTileXyzUrl(string baseUrl, int x, int y, int z)
@@ -232,72 +264,6 @@ namespace TileMapService.TileSources
             return baseUri + qb.ToQueryString();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetTileWmsUrl(string baseUrl, string format, int x, int y, int z)
-        {
-            // TODO: separate WMS utility class
-            const string WmsQueryService = "service";
-            const string WmsQueryVersion = "version";
-            const string WmsQueryRequest = "request";
-            const string WmsQuerySrs = "srs";
-            const string WmsQueryCrs = "crs";
-            const string WmsQueryBBox = "bbox";
-            const string WmsQueryFormat = "format";
-
-            const string WmsQueryWidth = "width";
-            const string WmsQueryHeight = "height";
-
-            const string WMS = "WMS";
-            const string Version111 = "1.1.1";
-            const string Version130 = "1.3.0";
-            const string GetMap = "GetMap";
-
-            const string EPSG3857 = Utils.SrsCodes.EPSG3857; // TODO: EPSG:4326 support
-
-            // Rebuilding url from configuration  https://stackoverflow.com/a/43407008/1182448
-            // All parameters with values are taken from provided url
-            // Mandatory parameters added if needed, with default (standard) values
-
-            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
-            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
-
-            // Will be replaced
-            items.RemoveAll(kvp => kvp.Key == WmsQuerySrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryCrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryBBox);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryWidth);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryHeight);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryFormat);
-
-            var qb = new QueryBuilder(items);
-            if (!items.Any(kvp => kvp.Key == WmsQueryService))
-            {
-                qb.Add(WmsQueryService, WMS);
-            }
-
-            var wmsVersion = String.Empty;
-            if (!items.Any(kvp => kvp.Key == WmsQueryVersion))
-            {
-                qb.Add(WmsQueryVersion, Version111); // Default WMS version is 1.1.1
-                wmsVersion = Version111;
-            }
-            else
-            {
-                wmsVersion = items.First(kvp => kvp.Key == WmsQueryVersion).Value;
-            }
-
-            if (!items.Any(kvp => kvp.Key == WmsQueryRequest))
-            {
-                qb.Add(WmsQueryRequest, GetMap);
-            }
-
-            qb.Add((wmsVersion == Version130) ? WmsQueryCrs : WmsQuerySrs, EPSG3857);
-            qb.Add(WmsQueryBBox, Utils.WebMercator.GetTileBounds(x, y, z).ToBBoxString());
-            qb.Add(WmsQueryWidth, Utils.WebMercator.TileSize.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmsQueryHeight, Utils.WebMercator.TileSize.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmsQueryFormat, format); // TODO: use WMS GetCapabilities
-
-            return baseUri + qb.ToQueryString();
-        }
+        #endregion
     }
 }
