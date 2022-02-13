@@ -5,14 +5,14 @@
     /// </summary>
     class Layer // TODO: ? use shared TileMapService.Models.Layer
     {
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        public string  Abstract { get; set; }
+        public string?  Abstract { get; set; }
 
         public bool IsQueryable { get; set; }
 
-        public Models.GeographicalBounds GeographicalBounds { get; set; }
+        public Models.GeographicalBounds? GeographicalBounds { get; set; }
     }
 }

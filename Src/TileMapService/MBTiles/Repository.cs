@@ -72,7 +72,7 @@ namespace TileMapService.MBTiles
         /// <param name="zoomLevel">Tile Z coordinate (zoom level).</param>
         /// <seealso href="https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/async">Async Limitations</seealso>
         /// <returns>Tile image contents.</returns>
-        public byte[] ReadTileData(int tileColumn, int tileRow, int zoomLevel)
+        public byte[]? ReadTileData(int tileColumn, int tileRow, int zoomLevel)
         {
             using var connection = new SqliteConnection(this.connectionString);
             using var command = new SqliteCommand(ReadTileDataCommandText, connection);
@@ -85,7 +85,7 @@ namespace TileMapService.MBTiles
 
             connection.Open();
             using var dr = command.ExecuteReader();
-            byte[] result = null;
+            byte[]? result = null;
 
             if (dr.Read())
             {
@@ -112,11 +112,7 @@ namespace TileMapService.MBTiles
             {
                 while (dr.Read())
                 {
-                    result.Add(new MetadataItem
-                    {
-                        Name = dr.IsDBNull(0) ? null : dr.GetString(0),
-                        Value = dr.IsDBNull(1) ? null : dr.GetString(1),
-                    });
+                    result.Add(new MetadataItem(dr.GetString(0), dr.IsDBNull(1) ? null : dr.GetString(1)));
                 }
 
                 dr.Close();

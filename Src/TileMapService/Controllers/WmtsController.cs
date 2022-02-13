@@ -22,13 +22,13 @@ namespace TileMapService.Controllers
         [HttpGet("")]
         public async Task<IActionResult> ProcessRequestAsync(
             ////string service = null,
-            string request = null,
+            string? request = null,
             ////string version = null,
-            string layer = null,
+            string? layer = null,
             ////string style = null,
             ////string format = null,
             ////string tileMatrixSet = null,
-            string tileMatrix = null,
+            string? tileMatrix = null,
             int tileRow = 0,
             int tileCol = 0)
         {
@@ -50,6 +50,21 @@ namespace TileMapService.Controllers
             }
             else if (String.Compare(request, "GetTile", StringComparison.Ordinal) == 0)
             {
+                if (tileMatrix == null)
+                {
+                    return BadRequest("tileMatrix must be defined"); // TODO: return errors in XML format
+                }
+
+                if (String.IsNullOrEmpty(layer))
+                {
+                    return BadRequest("layer must be defined"); // TODO: return errors in XML format
+                }
+
+                if (!this.tileSourceFabric.Contains(layer))
+                {
+                    return NotFound($"Specified tileset '{layer}' not found");
+                }
+
                 return await ProcessGetTileRequestAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix));
             }
             else
@@ -69,26 +84,15 @@ namespace TileMapService.Controllers
 
         private async Task<IActionResult> ProcessGetTileRequestAsync(string tileset, int x, int y, int z)
         {
-            if (String.IsNullOrEmpty(tileset))
+            var tileSource = this.tileSourceFabric.Get(tileset);
+            var data = await tileSource.GetTileAsync(x, WebMercator.FlipYCoordinate(y, z), z); // Y axis goes down from the top
+            if (data != null)
             {
-                return BadRequest();
-            }
-            else if (this.tileSourceFabric.Contains(tileset))
-            {
-                var tileSource = this.tileSourceFabric.Get(tileset);
-                var data = await tileSource.GetTileAsync(x, WebMercator.FlipYCoordinate(y, z), z); // Y axis goes down from the top
-                if (data != null)
-                {
-                    return File(data, tileSource.Configuration.ContentType);
-                }
-                else
-                {
-                    return NotFound();
-                }
+                return File(data, tileSource.Configuration.ContentType);
             }
             else
             {
-                return NotFound($"Specified tileset '{tileset}' not found");
+                return NotFound();
             }
         }
 

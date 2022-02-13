@@ -12,11 +12,6 @@ namespace TileMapService.Models
 
         private readonly GeographicalPoint pointMax;
 
-        public GeographicalBounds()
-        {
-
-        }
-
         public GeographicalBounds(GeographicalPoint pointMin, GeographicalPoint pointMax)
         {
             this.pointMin = pointMin;

@@ -2,8 +2,8 @@
 {
     class Service
     {
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
-        public string Abstract { get; set; }
+        public string? Abstract { get; set; }
     }
 }

@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
 
 using TileMapService.TileSources;
 
@@ -17,6 +18,7 @@ namespace TileMapService
             this.tileSources = configuration
                     .GetSection("Sources")
                     .Get<IList<SourceConfiguration>>()
+                    .Where(c => !String.IsNullOrEmpty(c.Id))
                     .ToDictionary(c => c.Id, c => CreateTileSource(c));
         }
 
@@ -57,6 +59,11 @@ namespace TileMapService
             if (config == null)
             {
                 throw new ArgumentNullException(nameof(config));
+            }
+
+            if (String.IsNullOrEmpty(config.Type))
+            {
+                throw new InvalidOperationException("config.Type is null or empty");
             }
 
             return (config.Type.ToLowerInvariant()) switch

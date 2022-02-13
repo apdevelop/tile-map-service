@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -13,7 +14,13 @@ namespace TileMapService
 
             // TODO: check and log configuration errors
             // https://stackoverflow.com/questions/56077346/asp-net-core-call-async-init-on-singleton-service
-            await (host.Services.GetService(typeof(ITileSourceFabric)) as ITileSourceFabric).InitAsync();
+
+            if (host.Services.GetService(typeof(ITileSourceFabric)) is not ITileSourceFabric service)
+            {
+                throw new InvalidOperationException();
+            }
+
+            await service.InitAsync();
 
             host.Run();
         }

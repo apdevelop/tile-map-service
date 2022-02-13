@@ -20,7 +20,7 @@ namespace TileMapService
         /// <param name="y">Tile Y coordinate (row), Y axis goes up from the bottom (TMS scheme).</param>
         /// <param name="z">Tile Z coordinate (zoom level).</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        Task<byte[]> GetTileAsync(int x, int y, int z);
+        Task<byte[]?> GetTileAsync(int x, int y, int z);
 
         /// <summary>
         /// Gets the actual tile source configuration.

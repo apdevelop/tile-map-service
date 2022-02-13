@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Mvc;
 
 using TileMapService.Utils;
 
@@ -46,6 +47,11 @@ namespace TileMapService.Controllers
             // TODO: services/basemap.xml
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
             var layer = layers.SingleOrDefault(l => l.Identifier == tileset);
+            if (layer == null)
+            {
+                return NotFound();
+            }
+
             var xmlDoc = new Tms.CapabilitiesUtility(this.BaseUrl, layers).GetTileMap(layer);
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
@@ -71,7 +77,7 @@ namespace TileMapService.Controllers
 
             if (this.tileSourceFabric.Contains(tileset))
             {
-                // TODO: check extension == tileset.Configuration.Format
+                // TODO: implement conversion of source format to requested output format
                 var tileSource = this.tileSourceFabric.Get(tileset);
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null)

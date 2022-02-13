@@ -13,15 +13,15 @@ using MBT = TileMapService.MBTiles;
 namespace TileMapService.TileSources
 {
     /// <summary>
-    /// Represents tile source with tiles from other HTTP (also TMS, WMTS) service.
+    /// Represents tile source with tiles from other web service (TMS, WMTS, WMS).
     /// </summary>
     class HttpTileSource : ITileSource
     {
         private SourceConfiguration configuration;
 
-        private HttpClient client;
+        private HttpClient? client;
 
-        private MBT.CacheRepository cache = null;
+        private MBT.CacheRepository? cache = null;
 
         public HttpTileSource(SourceConfiguration configuration)
         {
@@ -59,6 +59,16 @@ namespace TileMapService.TileSources
             var minZoom = this.configuration.MinZoom ?? 0;
             var maxZoom = this.configuration.MaxZoom ?? 24;
 
+            if (String.IsNullOrEmpty(this.configuration.Type))
+            {
+                throw new InvalidOperationException("configuration.Type is null or empty");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.Format))
+            {
+                throw new InvalidOperationException("configuration.Format is null or empty");
+            }
+
             // Default is tms=false for simple XYZ tile services
             var tms = this.configuration.Tms ?? (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeTms);
             var srs = String.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
@@ -68,12 +78,12 @@ namespace TileMapService.TileSources
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type.ToLowerInvariant(),
-                Format = this.configuration.Format, // TODO: from source metadata
+                Format = this.configuration.Format, // TODO: from source service capabilities
                 Title = title,
                 Tms = tms,
                 Srs = srs,
                 Location = this.configuration.Location,
-                ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from metadata
+                ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from source service capabilities
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
                 GeographicalBounds = geographicalBounds,
@@ -83,6 +93,11 @@ namespace TileMapService.TileSources
             if (this.configuration.Cache != null)
             {
                 var dbpath = this.configuration.Cache.DbFile;
+                if (String.IsNullOrEmpty(dbpath)) 
+                {
+                    throw new InvalidOperationException("DBpath is null or empty string");
+                }
+
                 if (File.Exists(dbpath))
                 {
                     this.cache = new MBT.CacheRepository(dbpath);
@@ -94,9 +109,24 @@ namespace TileMapService.TileSources
             }
         }
 
-        private async Task<Models.GeographicalBounds> GetGeographicalBoundsAsync()
+        private async Task<Models.GeographicalBounds?> GetGeographicalBoundsAsync()
         {
-            Models.GeographicalBounds geographicalBounds = null;
+            if (this.client == null)
+            {
+                throw new InvalidOperationException("HTTP client was not initialized.");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.Type))
+            {
+                throw new InvalidOperationException("configuration.Type is null or empty");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.Location))
+            {
+                throw new InvalidOperationException("configuration.Location is null or empty");
+            }
+
+            Models.GeographicalBounds? geographicalBounds = null;
 
             if (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeWms)
             {
@@ -123,7 +153,7 @@ namespace TileMapService.TileSources
             return geographicalBounds;
         }
 
-        async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
+        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
         {
             if ((z < this.configuration.MinZoom) || (z > this.configuration.MaxZoom))
             {
@@ -141,18 +171,23 @@ namespace TileMapService.TileSources
                     }
                 }
 
+                if (this.client == null)
+                {
+                    throw new InvalidOperationException("HTTP client was not initialized.");
+                }
+
                 var url = GetSourceUrl(x, y, z);
                 var response = await client.GetAsync(url);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    if (response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
+                    if (response.Content.Headers.ContentType != null && response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
                     {
                         var message = await response.Content.ReadAsStringAsync();
-                        System.Diagnostics.Debug.WriteLine(message); // TODO: log error
+                        System.Diagnostics.Debug.WriteLine(message); // TODO: write error details to log
                         return null;
                     }
 
-                    // TODO: more types checks of ContentType
+                    // TODO: more checks of Content-Type, response size, etc.
 
                     var data = await response.Content.ReadAsByteArrayAsync();
 
@@ -173,12 +208,33 @@ namespace TileMapService.TileSources
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetSourceUrl(int x, int y, int z)
         {
+            if (String.IsNullOrEmpty(this.configuration.Location))
+            {
+                throw new InvalidOperationException("configuration.Location is null or empty");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.Type))
+            {
+                throw new InvalidOperationException("configuration.Type is null or empty");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.Format))
+            {
+                throw new InvalidOperationException("configuration.Format is null or empty");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.ContentType))
+            {
+                throw new InvalidOperationException("configuration.ContentType is null or empty");
+            }
+
+            y = this.configuration.Tms != null && this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
             return (this.configuration.Type.ToLowerInvariant()) switch
             {
-                SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
-                SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
-                SourceConfiguration.TypeWmts => GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
-                SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(this.configuration.Location, this.configuration.ContentType, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z),
+                SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, y, z),
+                SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, y, z),
+                SourceConfiguration.TypeWmts => GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
+                SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
                 _ => throw new InvalidOperationException($"Source type '{this.configuration.Type}' is not supported."),
             };
         }

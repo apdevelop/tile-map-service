@@ -82,9 +82,13 @@
             maxZoom: 5,
             tms: true
         }),
-        'MapCache Geodetic (local proxy)': L.tileLayer('/tms/1.0.0/mapcache-geodetic/{z}/{x}/{y}.png', {
+        'MapCache Geodetic (local proxy / TMS)': L.tileLayer('/tms/1.0.0/mapcache-geodetic/{z}/{x}/{y}.png', {
             maxZoom: 5,
             tms: true
+        }),
+        'MapCache Geodetic (local proxy / XYZ)': L.tileLayer('/xyz/mapcache-geodetic/?z={z}&x={x}&y={y}', {
+            maxZoom: 5,
+            tms: false
         })
     };
 

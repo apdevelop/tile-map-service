@@ -183,13 +183,13 @@ namespace TileMapService.Wmts
             var layerElement = doc.CreateElement(String.Empty, "Layer", WmtsNamespaceUri);
 
             var titleElement = doc.CreateElement(OwsPrefix, "Title", OwsNamespaceUri);
-            titleElement.InnerText = layer.Title;
+            titleElement.InnerText = layer.Title ?? String.Empty;
             layerElement.AppendChild(titleElement);
 
             // TODO: Abstract element
 
             var identifierElement = doc.CreateElement(OwsPrefix, "Identifier", OwsNamespaceUri);
-            identifierElement.InnerText = layer.Identifier;
+            identifierElement.InnerText = layer.Identifier ?? String.Empty;
             layerElement.AppendChild(identifierElement);
 
             var styleElement = doc.CreateElement(String.Empty, "Style", WmtsNamespaceUri);
@@ -200,7 +200,7 @@ namespace TileMapService.Wmts
             layerElement.AppendChild(styleElement);
 
             var formatElement = doc.CreateElement(String.Empty, "Format", WmtsNamespaceUri);
-            formatElement.InnerText = layer.ContentType;
+            formatElement.InnerText = layer.ContentType ?? String.Empty;
             layerElement.AppendChild(formatElement);
 
             const string LowerCornerElementName = "LowerCorner";

@@ -55,16 +55,8 @@ namespace TileMapService.Utils
         public static Models.GeographicalBounds GetTileGeographicalBounds(int tileX, int tileY, int zoomLevel)
         {
             return new Models.GeographicalBounds(
-                new Models.GeographicalPoint
-                {
-                    Longitude = PixelXToLongitude(TileSize * tileX, zoomLevel),
-                    Latitude = PixelYToLatitude(TileSize * tileY + TileSize, zoomLevel),
-                },
-                new Models.GeographicalPoint
-                {
-                    Longitude = PixelXToLongitude(TileSize * tileX + TileSize, zoomLevel),
-                    Latitude = PixelYToLatitude(TileSize * tileY, zoomLevel),
-                });
+                new Models.GeographicalPoint(PixelXToLongitude(TileSize * tileX, zoomLevel), PixelYToLatitude(TileSize * tileY + TileSize, zoomLevel)),
+                new Models.GeographicalPoint(PixelXToLongitude(TileSize * tileX + TileSize, zoomLevel), PixelYToLatitude(TileSize * tileY, zoomLevel)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

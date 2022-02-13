@@ -194,7 +194,7 @@ namespace TileMapService.Tms
             var tileFormat = doc.CreateElement("TileFormat");
 
             var extensionAttribute = doc.CreateAttribute("extension");
-            extensionAttribute.Value = layer.Format; // TODO: "jpg" or "jpeg" ?
+            extensionAttribute.Value = layer.Format;
             tileFormat.Attributes.Append(extensionAttribute);
 
             var mimetypeAttribute = doc.CreateAttribute("mime-type");

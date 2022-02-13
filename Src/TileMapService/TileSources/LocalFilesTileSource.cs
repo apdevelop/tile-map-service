@@ -34,6 +34,16 @@ namespace TileMapService.TileSources
 
         Task ITileSource.InitAsync()
         {
+            if (String.IsNullOrEmpty(this.configuration.Location))
+            {
+                throw new InvalidOperationException("configuration.Location is null or empty");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.Format))
+            {
+                throw new InvalidOperationException("configuration.Format is null or empty");
+            }
+
             // Configuration values priority:
             // 1. Default values for local files source type.
             // 2. Actual values (from first found tile properties).
@@ -80,10 +90,12 @@ namespace TileMapService.TileSources
                 Cache = null, // Not used for local files source
             };
 
+            // TODO: tile width, tile height from first tile
+
             return Task.CompletedTask;
         }
 
-        async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
+        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
         {
             if ((z < this.configuration.MinZoom) || (z > this.configuration.MaxZoom))
             {
@@ -91,7 +103,13 @@ namespace TileMapService.TileSources
             }
             else
             {
-                var path = GetLocalFilePath(this.configuration.Location, x, this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z), z);
+                if (String.IsNullOrEmpty(this.configuration.Location))
+                {
+                    throw new InvalidOperationException("configuration.Location is null or empty");
+                }
+
+                y = this.configuration.Tms != null && this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
+                var path = GetLocalFilePath(this.configuration.Location, x, y, z);
                 var fileInfo = new FileInfo(path);
                 if (fileInfo.Exists)
                 {

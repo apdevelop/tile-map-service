@@ -9,7 +9,7 @@ namespace TileMapService.Wms
     {
         private readonly string baseUrl;
 
-        private XmlDocument doc;
+        private XmlDocument? doc;
 
         public CapabilitiesUtility(string baseUrl)
         {
@@ -48,11 +48,11 @@ namespace TileMapService.Wms
             serviceElement.AppendChild(serviceName);
 
             var serviceTitle = doc.CreateElement("Title");
-            serviceTitle.InnerText = service.Title;
+            serviceTitle.InnerText = service.Title ?? String.Empty;
             serviceElement.AppendChild(serviceTitle);
 
             var serviceAbstract = doc.CreateElement("Abstract");
-            serviceAbstract.InnerText = service.Abstract;
+            serviceAbstract.InnerText = service.Abstract ?? String.Empty;
             serviceElement.AppendChild(serviceAbstract);
 
             var serviceOnlineResource = CreateOnlineResourceElement(this.baseUrl);
@@ -108,7 +108,8 @@ namespace TileMapService.Wms
             var version = GetVersion(xmlDoc);
 
             var nsManager = new XmlNamespaceManager(xmlDoc.NameTable);
-            string xpath, defaultNsPrefix, bboxElementName;
+            string xpath, defaultNsPrefix;
+            string? bboxElementName;
             switch (version)
             {
                 case Version.Version111:
@@ -133,22 +134,38 @@ namespace TileMapService.Wms
             var result = new List<Layer>();
 
             var layers = xmlDoc.SelectNodes(xpath, nsManager);
-            foreach (XmlNode layer in layers)
+            if (layers != null)
             {
-                var bbox = bboxElementName != null ? layer.SelectSingleNode(defaultNsPrefix + bboxElementName, nsManager) : null;
-                result.Add(new Layer
+                foreach (XmlNode layer in layers)
                 {
-                    Name = layer.SelectSingleNode(defaultNsPrefix + "Name", nsManager).InnerText,
-                    Title = layer.SelectSingleNode(defaultNsPrefix + "Title", nsManager).InnerText,
-                    IsQueryable = layer.Attributes[Identifiers.QueryableAttribute] != null && layer.Attributes[Identifiers.QueryableAttribute].Value == "1",
-                    GeographicalBounds = bbox != null ?
-                        new Models.GeographicalBounds(
-                            Double.Parse(bbox.Attributes["minx"].Value, CultureInfo.InvariantCulture),
-                            Double.Parse(bbox.Attributes["miny"].Value, CultureInfo.InvariantCulture),
-                            Double.Parse(bbox.Attributes["maxx"].Value, CultureInfo.InvariantCulture),
-                            Double.Parse(bbox.Attributes["maxy"].Value, CultureInfo.InvariantCulture)) :
-                        null,
-                });
+                    var layerName = layer.SelectSingleNode(defaultNsPrefix + "Name", nsManager);
+                    var layerTitle = layer.SelectSingleNode(defaultNsPrefix + "Title", nsManager);
+                    var layerQueryable = layer.Attributes?[Identifiers.QueryableAttribute];
+
+                    XmlAttribute? minxAttribute = null, minyAttribute = null, maxxAttribute = null, maxyAttribute = null;
+                    var bbox = bboxElementName != null ? layer.SelectSingleNode(defaultNsPrefix + bboxElementName, nsManager) : null;
+                    if (bbox != null && bbox.Attributes != null)
+                    {
+                        minxAttribute = bbox.Attributes["minx"];
+                        minyAttribute = bbox.Attributes["miny"];
+                        maxxAttribute = bbox.Attributes["maxx"];
+                        maxyAttribute = bbox.Attributes["maxy"];
+                    }
+
+                    result.Add(new Layer
+                    {
+                        Name = layerName != null ? layerName.InnerText : String.Empty,
+                        Title = layerTitle != null ? layerTitle.InnerText : String.Empty,
+                        IsQueryable = layerQueryable != null && layerQueryable.Value == "1",
+                        GeographicalBounds = bbox != null && bbox.Attributes != null ?
+                            new Models.GeographicalBounds(
+                                minxAttribute != null ? Double.Parse(minxAttribute.Value, CultureInfo.InvariantCulture) : 0.0,
+                                minyAttribute != null ? Double.Parse(minyAttribute.Value, CultureInfo.InvariantCulture) : 0.0,
+                                maxxAttribute != null ? Double.Parse(maxxAttribute.Value, CultureInfo.InvariantCulture) : 0.0,
+                                maxyAttribute != null ? Double.Parse(maxyAttribute.Value, CultureInfo.InvariantCulture) : 0.0) :
+                            null,
+                    });
+                }
             }
 
             return result;
@@ -157,6 +174,11 @@ namespace TileMapService.Wms
         private static Version GetVersion(XmlDocument xmlDoc)
         {
             var rootElement = xmlDoc.DocumentElement;
+            if (rootElement == null)
+            {
+                throw new FormatException("Root Element was not found");
+            }
+
             var versionAttribute = rootElement.Attributes["version"];
             if (versionAttribute == null)
             {
@@ -193,6 +215,11 @@ namespace TileMapService.Wms
 
         private XmlElement CreateRequestElement(string name, IEnumerable<string> formats)
         {
+            if (this.doc == null)
+            {
+                throw new InvalidOperationException();
+            }
+
             var request = doc.CreateElement(name);
 
             foreach (var format in formats)
@@ -219,6 +246,11 @@ namespace TileMapService.Wms
 
         private XmlElement CreateOnlineResourceElement(string href)
         {
+            if (this.doc == null)
+            {
+                throw new InvalidOperationException();
+            }
+
             var serviceOnlineResource = doc.CreateElement("OnlineResource");
 
             var hrefAttribute = doc.CreateAttribute("xlink", "href", XlinkNamespaceUri);
@@ -234,6 +266,11 @@ namespace TileMapService.Wms
 
         private XmlElement CreateLayerElement(Version version, Layer layer)
         {
+            if (this.doc == null)
+            {
+                throw new InvalidOperationException();
+            }
+
             var layerElement = doc.CreateElement(Identifiers.LayerElement);
 
             var queryableAttribute = doc.CreateAttribute(Identifiers.QueryableAttribute);
@@ -241,15 +278,15 @@ namespace TileMapService.Wms
             layerElement.Attributes.Append(queryableAttribute);
 
             var layerTitle = doc.CreateElement(Identifiers.TitleElement);
-            layerTitle.InnerText = layer.Title;
+            layerTitle.InnerText = layer.Title ?? String.Empty;
             layerElement.AppendChild(layerTitle);
 
             var layerName = doc.CreateElement(Identifiers.NameElement);
-            layerName.InnerText = layer.Name;
+            layerName.InnerText = layer.Name ?? String.Empty;
             layerElement.AppendChild(layerName);
 
             var layerAbstract = doc.CreateElement(Identifiers.AbstractElement);
-            layerAbstract.InnerText = layer.Abstract;
+            layerAbstract.InnerText = layer.Abstract ?? String.Empty;
             layerElement.AppendChild(layerAbstract);
 
             string layerSrsElementName;

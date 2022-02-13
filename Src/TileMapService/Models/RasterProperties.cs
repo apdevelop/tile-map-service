@@ -17,12 +17,12 @@
         /// <summary>
         /// Bounds in EPSG:4326 SRS.
         /// </summary>
-        public GeographicalBounds GeographicalBounds { get; set; }
+        public GeographicalBounds? GeographicalBounds { get; set; }
 
         /// <summary>
         /// Bounds in EPSG:3857 SRS.
         /// </summary>
-        public Bounds ProjectedBounds { get; set; }
+        public Bounds? ProjectedBounds { get; set; }
 
         public double PixelWidth { get; set; }
 

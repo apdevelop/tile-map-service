@@ -22,7 +22,7 @@ namespace TileMapService.Tests
     /// </summary>
     /// <see>https://docs.nunit.org/articles/nunit/getting-started/dotnet-core-and-dotnet-standard.html</see>
     [TestFixture]
-    public class IntergrationTests
+    public class IntegrationTests
     {
         #region Test environment configuration (port number, path to temporary files)
 
@@ -48,6 +48,7 @@ namespace TileMapService.Tests
 
         // TODO: compare expected documents with MapCache capabilities output
         // TODO: check specific XML tags, not entire XML document
+        // TODO: implement tests as particular end-to-end feature check (source to endpoint)
 
         [OneTimeSetUp]
         public async Task Setup()

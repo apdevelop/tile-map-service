@@ -23,7 +23,7 @@ namespace TileMapService.TileSources
     {
         private SourceConfiguration configuration;
 
-        private M.RasterProperties rasterProperties;
+        private M.RasterProperties? rasterProperties;
 
         public RasterTileSource(SourceConfiguration configuration)
         {
@@ -49,6 +49,11 @@ namespace TileMapService.TileSources
 
         Task ITileSource.InitAsync()
         {
+            if (String.IsNullOrEmpty(this.configuration.Location))
+            {
+                throw new InvalidOperationException("configuration.Location is null or empty");
+            }
+
             Tiff.SetErrorHandler(new DisableErrorHandler()); // TODO: ? redirect output?
 
             this.rasterProperties = ReadGeoTiffProperties(this.configuration.Location);
@@ -70,7 +75,7 @@ namespace TileMapService.TileSources
                 Tms = false,
                 Srs = U.SrsCodes.EPSG3857, // TODO: only EPSG:3857 'output' SRS currently supported
                 Location = this.configuration.Location,
-                ContentType = U.EntitiesConverter.TileFormatToContentType(ImageFormats.Png),
+                ContentType = U.EntitiesConverter.TileFormatToContentType(ImageFormats.Png), // TODO: other output formats
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
                 GeographicalBounds = this.rasterProperties.GeographicalBounds,
@@ -80,8 +85,18 @@ namespace TileMapService.TileSources
             return Task.CompletedTask;
         }
 
-        async Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
+        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
         {
+            if (rasterProperties == null)
+            {
+                throw new InvalidOperationException("rasterProperties property is null.");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.ContentType))
+            {
+                throw new InvalidOperationException("configuration.ContentType property is null.");
+            }
+
             if ((z < this.configuration.MinZoom) || (z > this.configuration.MaxZoom))
             {
                 return null;
@@ -112,7 +127,7 @@ namespace TileMapService.TileSources
 
                 var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(this.configuration.ContentType);
                 using SKImage image = surface.Snapshot();
-                using SKData data = image.Encode(imageFormat, 90); // TODO: ? parameter
+                using SKData data = image.Encode(imageFormat, 90); // TODO: quality parameter
 
                 return await Task.FromResult(data.ToArray());
             }
@@ -181,7 +196,7 @@ namespace TileMapService.TileSources
             if (geoKeys != null)
             {
                 var geoDoubleParams = tiff.GetField(TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG);
-                double[] doubleParams = null;
+                double[]? doubleParams = null;
                 if (geoDoubleParams != null)
                 {
                     doubleParams = geoDoubleParams[1].ToDoubleArray();
@@ -256,18 +271,33 @@ namespace TileMapService.TileSources
                                 }
                             case (ushort)GeoTiff.Key.GeogSemiMajorAxisGeoKey:
                                 {
+                                    if (doubleParams == null)
+                                    {
+                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag");
+                                    }
+
                                     var geogSemiMajorAxis = doubleParams[keys[keyIndex + 3]];
                                     keyIndex += 4;
                                     break;
                                 }
                             case (ushort)GeoTiff.Key.GeogSemiMinorAxisGeoKey:
                                 {
+                                    if (doubleParams == null)
+                                    {
+                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag");
+                                    }
+
                                     var geogSemiMinorAxis = doubleParams[keys[keyIndex + 3]];
                                     keyIndex += 4;
                                     break;
                                 }
                             case (ushort)GeoTiff.Key.GeogInvFlatteningGeoKey:
                                 {
+                                    if (doubleParams == null)
+                                    {
+                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag");
+                                    }
+
                                     var geogInvFlattening = doubleParams[keys[keyIndex + 3]];
                                     keyIndex += 4;
                                     break;
@@ -305,8 +335,8 @@ namespace TileMapService.TileSources
                 }
             }
 
-            M.GeographicalBounds geographicalBounds = null;
-            M.Bounds projectedBounds = null;
+            M.GeographicalBounds? geographicalBounds = null;
+            M.Bounds? projectedBounds = null;
             double pixelWidth = 0.0, pixelHeight = 0.0;
 
             switch (srId)
@@ -376,6 +406,8 @@ namespace TileMapService.TileSources
         {
             var tileBuffer = new byte[tileSize];
 
+            // TODO: check if file exists
+
             using (var tiff = Tiff.Open(path, ModeOpenReadTiff))
             {
                 // https://bitmiracle.github.io/libtiff.net/help/articles/KB/grayscale-color.html#reading-a-color-image
@@ -421,6 +453,16 @@ namespace TileMapService.TileSources
             M.RasterProperties rasterProperties,
             M.Bounds bounds)
         {
+            if (rasterProperties == null)
+            {
+                throw new ArgumentNullException(nameof(rasterProperties));
+            }
+
+            if (rasterProperties.ProjectedBounds == null)
+            {
+                throw new ArgumentException("ProjectedBounds property is null.");
+            }
+
             var tileCoordMin = GetGeoTiffTileCoordinatesAtPoint(
                 rasterProperties,
                 Math.Max(bounds.Left, rasterProperties.ProjectedBounds.Left),
@@ -456,11 +498,21 @@ namespace TileMapService.TileSources
 
         private static double XToGeoTiffPixelX(M.RasterProperties rasterProperties, double x)
         {
+            if (rasterProperties.ProjectedBounds == null)
+            {
+                throw new ArgumentNullException(nameof(rasterProperties), "rasterProperties.ProjectedBounds is null.");
+            }
+
             return (x - rasterProperties.ProjectedBounds.Left) / rasterProperties.PixelWidth;
         }
 
         private static double YToGeoTiffPixelY(M.RasterProperties rasterProperties, double y)
         {
+            if (rasterProperties.ProjectedBounds == null)
+            {
+                throw new ArgumentNullException(nameof(rasterProperties), "rasterProperties.ProjectedBounds is null.");
+            }
+
             return (rasterProperties.ProjectedBounds.Top - y) / rasterProperties.PixelHeight;
         }
 
@@ -471,10 +523,20 @@ namespace TileMapService.TileSources
             int width, int height,
             M.Bounds tileBounds,
             IList<GeoTiff.TileCoordinates> sourceTileCoordinates,
-            int backgroundColor,
+            uint backgroundColor,
             int sourceTileWidth,
             int sourceTileHeight)
         {
+            if (this.rasterProperties == null)
+            {
+                throw new InvalidOperationException("rasterProperties is null.");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.Location))
+            {
+                throw new InvalidOperationException("configuration.Location is null or empty");
+            }
+
             var tileMinX = sourceTileCoordinates.Min(t => t.X);
             var tileMinY = sourceTileCoordinates.Min(t => t.Y);
             var tilesCountX = sourceTileCoordinates.Max(t => t.X) - tileMinX + 1;
@@ -493,7 +555,7 @@ namespace TileMapService.TileSources
 
             using var surface = SKSurface.Create(imageInfo);
             using var canvas = surface.Canvas;
-            canvas.Clear(new SKColor((uint)backgroundColor)); // TODO: ? uint parameter
+            canvas.Clear(new SKColor(backgroundColor));
 
             // Draw all source tiles without scaling
             foreach (var sourceTile in sourceTileCoordinates)

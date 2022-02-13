@@ -8,7 +8,7 @@
 
         public int Z { get; set; }
 
-        public byte[] ImageData { get; set; }
+        public byte[]? ImageData { get; set; }
 
         public TileDataset()
         {

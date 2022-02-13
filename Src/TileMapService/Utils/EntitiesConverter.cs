@@ -42,8 +42,8 @@ namespace TileMapService.Utils
                 ContentType = c.ContentType,
                 Format = c.Format,
                 Srs = c.Srs,
-                MinZoom = c.MinZoom.Value,
-                MaxZoom = c.MaxZoom.Value,
+                MinZoom = c.MinZoom != null ? c.MinZoom.Value : 0,
+                MaxZoom = c.MaxZoom != null ? c.MaxZoom.Value : 24,
                 GeographicalBounds = c.GeographicalBounds,
             };
         }
@@ -68,7 +68,7 @@ namespace TileMapService.Utils
         {
             if (rgbHexColor.StartsWith("0x"))
             {
-                rgbHexColor = rgbHexColor.Substring(2);
+                rgbHexColor = rgbHexColor[2..];
             }
 
             return BitConverter.ToUInt32(

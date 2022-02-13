@@ -92,7 +92,6 @@ namespace TileMapService.Wms
         private static int FindOptimalTileZoom(int width, Models.GeographicalBounds geoBBox)
         {
             var mapSize = WebMercator.MapSize(width, geoBBox.MinLongitude, geoBBox.MaxLongitude);
-
             var minZoom = 0;
             var minDistance = Double.MaxValue;
             for (var zoom = 0; zoom < 24; zoom++) // TODO: range?

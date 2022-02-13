@@ -6,18 +6,26 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 
 ### Features
 * Supported tile sources:
-  * [MBTiles](https://github.com/mapbox/mbtiles-spec) (SQLite database).
-  * Local file system (each tile in separate file).
-  * External tile services with XYZ, TMS, WMTS, WMS access using HTTP/HTTPS (this server acts as proxy server, translating requests on-the-fly, with caching feature).
-  * GeoTIFF image file (with `EPSG:3857` or `EPSG:4326` SRS only).
+
+| Type                      | EPSG:3857  | EPSG:4326  | Notes                                                                                       |
+| ------------------------- |:----------:|:----------:|--------------------------------------------------------------------------------------------|
+| MBTiles (SQLite)          | &#10003;   | &mdash;    | [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md) |
+| Local file system         | &#10003;   | &mdash;    | Each tile in separate file in Z/X/Y.ext folder structure                                    |
+| External web services     | &#10003;   | partial    | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map), [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification), [WMTS](https://www.ogc.org/standards/wmts), WMS (versions 1.1.1 and 1.3.0) services, with local caching feature  |
+| GeoTIFF local file        | &#10003;   | &#10003;   | Basic support with `EPSG:3857` or `EPSG:4326` SRS only)                                                                 |
+
 * Supported protocols (service endpoints) for serving tiles: 
-  * XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map)) [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z})
-  * TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service)) [http://localhost:5000/tms](http://localhost:5000/tms)
-  * WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service))  [http://localhost:5000/wmts](http://localhost:5000/wmts?request=GetCapabilities)
-  * WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))  [http://localhost:5000/wms](http://localhost:5000/wms?request=GetCapabilities) versions 1.1.1 and 1.3.0
+
+| Type                                                                              | EPSG:3857  | EPSG:4326  | Endpoint address                                                                      | Notes                                                                                       |
+| --------------------------------------------------------------------------------- |:----------:|:----------:|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map))                | &#10003;   | &#10003;   | [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z})   |      |
+| TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service))          | &#10003;   | &#10003;   | [http://localhost:5000/tms](http://localhost:5000/tms)                                |      |
+| WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)) | &#10003;   | &mdash;    | [http://localhost:5000/wmts](http://localhost:5000/wmts?request=GetCapabilities)      |      |
+| WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))            | &#10003;   | &mdash;    | [http://localhost:5000/wms](http://localhost:5000/wms?request=GetCapabilities)        | Versions 1.1.1 and 1.3.0 |
+
 * Coordinate system / tile grid support: [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection), basic support for geodetic `EPSG:4326`.
 * Tile image formats: raster (`PNG`, `JPEG`) 256&#215;256 pixels tiles and basic support of `PBF` / `MVT` vector tiles.
-* Local cache for external tile services sources (modified `mbtiles` format database file, `EPSG:3857` only), with blank tiles detection support.
+* Local cache for tiles from external tile services sources (modified `mbtiles` format database file, `EPSG:3857` only), with blank tiles detection support.
 * Configuration in JSON file.
 
 ### Technologies
@@ -25,8 +33,9 @@ Developed using MS Visual Studio 2019 with .NET 5 SDK.
 Using
 * [Microsoft.Data.Sqlite](https://docs.microsoft.com/ru-ru/dotnet/standard/data/sqlite/) for working with SQLite database.
 * [SkiaSharp](https://github.com/mono/SkiaSharp) for raster images processing.
-* [BitMiracle.LibTiff.NET](https://github.com/BitMiracle/libtiff.net) for reading `GeoTIFF` source files.
+* [BitMiracle.LibTiff.NET](https://github.com/BitMiracle/libtiff.net) for reading GeoTIFF source files.
 * [Leaflet](https://github.com/Leaflet) for map demo page.
+* [NUnit](https://nunit.org/) for tests.
 
 ### Configuration file
 
@@ -66,7 +75,7 @@ All external tile sources (services) in the provided `appsettings.json` file are
 
 ### References
 * [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md)
-* [Tile Map Service Specification](https://wiki.osgeo.org/index.php?title=Tile_Map_Service_Specification)
+* [Tile Map Service Specification](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification)
 * [OpenGIS Web Map Tile Service Implementation Standard](https://www.ogc.org/standards/wmts)
 * [Using TMS in Leaflet](https://leafletjs.com/examples/wms/wms.html)
 * [QGIS as OGC Data Client](https://docs.qgis.org/2.18/en/docs/user_manual/working_with_ogc/ogc_client_support.html)

@@ -32,15 +32,15 @@ namespace TileMapService.Controllers
         public async Task<IActionResult> ProcessWmsRequestAsync(
               string service = Identifiers.Wms,
               string version = Identifiers.Version111,
-              string request = null,
-              string layers = null,
+              string? request = null,
+              string? layers = null,
               ////string styles = null,
-              string srs = null,
-              string crs = null, // WMS version 1.3.0
-              string bbox = null,
+              string? srs = null,
+              string? crs = null, // WMS version 1.3.0
+              string? bbox = null,
               int width = 0,
               int height = 0,
-              string format = null,
+              string? format = null,
               // Optional GetMap request parameters
               bool? transparent = false,
               string bgcolor = Identifiers.DefaultBackgroundColor,
@@ -93,7 +93,8 @@ namespace TileMapService.Controllers
                     layers,
                     wmsVersion == Wms.Version.Version130 ? crs : srs,
                     bbox, width, height,
-                    format, transparent, bgcolor);
+                    format, 
+                    transparent, bgcolor);
             }
             else if (String.Compare(request, Identifiers.GetFeatureInfo, StringComparison.Ordinal) == 0)
             {
@@ -145,12 +146,12 @@ namespace TileMapService.Controllers
         }
 
         private async Task<IActionResult> ProcessGetMapRequestAsync(
-            string layers,
-            string srs,
-            string bbox,
+            string? layers,
+            string? srs,
+            string? bbox,
             int width,
             int height,
-            string format,
+            string? format,
             bool? transparent,
             string bgcolor)
         {
@@ -158,7 +159,7 @@ namespace TileMapService.Controllers
             const int MinSize = 32;
             const int MaxSize = 32768;
 
-            if (String.IsNullOrEmpty(layers))
+            if (String.IsNullOrEmpty(layers)) // TODO: return errors in OGC standard formats
             {
                 return BadRequest("layers");
             }
@@ -173,6 +174,12 @@ namespace TileMapService.Controllers
                 return BadRequest("height");
             }
 
+
+            if (String.IsNullOrEmpty(format))
+            {
+                return BadRequest("format");
+            }
+
             var isFormatSupported = (String.Compare(format, MediaTypeNames.Image.Png, StringComparison.OrdinalIgnoreCase) == 0) ||
                                     (String.Compare(format, MediaTypeNames.Image.Jpeg, StringComparison.OrdinalIgnoreCase) == 0);
 
@@ -181,9 +188,19 @@ namespace TileMapService.Controllers
                 return BadRequest("format");
             }
 
+            if (String.IsNullOrEmpty(srs))
+            {
+                return BadRequest("srs");
+            }
+
             if (String.Compare(srs, Identifiers.EPSG3857, StringComparison.OrdinalIgnoreCase) != 0)
             {
-                return BadRequest("srs"); // TODO: EPSG:4326
+                return BadRequest("Only EPSG:3857 is currently supported."); // TODO: EPSG:4326 support
+            }
+
+            if (bbox == null)
+            {
+                return BadRequest("bbox");
             }
 
             var boundingBox = Models.Bounds.FromCommaSeparatedString(bbox);

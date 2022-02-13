@@ -16,20 +16,12 @@
         /// <summary>
         /// String value of item.
         /// </summary>
-        public string Value { get; set; }
-
-        /// <summary>
-        /// Creates new empty metadata item instance.
-        /// </summary>
-        public MetadataItem()
-        {
-
-        }
+        public string? Value { get; set; }
 
         /// <summary>
         /// Creates new metadata item instance with given name and value.
         /// </summary>
-        public MetadataItem(string name, string value)
+        public MetadataItem(string name, string? value)
         {
             this.Name = name;
             this.Value = value;

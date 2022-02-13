@@ -16,7 +16,7 @@ namespace TileMapService.TileSources
     {
         private SourceConfiguration configuration;
 
-        private MBTiles.Repository repository;
+        private MBTiles.Repository? repository;
 
         public MBTilesTileSource(SourceConfiguration configuration)
         {
@@ -41,6 +41,11 @@ namespace TileMapService.TileSources
             // 1. Default values for MBTiles source type.
             // 2. Actual values (MBTiles metadata table values).
             // 3. Values from configuration file - overrides given above, if provided.
+
+            if (String.IsNullOrEmpty(this.configuration.Location))
+            {
+                throw new InvalidOperationException("configuration.Location is null or empty");
+            }
 
             this.repository = new MBTiles.Repository(configuration.Location, false);
             var metadata = new MBTiles.Metadata(this.repository.ReadMetadata());
@@ -70,18 +75,25 @@ namespace TileMapService.TileSources
                 Cache = null, // Not used for MBTiles source
             };
 
+            // TODO: tile width, tile height from first tile
+
             return Task.CompletedTask;
         }
 
-        Task<byte[]> ITileSource.GetTileAsync(int x, int y, int z)
+        Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            var tileRow = this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
+            if (this.repository == null)
+            {
+                throw new InvalidOperationException("Repository was not initialized.");
+            }
+
+            var tileRow = this.configuration.Tms != null && this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
             var tileData = this.repository.ReadTileData(x, tileRow, z);
 
             // TODO: pass gzipped data as-is with setting HTTP headers?
             // pbf as a format refers to gzip-compressed vector tile data in Mapbox Vector Tile format, 
             // which uses Google Protocol Buffers as encoding format.
-            if (this.configuration.Format == ImageFormats.Protobuf)
+            if (this.configuration.Format == ImageFormats.Protobuf && tileData != null)
             {
                 using var compressedStream = new MemoryStream(tileData);
                 using var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress);
