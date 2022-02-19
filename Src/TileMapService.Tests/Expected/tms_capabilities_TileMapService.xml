@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TileMapService version="1.0.0">
+	<Title/>
+	<Abstract/>
 	<TileMaps>
-		<TileMap title="World Countries" href="http://localhost:5000/tms/1.0.0/world-countries" profile="global-mercator" srs="EPSG:3857"/>
-		<TileMap title="World Satellite Imagery" href="http://localhost:5000/tms/1.0.0/world-satellite-imagery" profile="global-mercator" srs="EPSG:3857"/>
-		<TileMap title="Caspian Sea" href="http://localhost:5000/tms/1.0.0/caspian-sea" profile="global-mercator" srs="EPSG:3857"/>
-		<TileMap title="Tile Source 3" href="http://localhost:5000/tms/1.0.0/source3" profile="global-mercator" srs="EPSG:3857"/>
-		<TileMap title="HTTP proxy to world-countries" href="http://localhost:5000/tms/1.0.0/httpproxy" profile="global-mercator" srs="EPSG:3857"/>
+		<TileMap title="World Countries" href="http://localhost:5000/tms/1.0.0/world-countries" profile="global-mercator" srs="OSGEO:41001"/>
+		<TileMap title="World Satellite Imagery" href="http://localhost:5000/tms/1.0.0/world-satellite-imagery" profile="global-mercator" srs="OSGEO:41001"/>
+		<TileMap title="Caspian Sea" href="http://localhost:5000/tms/1.0.0/caspian-sea" profile="global-mercator" srs="OSGEO:41001"/>
+		<TileMap title="Tile Source 3" href="http://localhost:5000/tms/1.0.0/source3" profile="global-mercator" srs="OSGEO:41001"/>
+		<TileMap title="HTTP proxy to world-countries" href="http://localhost:5000/tms/1.0.0/httpproxy" profile="global-mercator" srs="OSGEO:41001"/>
 	</TileMaps>
 </TileMapService>

@@ -11,6 +11,10 @@ namespace TileMapService.Utils
     {
         public const int TileSize = 256; // TODO: cusom resolution values
 
+        public const int DefaultTileWidth = 256;
+
+        public const int DefaultTileHeight = 256;
+
         private static readonly double EarthRadius = 6378137.0;
 
         private static readonly double MaxLatitude = 85.0511287798;

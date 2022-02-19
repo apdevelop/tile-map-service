@@ -39,7 +39,7 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Format))
+            if (String.IsNullOrEmpty(this.configuration.Format)) // TODO: from first file, if any
             {
                 throw new InvalidOperationException("configuration.Format is null or empty");
             }
@@ -59,7 +59,7 @@ namespace TileMapService.TileSources
                 var baseFolder = new Uri(this.configuration.Location.Substring(0, zIndex)).LocalPath;
                 foreach (var directory in Directory.GetDirectories(baseFolder))
                 {
-                    if (Int32.TryParse(Path.GetFileName(directory), out int zoomLevel))
+                    if (Int32.TryParse(Path.GetFileName(directory), out int zoomLevel)) // Directory name is integer number
                     {
                         zoomLevels.Add(zoomLevel);
                     }
@@ -70,8 +70,12 @@ namespace TileMapService.TileSources
                 this.configuration.Id :
                 this.configuration.Title;
 
+            var srs = String.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
+
             var minZoom = this.configuration.MinZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Min(z => z) : 0);
-            var maxZoom = this.configuration.MaxZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 24);
+            var maxZoom = this.configuration.MaxZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 20);
+
+            // TODO: TileWidh, TileHeight from file properties (with supported image extension)
 
             // Re-create configuration
             this.configuration = new SourceConfiguration
@@ -81,7 +85,7 @@ namespace TileMapService.TileSources
                 Format = this.configuration.Format, // TODO: from file properties (extension)
                 Title = title,
                 Tms = this.configuration.Tms ?? false, // Default is tms=false for file storage
-                Srs = Utils.SrsCodes.EPSG3857, // TODO: support for EPSG:4326
+                Srs = srs,
                 Location = this.configuration.Location,
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
                 MinZoom = minZoom,

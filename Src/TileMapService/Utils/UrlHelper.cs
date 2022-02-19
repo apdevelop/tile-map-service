@@ -1,23 +1,24 @@
-﻿using Microsoft.AspNetCore.WebUtilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace TileMapService.Utils
 {
     static class UrlHelper
     {
-        public static string GetQueryBase(string baseUrl)
+        public static string GetQueryBase(string url)
         {
-            var uri = new Uri(baseUrl);
+            var uri = new Uri(url);
             var baseUri = uri.GetComponents(UriComponents.Scheme | UriComponents.Host | UriComponents.Port | UriComponents.Path, UriFormat.UriEscaped);
 
             return baseUri;
         }
 
-        public static List<KeyValuePair<string, string>> GetQueryParameters(string baseUrl)
+        public static List<KeyValuePair<string, string>> GetQueryParameters(string url)
         {
-            var uri = new Uri(baseUrl);
+            var uri = new Uri(url);
             var queryDictionary = QueryHelpers.ParseQuery(uri.Query);
             var items = queryDictionary
                 .SelectMany(
@@ -26,6 +27,14 @@ namespace TileMapService.Utils
                 .ToList();
 
             return items;
+        }
+
+        public static string[] GetSegments(string url)
+        {
+            var uri = new Uri(url);
+            var result = uri.Segments;
+
+            return result;
         }
     }
 }

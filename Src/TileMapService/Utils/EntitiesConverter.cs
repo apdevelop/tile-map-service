@@ -45,6 +45,8 @@ namespace TileMapService.Utils
                 MinZoom = c.MinZoom != null ? c.MinZoom.Value : 0,
                 MaxZoom = c.MaxZoom != null ? c.MaxZoom.Value : 24,
                 GeographicalBounds = c.GeographicalBounds,
+                TileWidth = c.TileWidth,
+                TileHeight = c.TileHeight,
             };
         }
 

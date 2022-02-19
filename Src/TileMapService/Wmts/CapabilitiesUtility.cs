@@ -8,7 +8,7 @@ namespace TileMapService.Wmts
 {
     /// <summary>
     /// WMTS capabilities document builder.
-    /// Supports only Web Mercator (EPSG:3857) / "Google Maps Compatible" 256x256 tile sets.
+    /// Currently supports only Web Mercator (EPSG:3857) / "Google Maps Compatible" 256x256 tile sets.
     /// </summary>
     class CapabilitiesUtility
     {
@@ -16,9 +16,9 @@ namespace TileMapService.Wmts
 
         private readonly List<Models.Layer> layers;
 
-        private const int TileWidth = 256; // TODO: cusom resolution values
+        private const int TileWidth = Utils.WebMercator.DefaultTileWidth; // TODO: custom resolution values
 
-        private const int TileHeight = 256;
+        private const int TileHeight = Utils.WebMercator.DefaultTileHeight;
 
         #region Constants
 
@@ -36,7 +36,7 @@ namespace TileMapService.Wmts
 
         #endregion
 
-        // TODO: DTO classes for WMTS capabilities description (like Layer)
+        // TODO: DTO classes for WMTS capabilities description (like Layer, Capabilities)
 
         public CapabilitiesUtility(
             string baseUrl,

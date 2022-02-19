@@ -4,7 +4,7 @@ using SkiaSharp;
 
 namespace TileMapService.Utils
 {
-    internal class ImageHelper
+    public class ImageHelper
     {
         public static byte[] CreateEmptyImage(
             int width,
@@ -53,6 +53,14 @@ namespace TileMapService.Utils
             }
 
             return zero;
+        }
+
+        public static (int Width, int Height)? GetImageSize(byte[] imageData)
+        {
+            using var image = SKImage.FromEncodedData(imageData);
+            return image != null ?
+                (image.Width, image.Height) :
+                null;
         }
 
         public static SKEncodedImageFormat SKEncodedImageFormatFromMediaType(string mediaType)

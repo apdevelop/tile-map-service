@@ -58,6 +58,37 @@ namespace TileMapService.TileSources
                     (!String.IsNullOrEmpty(metadata.Format) ? metadata.Format : ImageFormats.Png) :
                     this.configuration.Format;
 
+            // Get tile width and height from first tile, for raster formats
+            var tileWidth = Utils.WebMercator.DefaultTileWidth;
+            var tileHeight = Utils.WebMercator.DefaultTileHeight;
+            var firstTile = this.repository.ReadFirstTile();
+            if (firstTile != null && (format == ImageFormats.Png || format == ImageFormats.Jpeg))
+            {
+                var size = Utils.ImageHelper.GetImageSize(firstTile);
+                if (size.HasValue)
+                {
+                    tileWidth = size.Value.Width;
+                    tileHeight = size.Value.Height;
+                }
+            }
+
+            var minZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? null;
+            var maxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? null;
+            if (minZoom == null || maxZoom == null)
+            {
+                var zoomRange = this.repository.GetZoomLevelRange();
+                if (zoomRange.HasValue)
+                {
+                    minZoom = zoomRange.Value.Min;
+                    maxZoom = zoomRange.Value.Max;
+                }
+                else
+                {
+                    minZoom = 0;
+                    maxZoom = 20;
+                }
+            }
+
             // Re-create configuration
             this.configuration = new SourceConfiguration
             {
@@ -69,13 +100,13 @@ namespace TileMapService.TileSources
                 Srs = Utils.SrsCodes.EPSG3857, // MBTiles supports only Spherical Mercator tile grid
                 Location = this.configuration.Location,
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(format),
-                MinZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? 0, // TODO: ? Check actual SELECT MIN/MAX(zoom_level) ?
-                MaxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? 24,
+                MinZoom = minZoom,
+                MaxZoom = maxZoom,
                 GeographicalBounds = metadata.Bounds, // Can be null, if no corresponding record in 'metadata' table
+                TileWidth = tileWidth,
+                TileHeight = tileHeight,
                 Cache = null, // Not used for MBTiles source
             };
-
-            // TODO: tile width, tile height from first tile
 
             return Task.CompletedTask;
         }
@@ -88,7 +119,7 @@ namespace TileMapService.TileSources
             }
 
             var tileRow = this.configuration.Tms != null && this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
-            var tileData = this.repository.ReadTileData(x, tileRow, z);
+            var tileData = this.repository.ReadTile(x, tileRow, z);
 
             // TODO: pass gzipped data as-is with setting HTTP headers?
             // pbf as a format refers to gzip-compressed vector tile data in Mapbox Vector Tile format, 

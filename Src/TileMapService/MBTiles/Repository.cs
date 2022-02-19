@@ -72,7 +72,7 @@ namespace TileMapService.MBTiles
         /// <param name="zoomLevel">Tile Z coordinate (zoom level).</param>
         /// <seealso href="https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/async">Async Limitations</seealso>
         /// <returns>Tile image contents.</returns>
-        public byte[]? ReadTileData(int tileColumn, int tileRow, int zoomLevel)
+        public byte[]? ReadTile(int tileColumn, int tileRow, int zoomLevel)
         {
             using var connection = new SqliteConnection(this.connectionString);
             using var command = new SqliteCommand(ReadTileDataCommandText, connection);
@@ -90,6 +90,44 @@ namespace TileMapService.MBTiles
             if (dr.Read())
             {
                 result = (byte[])dr[0];
+            }
+
+            dr.Close();
+
+            return result;
+        }
+
+        public byte[]? ReadFirstTile()
+        {
+            using var connection = new SqliteConnection(this.connectionString);
+            using var command = new SqliteCommand($"SELECT {ColumnTileData} FROM {TableTiles} LIMIT 1", connection);
+
+            connection.Open();
+            using var dr = command.ExecuteReader();
+            byte[]? result = null;
+
+            if (dr.Read())
+            {
+                result = (byte[])dr[0];
+            }
+
+            dr.Close();
+
+            return result;
+        }
+
+        public (int Min, int Max)? GetZoomLevelRange()
+        {
+            using var connection = new SqliteConnection(this.connectionString);
+            using var command = new SqliteCommand($"SELECT MIN({ColumnZoomLevel}), MAX({ColumnZoomLevel}) FROM {TableTiles}", connection);
+
+            connection.Open();
+            using var dr = command.ExecuteReader();
+
+            (int Min, int Max)? result = null;
+            if (dr.Read())
+            {
+                result = (Min: dr.GetInt32(0), Max: dr.GetInt32(1));
             }
 
             dr.Close();

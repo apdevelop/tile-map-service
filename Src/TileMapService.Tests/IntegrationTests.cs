@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
 
@@ -26,23 +23,17 @@ namespace TileMapService.Tests
     {
         #region Test environment configuration (port number, path to temporary files)
 
-        private readonly int portNumber = 5000;
+        private static string Mbtiles1FilePath => Path.Join(TestConfiguration.DataPath, "test1.mbtiles");
 
-        private string BaseUrl => $"http://localhost:{portNumber}";
+        private static string Mbtiles2FilePath => Path.Join(TestConfiguration.DataPath, "test2.mbtiles");
 
-        private static string TestDataPath => Path.Join(Path.GetTempPath(), "TileMapServiceTestData");
+        private static string Mbtiles3FilePath => Path.Join(TestConfiguration.DataPath, "test3.mbtiles");
 
-        private static string SettingsFilePath => Path.Join(TestDataPath, "testsettings.json");
-
-        private static string Mbtiles1FilePath => Path.Join(TestDataPath, "test1.mbtiles");
-
-        private static string Mbtiles2FilePath => Path.Join(TestDataPath, "test2.mbtiles");
-
-        private static string Mbtiles3FilePath => Path.Join(TestDataPath, "test3.mbtiles");
-
-        private static string LocalFilesPath => Path.Join(TestDataPath, "tiles3");
+        private static string LocalFilesPath => Path.Join(TestConfiguration.DataPath, "tiles3");
 
         #endregion
+
+        private IHost serviceHost;
 
         private HttpClient client;
 
@@ -53,20 +44,73 @@ namespace TileMapService.Tests
         [OneTimeSetUp]
         public async Task Setup()
         {
+            var tileSources = new[]
+            {
+                new SourceConfiguration
+                {
+                    Type = SourceConfiguration.TypeMBTiles,
+                    Id = "world-countries",
+                    Location = Mbtiles1FilePath,
+                    MinZoom = 0,
+                    MaxZoom = 18,
+                },
+                new SourceConfiguration
+                {
+                    Type = SourceConfiguration.TypeMBTiles,
+                    Id = "world-satellite-imagery",
+                    Title = null, // will be used from mbtiles metadata
+                    Location = Mbtiles2FilePath,
+                },
+                new SourceConfiguration
+                {
+                    Type = SourceConfiguration.TypeMBTiles,
+                    Id = "caspian-sea",
+                    Title = null, // will be used from mbtiles metadata
+                    Location = Mbtiles3FilePath,
+                },
+                new SourceConfiguration
+                {
+                    Type = SourceConfiguration.TypeLocalFiles,
+                    Id = "source3",
+                    Title = "Tile Source 3",
+                    Location = LocalFilesPath + "\\{z}\\{x}\\{y}.png",
+                    MinZoom = 0,
+                    MaxZoom = 2,
+                    Format = ImageFormats.Png,
+                    Tms = false,
+                },
+                new SourceConfiguration
+                {
+                    Type = SourceConfiguration.TypeXyz,
+                    Id = "httpproxy",
+                    Title = "HTTP proxy to world-countries",
+                    Location = TestConfiguration.BaseUrl + "/xyz/world-countries/{z}/{x}/{y}.png",
+                    Format = ImageFormats.Png,
+                    MinZoom = 0,
+                    MaxZoom = 2,
+                },
+                // TODO: EPSG:4326 source
+            };
+
             RemoveTestData();
             PrepareTestData();
+            CreateLocalTiles(tileSources[3]);
 
             this.client = new HttpClient
             {
-                BaseAddress = new Uri(BaseUrl),
+                BaseAddress = new Uri(TestConfiguration.BaseUrl),
             };
 
-            await this.CreateAndRunServiceHostAsync();
+            var json = JsonSerializer.Serialize(new { Sources = tileSources });
+            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.portNumber);
         }
 
         [OneTimeTearDown]
-        public void TearDown()
+        public async Task TearDown()
         {
+            await this.serviceHost.StopAsync();
+            this.serviceHost.Dispose();
+
             // Skip deleting files to analyze them
             if (!System.Diagnostics.Debugger.IsAttached)
             {
@@ -80,11 +124,11 @@ namespace TileMapService.Tests
             var r = await client.GetAsync("/tms");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
 
-            var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_Services.xml"));
+            var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_Services.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = UpdateXmlContents(expectedXml);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
 
-            CompareXml(expectedXml, actualXml);
+            TestsUtility.CompareXml(expectedXml, actualXml);
         }
 
         [Test]
@@ -93,11 +137,11 @@ namespace TileMapService.Tests
             var r = await client.GetAsync("/tms/1.0.0");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
 
-            var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMapService.xml"));
+            var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMapService.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = UpdateXmlContents(expectedXml);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
 
-            CompareXml(expectedXml, actualXml);
+            TestsUtility.CompareXml(expectedXml, actualXml);
         }
 
         [Test]
@@ -106,11 +150,11 @@ namespace TileMapService.Tests
             var r = await client.GetAsync("/tms/1.0.0/world-countries");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
 
-            var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap1.xml"));
+            var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap1.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = UpdateXmlContents(expectedXml);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
 
-            CompareXml(expectedXml, actualXml);
+            TestsUtility.CompareXml(expectedXml, actualXml);
         }
 
         [Test]
@@ -119,11 +163,11 @@ namespace TileMapService.Tests
             var r = await client.GetAsync("/tms/1.0.0/world-satellite-imagery");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
 
-            var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap2.xml"));
+            var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap2.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = UpdateXmlContents(expectedXml);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
 
-            CompareXml(expectedXml, actualXml);
+            TestsUtility.CompareXml(expectedXml, actualXml);
         }
 
         [Test]
@@ -132,11 +176,11 @@ namespace TileMapService.Tests
             var r = await client.GetAsync("/tms/1.0.0/source3");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
 
-            var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.tms_capabilities_TileMap3.xml"));
+            var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap3.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = UpdateXmlContents(expectedXml);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
 
-            CompareXml(expectedXml, actualXml);
+            TestsUtility.CompareXml(expectedXml, actualXml);
         }
 
         [Test]
@@ -145,11 +189,11 @@ namespace TileMapService.Tests
             var r = await client.GetAsync("/wmts?request=GetCapabilities");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
 
-            var expectedXml = Encoding.UTF8.GetString(ReadResource("Expected.wmts_GetCapabilities.xml"));
+            var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.wmts_GetCapabilities.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = UpdateXmlContents(expectedXml);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
 
-            CompareXml(expectedXml, actualXml);
+            TestsUtility.CompareXml(expectedXml, actualXml);
         }
 
         [Test]
@@ -235,112 +279,14 @@ namespace TileMapService.Tests
 
         // TODO: Test for use of metadata bounds from mbtiles in WMTS source capabilities
 
-        #region Utility methods
+        #region Managing test data
 
-        private string UpdateXmlContents(string xml)
+        private static void PrepareTestData()
         {
-            var s11 = "http://localhost:5000";
-            var s12 = "http://localhost:" + this.portNumber.ToString(CultureInfo.InvariantCulture);
-
-            return xml.Replace(s11, s12);
-        }
-
-        private static void CompareXml(string expectedXml, string actualXml)
-        {
-            var comparer = new NetBike.XmlUnit.XmlComparer
+            if (!Directory.Exists(TestConfiguration.DataPath))
             {
-                NormalizeText = true,
-                Analyzer = NetBike.XmlUnit.XmlAnalyzer.Custom()
-                    .SetEqual(NetBike.XmlUnit.XmlComparisonType.NodeListSequence)
-            };
-
-            using var expectedReader = new StringReader(expectedXml);
-            using var actualReader = new StringReader(actualXml);
-
-            var result = comparer.Compare(expectedReader, actualReader);
-
-            if (!result.IsEqual)
-            {
-                Assert.Fail(result.Differences.First().Difference.ToString());
+                Directory.CreateDirectory(TestConfiguration.DataPath);
             }
-        }
-
-        private static byte[] ReadResource(string id)
-        {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var resourceName = assembly.GetName().Name + "." + id;
-
-            byte[] data = null;
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
-            {
-                data = new byte[stream.Length];
-                stream.Read(data, 0, (int)stream.Length);
-            }
-
-            return data;
-        }
-
-        #endregion
-
-        #region setup / teardown
-
-        private void PrepareTestData()
-        {
-            if (!Directory.Exists(TestDataPath))
-            {
-                Directory.CreateDirectory(TestDataPath);
-            }
-
-            // Create config file
-            var tileSources = new[]
-            {
-                new SourceConfiguration
-                {
-                    Type = SourceConfiguration.TypeMBTiles,
-                    Id = "world-countries",
-                    Location = Mbtiles1FilePath,
-                    MinZoom = 0,
-                    MaxZoom = 18,
-                },
-                new SourceConfiguration
-                {
-                    Type = SourceConfiguration.TypeMBTiles,
-                    Id = "world-satellite-imagery",
-                    Title = null, // will be used from mbtiles metadata
-                    Location = Mbtiles2FilePath,
-                },
-                new SourceConfiguration
-                {
-                    Type = SourceConfiguration.TypeMBTiles,
-                    Id = "caspian-sea",
-                    Title = null, // will be used from mbtiles metadata
-                    Location = Mbtiles3FilePath,
-                },
-                new SourceConfiguration
-                {
-                    Type = SourceConfiguration.TypeLocalFiles,
-                    Id = "source3",
-                    Title = "Tile Source 3",
-                    Location = LocalFilesPath + "\\{z}\\{x}\\{y}.png",
-                    MinZoom = 0,
-                    MaxZoom = 2,
-                    Format = ImageFormats.Png,
-                    Tms = false,
-                },
-                new SourceConfiguration
-                {
-                    Type = SourceConfiguration.TypeXyz,
-                    Id = "httpproxy",
-                    Title = "HTTP proxy to world-countries",
-                    Location = this.BaseUrl + "/xyz/world-countries/{z}/{x}/{y}.png",
-                    Format = ImageFormats.Png,
-                    MinZoom = 0,
-                    MaxZoom = 2,
-                },
-                // TODO: EPSG:4326 source
-            };
-
-            File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(new { Sources = tileSources }));
 
             // Create and fill MBTiles databases
             {
@@ -367,8 +313,6 @@ namespace TileMapService.Tests
                 db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMaxZoom, "10"));
                 db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyBounds, "46.4012447459838,35.79530426558146,55.064448928947485,47.40446363441855"));
             }
-
-            CreateLocalTiles(tileSources[3]);
         }
 
         private static void CreateLocalTiles(SourceConfiguration tileSource)
@@ -391,40 +335,12 @@ namespace TileMapService.Tests
             }
         }
 
-        private async Task CreateAndRunServiceHostAsync()
-        {
-            // https://docs.microsoft.com/ru-ru/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0
-            var host = Host.CreateDefaultBuilder()
-                    .ConfigureAppConfiguration(configurationBuilder =>
-                    {
-                        var configuration = new ConfigurationBuilder()
-                            .AddJsonFile(SettingsFilePath)
-                            .Build();
-
-                        // https://stackoverflow.com/a/58594026/1182448
-                        configurationBuilder.Sources.Clear();
-                        configurationBuilder.AddConfiguration(configuration);
-                    })
-                    .ConfigureWebHostDefaults(webHostBuilder =>
-                    {
-                        webHostBuilder.UseStartup<Startup>();
-                        webHostBuilder.UseKestrel(options =>
-                        {
-                            options.Listen(IPAddress.Loopback, portNumber);
-                        });
-                    })
-                    .Build();
-
-            await (host.Services.GetService(typeof(ITileSourceFabric)) as ITileSourceFabric).InitAsync();
-
-            var _ = host.RunAsync();
-        }
-
         private static void RemoveTestData()
         {
-            if (Directory.Exists(TestDataPath))
+            if (Directory.Exists(TestConfiguration.DataPath))
             {
-                var dir = new DirectoryInfo(TestDataPath);
+                // TODO:  delete by one file
+                var dir = new DirectoryInfo(TestConfiguration.DataPath);
                 dir.Delete(true);
             }
         }

@@ -1,6 +1,6 @@
 ﻿namespace TileMapService.Utils
 {
-    static class SrsCodes // TODO: class name ?
+    public static class SrsCodes // TODO: class name ?
     {
         /// <summary>
         /// EPSG:3857

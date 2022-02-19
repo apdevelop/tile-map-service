@@ -25,5 +25,9 @@
         public int MaxZoom { get; set; }
 
         public GeographicalBounds? GeographicalBounds { get; set; }
+
+        public int TileWidth { get; set; } = Utils.WebMercator.DefaultTileWidth;
+
+        public int TileHeight { get; set; } = Utils.WebMercator.DefaultTileHeight;
     }
 }

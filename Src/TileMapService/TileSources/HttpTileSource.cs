@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Extensions;
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -7,6 +6,8 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Http.Extensions;
 
 using MBT = TileMapService.MBTiles;
 
@@ -50,8 +51,9 @@ namespace TileMapService.TileSources
             this.client = new HttpClient(); // TODO: custom headers from configuration
 
             // TODO: read and use metadata from TMS, WMTS sources - implement TMS, WMTS capabilities client and DTO classes
-            var geographicalBounds = await GetGeographicalBoundsAsync();
+            var sourceCapabilities = await GetSourceCapabilitiesAsync();
 
+            // TODO: combine capabilies with configuration
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
                 this.configuration.Id :
                 this.configuration.Title;
@@ -64,7 +66,7 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("configuration.Type is null or empty");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Format))
+            if (String.IsNullOrEmpty(this.configuration.Format)) // TODO: get from metadata
             {
                 throw new InvalidOperationException("configuration.Format is null or empty");
             }
@@ -86,14 +88,16 @@ namespace TileMapService.TileSources
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from source service capabilities
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
-                GeographicalBounds = geographicalBounds,
+                GeographicalBounds = sourceCapabilities?.GeographicalBounds,
+                TileWidth = sourceCapabilities != null ? sourceCapabilities.TileWidth : Utils.WebMercator.DefaultTileWidth,
+                TileHeight = sourceCapabilities != null ? sourceCapabilities.TileHeight : Utils.WebMercator.DefaultTileHeight,
                 Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only Web Mercator is supported due to mbtiles format limits
             };
 
             if (this.configuration.Cache != null)
             {
                 var dbpath = this.configuration.Cache.DbFile;
-                if (String.IsNullOrEmpty(dbpath)) 
+                if (String.IsNullOrEmpty(dbpath))
                 {
                     throw new InvalidOperationException("DBpath is null or empty string");
                 }
@@ -109,7 +113,7 @@ namespace TileMapService.TileSources
             }
         }
 
-        private async Task<Models.GeographicalBounds?> GetGeographicalBoundsAsync()
+        private async Task<Models.Layer?> GetSourceCapabilitiesAsync()
         {
             if (this.client == null)
             {
@@ -126,9 +130,29 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
+            var tileWidth = Utils.WebMercator.DefaultTileWidth;
+            var tileHeight = Utils.WebMercator.DefaultTileHeight;
             Models.GeographicalBounds? geographicalBounds = null;
 
-            if (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeWms)
+            // TODO: separate WMS/WMTS/TMS capabilities client classes
+            if (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeTms)
+            {
+                var r = await this.client.GetAsync(this.configuration.Location);
+                if (r.IsSuccessStatusCode)
+                {
+                    var xml = await r.Content.ReadAsStringAsync();
+                    if (!String.IsNullOrEmpty(xml))
+                    {
+                        var doc = new System.Xml.XmlDocument();
+                        doc.LoadXml(xml);
+
+                        var properties = Tms.CapabilitiesUtility.ParseTileMap(doc);
+                        tileWidth = properties.TileWidth;
+                        tileHeight = properties.TileHeight;
+                    }
+                }
+            }
+            else if (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeWms)
             {
                 var sourceLayerName = Utils.UrlHelper.GetQueryParameters(this.configuration.Location).First(p => p.Key == "layers");
                 var url = Wms.QueryUtility.GetCapabilitiesWmsUrl(this.configuration.Location);
@@ -149,8 +173,14 @@ namespace TileMapService.TileSources
                     }
                 }
             }
+            // TODO: other service types (TMS, WMTS)
 
-            return geographicalBounds;
+            return new Models.Layer
+            {
+                GeographicalBounds = geographicalBounds,
+                TileWidth = tileWidth,
+                TileHeight = tileHeight,
+            };
         }
 
         async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
@@ -164,7 +194,7 @@ namespace TileMapService.TileSources
                 // Check if exists in cache
                 if (this.cache != null)
                 {
-                    var data = this.cache.ReadTileData(x, y, z);
+                    var data = this.cache.ReadTile(x, y, z);
                     if (data != null)
                     {
                         return data;

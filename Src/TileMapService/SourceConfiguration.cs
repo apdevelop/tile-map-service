@@ -106,7 +106,11 @@ namespace TileMapService
         [JsonPropertyName("srs")]
         public string? Srs { get; set; }
 
-        // TODO: tile width, tile height
+        [JsonIgnore] // TODO: allow reading from config file
+        public int TileWidth { get; set; } = Utils.WebMercator.DefaultTileWidth;
+
+        [JsonIgnore] // TODO: allow reading from config file
+        public int TileHeight { get; set; } = Utils.WebMercator.DefaultTileHeight;
 
         // TODO: more custom properties, like abstract, attribution and so on.
 

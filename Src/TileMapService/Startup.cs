@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Net;
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TileMapService
@@ -18,8 +22,26 @@ namespace TileMapService
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseRouting();
+            // TODO: custom exception
+            ////app.UseExceptionHandler(appError =>
+            ////{
+            ////    appError.Run(async context =>
+            ////    {
+            ////        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            ////        context.Response.ContentType = "application/json";
+
+            ////        var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+            ////        if (contextFeature != null)
+            ////        {
+            ////            await context.Response.WriteAsync();
+            ////        }
+            ////    });
+            ////});
             app.UseCors(builder => builder.AllowAnyOrigin());
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }

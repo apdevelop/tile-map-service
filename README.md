@@ -10,7 +10,7 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 | Type                      | EPSG:3857  | EPSG:4326  | Notes                                                                                       |
 | ------------------------- |:----------:|:----------:|--------------------------------------------------------------------------------------------|
 | MBTiles (SQLite)          | &#10003;   | &mdash;    | [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md) |
-| Local file system         | &#10003;   | &mdash;    | Each tile in separate file in Z/X/Y.ext folder structure                                    |
+| Local file system         | &#10003;   | &#10003;   | Each tile in separate file in Z/X/Y.ext folder structure                                    |
 | External web services     | &#10003;   | partial    | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map), [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification), [WMTS](https://www.ogc.org/standards/wmts), WMS (versions 1.1.1 and 1.3.0) services, with local caching feature  |
 | GeoTIFF local file        | &#10003;   | &#10003;   | Basic support with `EPSG:3857` or `EPSG:4326` SRS only)                                                                 |
 

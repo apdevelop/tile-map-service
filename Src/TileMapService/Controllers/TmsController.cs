@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -25,8 +28,8 @@ namespace TileMapService.Controllers
         public IActionResult GetRootResource()
         {
             // TODO: services/root.xml
-            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var xmlDoc = new Tms.CapabilitiesUtility(this.BaseUrl, layers).GetRootResource();
+            var capabilities = this.GetCapabilities();
+            var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetRootResource();
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
@@ -35,8 +38,8 @@ namespace TileMapService.Controllers
         public IActionResult GetTileMapService()
         {
             // TODO: services/tilemapservice.xml
-            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var xmlDoc = new Tms.CapabilitiesUtility(this.BaseUrl, layers).GetTileMapService();
+            var capabilities = this.GetCapabilities();
+            var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetTileMapService();
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
@@ -45,14 +48,14 @@ namespace TileMapService.Controllers
         public IActionResult GetTileMap(string tileset)
         {
             // TODO: services/basemap.xml
-            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var layer = layers.SingleOrDefault(l => l.Identifier == tileset);
+            var capabilities = this.GetCapabilities();
+            var layer = capabilities.Layers?.SingleOrDefault(l => l.Identifier == tileset);
             if (layer == null)
             {
-                return NotFound();
+                return NotFound(); // TODO: errors in XML format
             }
 
-            var xmlDoc = new Tms.CapabilitiesUtility(this.BaseUrl, layers).GetTileMap(layer);
+            var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetTileMap(layer);
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
@@ -77,8 +80,14 @@ namespace TileMapService.Controllers
 
             if (this.tileSourceFabric.Contains(tileset))
             {
-                // TODO: implement conversion of source format to requested output format
+                // TODO: ? convert source format to requested output format
                 var tileSource = this.tileSourceFabric.Get(tileset);
+
+                if (IsOutOfBBox(x, y, z, tileSource.Configuration.Srs))
+                {
+                    return ResponseWithNotFoundError("The requested tile is outside the bounding box of the tile map.");
+                }
+
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null)
                 {
@@ -93,6 +102,39 @@ namespace TileMapService.Controllers
             {
                 return NotFound($"Specified tileset '{tileset}' not found");
             }
+        }
+
+        private IActionResult ResponseWithNotFoundError(string message)
+        {
+            var xmlDoc = new Tms.TileMapServerError(message).ToXml();
+            Response.ContentType = MediaTypeNames.Text.Xml + "; charset=utf-8"; // TODO: better way?
+            Response.StatusCode = (int)HttpStatusCode.NotFound;
+            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
+        }
+
+        private static bool IsOutOfBBox(int x, int y, int z, string? srs) // TODO: shared function
+        {
+            int xmin, xmax;
+            int ymin = 0;
+            int ymax = z << 1;
+            switch (srs)
+            {
+                case SrsCodes.EPSG3857: { xmin = 0; xmax = 1 << z; break; }
+                case SrsCodes.EPSG4326: { xmin = 0; xmax = 2 * (1 << z); break; }
+                default: throw new ArgumentOutOfRangeException(nameof(srs));
+            }
+
+            return x < xmin || x > xmax || y < ymin || y > ymax;
+        }
+
+        private Tms.Capabilities GetCapabilities()
+        {
+            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
+            return new Tms.Capabilities
+            {
+                BaseUrl = this.BaseUrl,
+                Layers = layers.ToArray(),
+            };
         }
 
         private string BaseUrl

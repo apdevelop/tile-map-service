@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Http.Extensions;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace TileMapService.Wms
 {
