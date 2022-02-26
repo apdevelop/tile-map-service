@@ -8,10 +8,16 @@
 
         public const string GetTile = "GetTile";
 
+        public const string Version100 = "1.0.0";
+
         public const string ExceptionReportElement = "ExceptionReport";
 
         public const string ExceptionElement = "Exception";
 
         public const string ExceptionCodeAttribute = "exceptionCode";
+
+        public const string TileWidthElement = "TileWidth";
+
+        public const string TileHeightElement = "TileHeight";
     }
 }

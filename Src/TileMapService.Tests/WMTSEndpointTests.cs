@@ -100,6 +100,15 @@ namespace TileMapService.Tests
             // 2. Layers (Sources)
             var layers = xml.SelectNodes("/ns:Capabilities/ns:Contents/ns:Layer", nsManager);
             Assert.AreEqual(2, layers.Count);
+
+            var tileMatrixSet = xml.SelectSingleNode("/ns:Capabilities/ns:Contents/ns:Layer/ns:TileMatrixSetLink/ns:TileMatrixSet", nsManager).InnerText;
+            Assert.IsNotEmpty(tileMatrixSet);
+
+            var tileMatrix = xml.SelectSingleNode("/ns:Capabilities/ns:Contents/ns:TileMatrixSet[ows:Identifier='"+ tileMatrixSet + "']/ns:TileMatrix[ows:Identifier='0']", nsManager);
+            Assert.IsNotNull(tileMatrix);
+
+            Assert.AreEqual(512, Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileWidth", nsManager).InnerText, CultureInfo.InvariantCulture));
+            Assert.AreEqual(512, Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileHeight", nsManager).InnerText, CultureInfo.InvariantCulture));
         }
 
         [Test]

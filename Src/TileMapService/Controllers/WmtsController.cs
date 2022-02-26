@@ -26,7 +26,7 @@ namespace TileMapService.Controllers
         public async Task<IActionResult> ProcessRequestAsync(
             string? service = null,
             string? request = null,
-            string version = "1.0.0",
+            string version = Identifiers.Version100,
             string? layer = null,
             ////string style = null,
             ////string format = null,

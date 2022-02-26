@@ -14,11 +14,7 @@ namespace TileMapService.Wmts
     {
         private readonly string baseUrl;
 
-        private readonly List<Models.Layer> layers;
-
-        private const int TileWidth = Utils.WebMercator.DefaultTileWidth; // TODO: ! custom resolution values
-
-        private const int TileHeight = Utils.WebMercator.DefaultTileHeight;
+        private readonly Models.Layer[] layers;
 
         #region Constants
 
@@ -30,8 +26,6 @@ namespace TileMapService.Wmts
 
         private const string XlinkNamespaceUri = "http://www.w3.org/1999/xlink";
 
-        private const string Version100 = "1.0.0";
-
         #endregion
 
         // TODO: DTO classes for WMTS capabilities description (like Layer, Capabilities)
@@ -41,7 +35,7 @@ namespace TileMapService.Wmts
             IEnumerable<Models.Layer> layers)
         {
             this.baseUrl = baseUrl;
-            this.layers = layers.ToList();
+            this.layers = layers.ToArray();
         }
 
         public XmlDocument GetCapabilities()
@@ -52,7 +46,7 @@ namespace TileMapService.Wmts
             rootElement.SetAttribute("xmlns:" + XlinkPrefix, XlinkNamespaceUri);
             rootElement.SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             rootElement.SetAttribute("xmlns:gml", "http://www.opengis.net/gml");
-            rootElement.SetAttribute("version", Version100);
+            rootElement.SetAttribute("version", Identifiers.Version100);
             doc.AppendChild(rootElement);
 
             var serviceIdentificationElement = doc.CreateElement(OwsPrefix, "ServiceIdentification", Identifiers.OwsNamespaceUri);
@@ -66,7 +60,7 @@ namespace TileMapService.Wmts
             serviceIdentificationElement.AppendChild(serviceTypeElement);
 
             var serviceTypeVersionElement = doc.CreateElement(OwsPrefix, "ServiceTypeVersion", Identifiers.OwsNamespaceUri);
-            serviceTypeVersionElement.InnerText = Version100;
+            serviceTypeVersionElement.InnerText = Identifiers.Version100;
             serviceIdentificationElement.AppendChild(serviceTypeVersionElement);
 
             rootElement.AppendChild(serviceIdentificationElement);
@@ -375,12 +369,12 @@ namespace TileMapService.Wmts
                         }
                 }
 
-                var tileWidthElement = doc.CreateElement(String.Empty, "TileWidth", WmtsNamespaceUri);
-                tileWidthElement.InnerText = TileWidth.ToString(CultureInfo.InvariantCulture);
+                var tileWidthElement = doc.CreateElement(String.Empty, Identifiers.TileWidthElement, WmtsNamespaceUri);
+                tileWidthElement.InnerText = layer.TileWidth.ToString(CultureInfo.InvariantCulture);
                 tileMatrixElement.AppendChild(tileWidthElement);
 
-                var tileHeightElement = doc.CreateElement(String.Empty, "TileHeight", WmtsNamespaceUri);
-                tileHeightElement.InnerText = TileHeight.ToString(CultureInfo.InvariantCulture);
+                var tileHeightElement = doc.CreateElement(String.Empty, Identifiers.TileHeightElement, WmtsNamespaceUri);
+                tileHeightElement.InnerText = layer.TileHeight.ToString(CultureInfo.InvariantCulture);
                 tileMatrixElement.AppendChild(tileHeightElement);
 
                 var matrixWidthElement = doc.CreateElement(String.Empty, "MatrixWidth", WmtsNamespaceUri);
