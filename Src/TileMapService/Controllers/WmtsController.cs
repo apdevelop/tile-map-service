@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Mvc;
+
 using TileMapService.Utils;
+using TileMapService.Wmts;
 
 namespace TileMapService.Controllers
 {
@@ -21,9 +24,9 @@ namespace TileMapService.Controllers
 
         [HttpGet("")]
         public async Task<IActionResult> ProcessRequestAsync(
-            ////string service = null,
+            string? service = null,
             string? request = null,
-            ////string version = null,
+            string version = "1.0.0",
             string? layer = null,
             ////string style = null,
             ////string format = null,
@@ -32,51 +35,50 @@ namespace TileMapService.Controllers
             int tileRow = 0,
             int tileCol = 0)
         {
-            // TODO: return errors in XML format
+            // TODO: check requirements of standard
+            if (String.Compare(service, "WMTS", StringComparison.Ordinal) != 0)
+            {
+                return ResponseWithBadRequestError("MissingParameterValue", "SERVICE parameter is not defined");
+            }
 
-            ////if (String.Compare(service, "WMTS", StringComparison.Ordinal) != 0)
-            ////{
-            ////    return BadRequest("service");
-            ////}
+            if (String.Compare(version, "1.0.0", StringComparison.Ordinal) != 0)
+            {
+                return ResponseWithBadRequestError("InvalidParameterValue", "Invalid VERSION parameter value (1.0.0 available only)");
+            }
 
-            ////if (String.Compare(version, "1.0.0", StringComparison.Ordinal) != 0)
-            ////{
-            ////    return BadRequest("version");
-            ////}
-
-            if (String.Compare(request, "GetCapabilities", StringComparison.Ordinal) == 0)
+            if (String.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
             {
                 return ProcessGetCapabilitiesRequest();
             }
-            else if (String.Compare(request, "GetTile", StringComparison.Ordinal) == 0)
+            else if (String.Compare(request, Identifiers.GetTile, StringComparison.Ordinal) == 0)
             {
-                if (tileMatrix == null)
+                if (String.IsNullOrEmpty(tileMatrix))
                 {
-                    return BadRequest("tileMatrix must be defined"); // TODO: return errors in XML format
+                    return ResponseWithBadRequestError("MissingParameter", "TILEMATRIX parameter is not defined");
                 }
 
                 if (String.IsNullOrEmpty(layer))
                 {
-                    return BadRequest("layer must be defined"); // TODO: return errors in XML format
+                    return ResponseWithBadRequestError("MissingParameter", "LAYER parameter is not defined");
                 }
 
                 if (!this.tileSourceFabric.Contains(layer))
                 {
-                    return NotFound($"Specified tileset '{layer}' not found");
+                    return ResponseWithNotFoundError("Not Found", $"Specified layer '{layer}' was not found");
                 }
 
                 return await ProcessGetTileRequestAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix));
             }
             else
             {
-                return BadRequest("request");
+                return ResponseWithBadRequestError("MissingParameter", "Invaid request"); // TODO: more detailed
             }
         }
 
         private IActionResult ProcessGetCapabilitiesRequest()
         {
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
-            var xmlDoc = new Wmts.CapabilitiesUtility(BaseUrl + "/wmts", layers)
+            var xmlDoc = new CapabilitiesUtility(BaseUrl + "/wmts", layers)
                 .GetCapabilities(); // TODO: fix base URL
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
@@ -92,8 +94,26 @@ namespace TileMapService.Controllers
             }
             else
             {
-                return NotFound();
+                return ResponseWithNotFoundError("Not Found", "Specified tile was not found");
             }
+        }
+
+        private IActionResult ResponseWithBadRequestError(string exceptionCode, string message)
+        {
+            var xmlDoc = new ExceptionReport(exceptionCode, message).ToXml();
+            Response.ContentType = MediaTypeNames.Text.Xml + "; charset=utf-8"; // TODO: better way?
+            Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            // TODO: content-disposition: filename="message.xml"
+            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
+        }
+
+        private IActionResult ResponseWithNotFoundError(string exceptionCode, string message)
+        {
+            var xmlDoc = new ExceptionReport(exceptionCode, message).ToXml();
+            Response.ContentType = MediaTypeNames.Text.Xml + "; charset=utf-8"; // TODO: better way?
+            Response.StatusCode = (int)HttpStatusCode.NotFound;
+            // TODO: content-disposition: filename="message.xml"
+            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
         }
 
         private string BaseUrl

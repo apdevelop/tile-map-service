@@ -186,7 +186,7 @@ namespace TileMapService.Tests
         [Test]
         public async Task GetWmtsCapabilitiesAsync()
         {
-            var r = await client.GetAsync("/wmts?request=GetCapabilities");
+            var r = await client.GetAsync("/wmts?service=WMTS&request=GetCapabilities");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.wmts_GetCapabilities.xml"));

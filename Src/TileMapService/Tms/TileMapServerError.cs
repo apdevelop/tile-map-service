@@ -16,11 +16,12 @@ namespace TileMapService.Tms
         {
             var doc = new XmlDocument();
             var rootElement = doc.CreateElement(String.Empty, "TileMapServerError", String.Empty);
-            doc.AppendChild(rootElement);
 
             var messageElement = doc.CreateElement("Message");
             messageElement.AppendChild(doc.CreateTextNode(this.message));
             rootElement.AppendChild(messageElement);
+
+            doc.AppendChild(rootElement);
 
             return doc;
         }

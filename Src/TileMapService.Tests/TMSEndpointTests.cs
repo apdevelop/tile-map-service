@@ -55,6 +55,7 @@ namespace TileMapService.Tests
                     MinZoom = 0,
                     MaxZoom = 3,
                 },
+                // TODO: add small area source with bounding box
             };
 
             this.client = new HttpClient
@@ -168,7 +169,7 @@ namespace TileMapService.Tests
         }
 
         [Test]
-        public async Task GetMercatorTmsTile000Async()
+        public async Task GetWebMercatorTmsTile000Async()
         {
             var db = new MBT.Repository(MbtilesFilePath);
             var expected = db.ReadTile(0, 0, 0);
