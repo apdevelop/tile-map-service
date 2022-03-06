@@ -36,14 +36,14 @@ namespace TileMapService.Controllers
             int tileCol = 0)
         {
             // TODO: check requirements of standard
-            if (String.Compare(service, "WMTS", StringComparison.Ordinal) != 0)
+            if (String.Compare(service, Identifiers.WMTS, StringComparison.Ordinal) != 0)
             {
-                return ResponseWithBadRequestError("MissingParameterValue", "SERVICE parameter is not defined");
+                return ResponseWithBadRequestError(Identifiers.MissingParameterValue, "SERVICE parameter is not defined");
             }
 
-            if (String.Compare(version, "1.0.0", StringComparison.Ordinal) != 0)
+            if (String.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
             {
-                return ResponseWithBadRequestError("InvalidParameterValue", "Invalid VERSION parameter value (1.0.0 available only)");
+                return ResponseWithBadRequestError(Identifiers.InvalidParameterValue, "Invalid VERSION parameter value (1.0.0 available only)");
             }
 
             if (String.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
@@ -54,24 +54,24 @@ namespace TileMapService.Controllers
             {
                 if (String.IsNullOrEmpty(tileMatrix))
                 {
-                    return ResponseWithBadRequestError("MissingParameter", "TILEMATRIX parameter is not defined");
+                    return ResponseWithBadRequestError(Identifiers.MissingParameter, "TILEMATRIX parameter is not defined");
                 }
 
                 if (String.IsNullOrEmpty(layer))
                 {
-                    return ResponseWithBadRequestError("MissingParameter", "LAYER parameter is not defined");
+                    return ResponseWithBadRequestError(Identifiers.MissingParameter, "LAYER parameter is not defined");
                 }
 
                 if (!this.tileSourceFabric.Contains(layer))
                 {
-                    return ResponseWithNotFoundError("Not Found", $"Specified layer '{layer}' was not found");
+                    return ResponseWithNotFoundError(Identifiers.NotFound, $"Specified layer '{layer}' was not found");
                 }
 
                 return await ProcessGetTileRequestAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix));
             }
             else
             {
-                return ResponseWithBadRequestError("MissingParameter", "Invaid request"); // TODO: more detailed
+                return ResponseWithBadRequestError(Identifiers.MissingParameter, "Invaid request"); // TODO: more detailed
             }
         }
 

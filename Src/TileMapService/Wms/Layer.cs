@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents layer properties in WMS Capabilities XML document.
     /// </summary>
-    class Layer // TODO: ? use shared TileMapService.Models.Layer
+    class Layer // TODO: ? use shared TileMapService.Models.Layer DTO
     {
         public string? Title { get; set; }
 

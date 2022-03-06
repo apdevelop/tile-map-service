@@ -99,7 +99,7 @@ namespace TileMapService.Wms
         // TODO: uniform API for build / parse Capabilities XML document
 
         /// <summary>
-        /// Extracts Layers list from input Capabilities XML document.
+        /// Extracts list of Layers from input Capabilities XML document.
         /// </summary>
         /// <param name="xmlDoc">Capabilities XML document.</param>
         /// <returns>List of Layers (flatten, without hierarchy).</returns>

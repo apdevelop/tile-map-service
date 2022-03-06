@@ -130,57 +130,86 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            var tileWidth = Utils.WebMercator.DefaultTileWidth;
-            var tileHeight = Utils.WebMercator.DefaultTileHeight;
-            Models.GeographicalBounds? geographicalBounds = null;
+            var result = new Models.Layer
+            {
+                GeographicalBounds = null,
+                TileWidth = Utils.WebMercator.DefaultTileWidth,
+                TileHeight = Utils.WebMercator.DefaultTileHeight,
+            };
 
             // TODO: separate WMS/WMTS/TMS capabilities client classes
-            if (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeTms)
+            var sourceType = this.configuration.Type.ToLowerInvariant();
+            switch (sourceType)
             {
-                var r = await this.client.GetAsync(this.configuration.Location);
-                if (r.IsSuccessStatusCode)
-                {
-                    var xml = await r.Content.ReadAsStringAsync();
-                    if (!String.IsNullOrEmpty(xml))
+                case SourceConfiguration.TypeTms:
                     {
-                        var doc = new System.Xml.XmlDocument();
-                        doc.LoadXml(xml);
-
-                        var properties = Tms.CapabilitiesUtility.ParseTileMap(doc);
-                        tileWidth = properties.TileWidth;
-                        tileHeight = properties.TileHeight;
-                    }
-                }
-            }
-            else if (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeWms)
-            {
-                var sourceLayerName = Utils.UrlHelper.GetQueryParameters(this.configuration.Location).First(p => p.Key == "layers");
-                var url = Wms.QueryUtility.GetCapabilitiesWmsUrl(this.configuration.Location);
-                var r = await this.client.GetAsync(url);
-                if (r.IsSuccessStatusCode)
-                {
-                    var xml = await r.Content.ReadAsStringAsync();
-                    if (!String.IsNullOrEmpty(xml))
-                    {
-                        var doc = new System.Xml.XmlDocument();
-                        doc.LoadXml(xml);
-                        var layers = Wms.CapabilitiesUtility.GetLayers(doc);
-                        var layer = layers.FirstOrDefault(l => l.Name == sourceLayerName.Value);
-                        if (layer != null)
+                        var r = await this.client.GetAsync(this.configuration.Location);
+                        if (r.IsSuccessStatusCode)
                         {
-                            geographicalBounds = layer.GeographicalBounds;
-                        }
-                    }
-                }
-            }
-            // TODO: other service types (TMS, WMTS)
+                            var xml = await r.Content.ReadAsStringAsync();
+                            if (!String.IsNullOrEmpty(xml))
+                            {
+                                var doc = new System.Xml.XmlDocument();
+                                doc.LoadXml(xml);
 
-            return new Models.Layer
-            {
-                GeographicalBounds = geographicalBounds,
-                TileWidth = tileWidth,
-                TileHeight = tileHeight,
-            };
+                                var properties = Tms.CapabilitiesUtility.ParseTileMap(doc);
+                                result.TileWidth = properties.TileWidth;
+                                result.TileHeight = properties.TileHeight;
+                            }
+                        }
+                        break;
+                    }
+                case SourceConfiguration.TypeWmts:
+                    {
+                        var sourceLayerName = Utils.UrlHelper.GetQueryParameters(this.configuration.Location).First(p => p.Key == "layer");
+                        var url = Wmts.QueryUtility.GetCapabilitiesWmsUrl(this.configuration.Location);
+                        var r = await this.client.GetAsync(url);
+                        if (r.IsSuccessStatusCode)
+                        {
+                            var xml = await r.Content.ReadAsStringAsync();
+                            if (!String.IsNullOrEmpty(xml))
+                            {
+                                var doc = new System.Xml.XmlDocument();
+                                doc.LoadXml(xml);
+                                var layers = Wmts.CapabilitiesUtility.GetLayers(doc);
+                                var layer = layers.FirstOrDefault(l => l.Identifier == sourceLayerName.Value);
+                                if (layer != null)
+                                {
+                                    result.GeographicalBounds = layer.GeographicalBounds;
+                                }
+
+                                // TODO: use ResourceURL resourceType="tile" template="..."
+                            }
+                        }
+
+                        break;
+                    }
+                case SourceConfiguration.TypeWms:
+                    {
+                        var sourceLayerName = Utils.UrlHelper.GetQueryParameters(this.configuration.Location).First(p => p.Key == "layers");
+                        var url = Wms.QueryUtility.GetCapabilitiesWmsUrl(this.configuration.Location);
+                        var r = await this.client.GetAsync(url);
+                        if (r.IsSuccessStatusCode)
+                        {
+                            var xml = await r.Content.ReadAsStringAsync();
+                            if (!String.IsNullOrEmpty(xml))
+                            {
+                                var doc = new System.Xml.XmlDocument();
+                                doc.LoadXml(xml);
+                                var layers = Wms.CapabilitiesUtility.GetLayers(doc);
+                                var layer = layers.FirstOrDefault(l => l.Name == sourceLayerName.Value);
+                                if (layer != null)
+                                {
+                                    result.GeographicalBounds = layer.GeographicalBounds;
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+            }
+
+            return result;
         }
 
         async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
@@ -263,7 +292,7 @@ namespace TileMapService.TileSources
             {
                 SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, y, z),
                 SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, y, z),
-                SourceConfiguration.TypeWmts => GetTileWmtsUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
+                SourceConfiguration.TypeWmts => Wmts.QueryUtility.GetTileUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
                 SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
                 _ => throw new InvalidOperationException($"Source type '{this.configuration.Type}' is not supported."),
             };
@@ -298,56 +327,6 @@ namespace TileMapService.TileSources
                 "/" + x.ToString(CultureInfo.InvariantCulture) +
                 "/" + y.ToString(CultureInfo.InvariantCulture) +
                 "." + format; // TODO: get actual source extension
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetTileWmtsUrl(string baseUrl, string format, int x, int y, int z)
-        {
-            // TODO: separate WMTS utility class
-            const string WmtsQueryService = "service";
-            const string WmtsQueryVersion = "version";
-            const string WmtsQueryRequest = "request";
-            const string WmtsQueryFormat = "format";
-
-            const string WmtsQueryTileMatrix = "tilematrix";
-            const string WmtsQueryTileCol = "tilecol";
-            const string WmtsQueryTileRow = "tilerow";
-
-            const string WMTS = "WMTS";
-            const string Version100 = "1.0.0";
-            const string GetTile = "GetTile";
-
-            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
-            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
-
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryFormat);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileMatrix);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileCol);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileRow);
-
-            var qb = new QueryBuilder(items);
-            if (!items.Any(kvp => kvp.Key == WmtsQueryService))
-            {
-                qb.Add(WmtsQueryService, WMTS);
-            }
-
-            if (!items.Any(kvp => kvp.Key == WmtsQueryVersion))
-            {
-                qb.Add(WmtsQueryVersion, Version100);
-            }
-
-            if (!items.Any(kvp => kvp.Key == WmtsQueryRequest))
-            {
-                qb.Add(WmtsQueryRequest, GetTile);
-            }
-
-            qb.Add(WmtsQueryFormat, format);
-
-            qb.Add(WmtsQueryTileMatrix, z.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmtsQueryTileCol, x.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmtsQueryTileRow, y.ToString(CultureInfo.InvariantCulture));
-
-            return baseUri + qb.ToQueryString();
         }
 
         #endregion

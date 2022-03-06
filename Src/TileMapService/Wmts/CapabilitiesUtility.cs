@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
+using TileMapService.Models;
 
 namespace TileMapService.Wmts
 {
@@ -134,6 +135,66 @@ namespace TileMapService.Wmts
             rootElement.AppendChild(contentsElement);
 
             return doc;
+        }
+
+        // TODO: uniform API for build / parse Capabilities XML document
+
+        /// <summary>
+        /// Extracts list of Layers from input Capabilities XML document.
+        /// </summary>
+        /// <param name="xmlDoc">Capabilities XML document.</param>
+        /// <returns>List of Layers (flatten, without hierarchy).</returns>
+        public static List<Models.Layer> GetLayers(XmlDocument xmlDoc)
+        {
+            var nsManager = new XmlNamespaceManager(xmlDoc.NameTable);
+
+            nsManager.AddNamespace(OwsPrefix, Identifiers.OwsNamespaceUri);
+            nsManager.AddNamespace("ns", WmtsNamespaceUri);
+
+            var xpath = "/ns:Capabilities/ns:Contents/ns:Layer";
+
+            var result = new List<Layer>();
+            var layers = xmlDoc.SelectNodes(xpath, nsManager);
+            if (layers != null)
+            {
+                foreach (XmlNode layer in layers)
+                {
+                    var layerIdentifier = layer.SelectSingleNode(OwsPrefix + ":" + "Identifier", nsManager);
+                    var layerTitle = layer.SelectSingleNode(OwsPrefix + ":" + "Title", nsManager);
+
+                    GeographicalBounds? geographicalBounds = null;
+                    var bbox = layer.SelectSingleNode(OwsPrefix + ":" + "WGS84BoundingBox", nsManager);
+                    if (bbox != null)
+                    {
+                        var lowerCorner = bbox.SelectSingleNode(OwsPrefix + ":" + Identifiers.LowerCornerElement, nsManager);
+                        var upperCorner = bbox.SelectSingleNode(OwsPrefix + ":" + Identifiers.UpperCornerElement, nsManager);
+                        if (lowerCorner != null &&
+                            upperCorner != null &&
+                            !String.IsNullOrEmpty(lowerCorner.InnerText) &&
+                            !String.IsNullOrEmpty(lowerCorner.InnerText))
+                        {
+                            var lowerCornerValues = lowerCorner.InnerText.Split(' ');
+                            var upperCornerValues = upperCorner.InnerText.Split(' ');
+                            var minx = Double.Parse(lowerCornerValues[0], CultureInfo.InvariantCulture);
+                            var miny = Double.Parse(lowerCornerValues[1], CultureInfo.InvariantCulture);
+                            var maxx = Double.Parse(upperCornerValues[0], CultureInfo.InvariantCulture);
+                            var maxy = Double.Parse(upperCornerValues[1], CultureInfo.InvariantCulture);
+                            geographicalBounds = new GeographicalBounds(minx, miny, maxx, maxy);
+                        }
+
+                        // TODO: use ResourceURL format="image/jpeg"
+                    }
+
+                    result.Add(new Layer
+                    {
+                        Identifier = layerIdentifier != null ? layerIdentifier.InnerText : String.Empty,
+                        Title = layerTitle != null ? layerTitle.InnerText : String.Empty,
+                        GeographicalBounds = geographicalBounds,
+                    });
+                }
+            }
+
+            return result;
         }
 
         private static XmlElement CreateOperationElement(XmlDocument doc, string baseUrl, string name)
@@ -285,22 +346,22 @@ namespace TileMapService.Wmts
             {
                 case Utils.SrsCodes.EPSG3857:
                     {
-                        var lowerCornerElement = doc.CreateElement(OwsPrefix, "LowerCorner", Identifiers.OwsNamespaceUri);
+                        var lowerCornerElement = doc.CreateElement(OwsPrefix, Identifiers.LowerCornerElement, Identifiers.OwsNamespaceUri);
                         lowerCornerElement.InnerText = "-20037508.342789 -20037508.342789";
                         boundingBoxElement.AppendChild(lowerCornerElement);
 
-                        var upperCornerElement = doc.CreateElement(OwsPrefix, "UpperCorner", Identifiers.OwsNamespaceUri);
+                        var upperCornerElement = doc.CreateElement(OwsPrefix, Identifiers.UpperCornerElement, Identifiers.OwsNamespaceUri);
                         upperCornerElement.InnerText = "20037508.342789 20037508.342789";
                         boundingBoxElement.AppendChild(upperCornerElement);
                         break;
                     }
                 case Utils.SrsCodes.EPSG4326:
                     {
-                        var lowerCornerElement = doc.CreateElement(OwsPrefix, "LowerCorner", Identifiers.OwsNamespaceUri);
+                        var lowerCornerElement = doc.CreateElement(OwsPrefix, Identifiers.LowerCornerElement, Identifiers.OwsNamespaceUri);
                         lowerCornerElement.InnerText = "-90.000000 -180.000000";
                         boundingBoxElement.AppendChild(lowerCornerElement);
 
-                        var upperCornerElement = doc.CreateElement(OwsPrefix, "UpperCorner", Identifiers.OwsNamespaceUri);
+                        var upperCornerElement = doc.CreateElement(OwsPrefix, Identifiers.UpperCornerElement, Identifiers.OwsNamespaceUri);
                         upperCornerElement.InnerText = "90.000000 180.000000";
                         boundingBoxElement.AppendChild(upperCornerElement);
                         break;

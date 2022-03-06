@@ -9,18 +9,47 @@ namespace TileMapService.Wms
 {
     class QueryUtility
     {
-        const string WmsQueryService = "service";
-        const string WmsQueryVersion = "version";
-        const string WmsQueryRequest = "request";
-        const string WmsQuerySrs = "srs";
-        const string WmsQueryCrs = "crs";
-        const string WmsQueryBBox = "bbox";
-        const string WmsQueryFormat = "format";
+        private const string WmsQueryService = "service";
+        private const string WmsQueryVersion = "version";
+        private const string WmsQueryRequest = "request";
+        private const string WmsQuerySrs = "srs";
+        private const string WmsQueryCrs = "crs";
+        private const string WmsQueryBBox = "bbox";
+        private const string WmsQueryFormat = "format";
+        private const string WmsQueryWidth = "width";
+        private const string WmsQueryHeight = "height";
 
-        const string WmsQueryWidth = "width";
-        const string WmsQueryHeight = "height";
+        private const string EPSG3857 = Utils.SrsCodes.EPSG3857; // TODO: EPSG:4326 support
 
-        const string EPSG3857 = Utils.SrsCodes.EPSG3857; // TODO: EPSG:4326 support
+        public static string GetCapabilitiesWmsUrl(string baseUrl)
+        {
+            // Rebuilding url from configuration  https://stackoverflow.com/a/43407008/1182448
+            // All parameters with values are taken from provided url
+            // Mandatory parameters added if needed, with default (standard) values
+
+            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
+            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
+
+            items.RemoveAll(kvp => kvp.Key == WmsQuerySrs);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryCrs);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryBBox);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryWidth);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryHeight);
+            items.RemoveAll(kvp => kvp.Key == WmsQueryFormat);
+
+            var qb = new QueryBuilder(items);
+            if (!items.Any(kvp => kvp.Key == WmsQueryService))
+            {
+                qb.Add(WmsQueryService, Identifiers.Wms);
+            }
+
+            if (!items.Any(kvp => kvp.Key == WmsQueryRequest))
+            {
+                qb.Add(WmsQueryRequest, Identifiers.GetCapabilities);
+            }
+
+            return baseUri + qb.ToQueryString();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetTileUrl(string baseUrl, string format, int x, int y, int z)
@@ -67,36 +96,6 @@ namespace TileMapService.Wms
             qb.Add(WmsQueryWidth, Utils.WebMercator.TileSize.ToString(CultureInfo.InvariantCulture));
             qb.Add(WmsQueryHeight, Utils.WebMercator.TileSize.ToString(CultureInfo.InvariantCulture));
             qb.Add(WmsQueryFormat, format); // TODO: use WMS GetCapabilities
-
-            return baseUri + qb.ToQueryString();
-        }
-
-        public static string GetCapabilitiesWmsUrl(string baseUrl)
-        {
-            // Rebuilding url from configuration  https://stackoverflow.com/a/43407008/1182448
-            // All parameters with values are taken from provided url
-            // Mandatory parameters added if needed, with default (standard) values
-
-            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
-            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
-
-            items.RemoveAll(kvp => kvp.Key == WmsQuerySrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryCrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryBBox);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryWidth);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryHeight);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryFormat);
-
-            var qb = new QueryBuilder(items);
-            if (!items.Any(kvp => kvp.Key == WmsQueryService))
-            {
-                qb.Add(WmsQueryService, Identifiers.Wms);
-            }
-
-            if (!items.Any(kvp => kvp.Key == WmsQueryRequest))
-            {
-                qb.Add(WmsQueryRequest, Identifiers.GetCapabilities);
-            }
 
             return baseUri + qb.ToQueryString();
         }

@@ -26,7 +26,9 @@ namespace TileMapService.Tests
 
         private HttpClient client;
 
-        private static string MbtilesFilePath => Path.Join(TestConfiguration.DataPath, "test-tms-world-mercator-hd.mbtiles");
+        private static string MbtilesFilePath1 => Path.Join(TestConfiguration.DataPath, "test-tms-world-mercator-hd.mbtiles");
+
+        private static string MbtilesFilePath2 => Path.Join(TestConfiguration.DataPath, "test-tms-small-area.mbtiles");
 
         private static string LocalFilesPath => Path.Join(TestConfiguration.DataPath, "test-tms-world-geodetic");
 
@@ -42,7 +44,13 @@ namespace TileMapService.Tests
                 {
                     Type = SourceConfiguration.TypeMBTiles,
                     Id = "world-mercator-hd",
-                    Location = MbtilesFilePath,
+                    Location = MbtilesFilePath1,
+                },
+                new SourceConfiguration
+                {
+                    Type = SourceConfiguration.TypeMBTiles,
+                    Id = "small-area",
+                    Location = MbtilesFilePath2,
                 },
                 new SourceConfiguration
                 {
@@ -55,7 +63,6 @@ namespace TileMapService.Tests
                     MinZoom = 0,
                     MaxZoom = 3,
                 },
-                // TODO: add small area source with bounding box
             };
 
             this.client = new HttpClient
@@ -68,7 +75,7 @@ namespace TileMapService.Tests
 
             var tileSources2 = new[]
             {
-                // TODO: add TMS proxy test (init source after service started
+                // TODO: add TMS proxy test (init source after service started)
                 new SourceConfiguration
                 {
                     Type = SourceConfiguration.TypeTms,
@@ -118,9 +125,10 @@ namespace TileMapService.Tests
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
             var sources = xml.SelectNodes("/TileMapService/TileMaps/TileMap");
-            Assert.AreEqual(2, sources.Count);
+            Assert.AreEqual(3, sources.Count);
             var hrefSource1 = sources[0].Attributes["href"].Value;
             var hrefSource2 = sources[1].Attributes["href"].Value;
+            var hrefSource3 = sources[2].Attributes["href"].Value;
 
             // 3 TileSets
             r = await client.GetAsync(hrefSource1);
@@ -136,6 +144,18 @@ namespace TileMapService.Tests
             Assert.AreEqual("78271.51696401954", tileSets[0].Attributes["units-per-pixel"].Value);
 
             r = await client.GetAsync(hrefSource2);
+            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            tmsXml = await r.Content.ReadAsStringAsync();
+            xml.LoadXml(tmsXml);
+            tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
+            Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture));
+            Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture));
+            Assert.AreEqual("jpg", tileFormat.Attributes["extension"].Value);
+            tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
+            Assert.AreEqual(3, tileSets.Count); // Z=8..10 from tiles zoomLevel range in table
+            Assert.AreEqual("611.4962262814026", tileSets[0].Attributes["units-per-pixel"].Value);
+
+            r = await client.GetAsync(hrefSource3);
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
@@ -171,10 +191,23 @@ namespace TileMapService.Tests
         [Test]
         public async Task GetWebMercatorTmsTile000Async()
         {
-            var db = new MBT.Repository(MbtilesFilePath);
+            var db = new MBT.Repository(MbtilesFilePath1);
             var expected = db.ReadTile(0, 0, 0);
 
             var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.png");
+            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            var actual = await r.Content.ReadAsByteArrayAsync();
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public async Task GetSmallAreaTmsTile800Async()
+        {
+            var db = new MBT.Repository(MbtilesFilePath2);
+            var expected = db.ReadTile(0, 0, 8);
+
+            var r = await client.GetAsync("/tms/1.0.0/small-area/8/0/0.png");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
             var actual = await r.Content.ReadAsByteArrayAsync();
 
@@ -220,15 +253,23 @@ namespace TileMapService.Tests
                 Directory.CreateDirectory(TestConfiguration.DataPath);
             }
 
-            // 1. MBTiles database
+            // 1. MBTiles database 1
             const int HDTileSize = 512;
-            var db = MBT.Repository.CreateEmptyDatabase(MbtilesFilePath);
-            db.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "World Mercator EPSG:3857 HD"));
-            db.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Png));
-            db.AddTile(0, 0, 0, Utils.ImageHelper.CreateEmptyImage(HDTileSize, HDTileSize, 0, SkiaSharp.SKEncodedImageFormat.Png, 0));
-            db.AddTile(0, 0, 5, Utils.ImageHelper.CreateEmptyImage(HDTileSize, HDTileSize, 5, SkiaSharp.SKEncodedImageFormat.Png, 0));
+            var db1 = MBT.Repository.CreateEmptyDatabase(MbtilesFilePath1);
+            db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "World Mercator HD"));
+            db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Png));
+            db1.AddTile(0, 0, 0, Utils.ImageHelper.CreateEmptyImage(HDTileSize, HDTileSize, 0, SkiaSharp.SKEncodedImageFormat.Png, 0));
+            db1.AddTile(0, 0, 5, Utils.ImageHelper.CreateEmptyImage(HDTileSize, HDTileSize, 5, SkiaSharp.SKEncodedImageFormat.Png, 0));
 
-            // 2. Local files for EPSG:4326
+            // 2. MBTiles database 2
+            const int TileSize = 256;
+            var db2 = MBT.Repository.CreateEmptyDatabase(MbtilesFilePath2);
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "Small Area"));
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Jpeg));
+            db2.AddTile(0, 0, 8, Utils.ImageHelper.CreateEmptyImage(TileSize, TileSize, 8, SkiaSharp.SKEncodedImageFormat.Jpeg, 85));
+            db2.AddTile(0, 0, 10, Utils.ImageHelper.CreateEmptyImage(TileSize, TileSize, 10, SkiaSharp.SKEncodedImageFormat.Jpeg, 85));
+
+            // 3. Local files for EPSG:4326
             // Create files Z\X\Y structure
             for (var z = 0; z <= 3; z++)
             {
@@ -251,9 +292,14 @@ namespace TileMapService.Tests
         {
             if (Directory.Exists(TestConfiguration.DataPath))
             {
-                if (File.Exists(MbtilesFilePath))
+                if (File.Exists(MbtilesFilePath1))
                 {
-                    File.Delete(MbtilesFilePath);
+                    File.Delete(MbtilesFilePath1);
+                }
+
+                if (File.Exists(MbtilesFilePath2))
+                {
+                    File.Delete(MbtilesFilePath2);
                 }
 
                 if (Directory.Exists(LocalFilesPath))
