@@ -24,6 +24,8 @@
 
         public static class Application
         {
+            public const string Xml = "application/xml";
+
             public const string MapboxVectorTile = "application/vnd.mapbox-vector-tile";
 
             public const string XProtobuf = "application/x-protobuf";

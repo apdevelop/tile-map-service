@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using SkiaSharp;
 
 using TileMapService.Wms;
+using TileMapService.Utils;
 using U = TileMapService.Utils;
 
 namespace TileMapService.Controllers
@@ -60,56 +62,54 @@ namespace TileMapService.Controllers
         {
             // $"WMS [{Request.GetOwinContext().Request.RemoteIpAddress}:{Request.GetOwinContext().Request.RemotePort}] {Request.RequestUri}";
 
-            // TODO: return errors in XML format (OGC standard)
-
-            if (String.Compare(service, Identifiers.Wms, StringComparison.Ordinal) != 0)
+            if (String.Compare(service, Identifiers.Wms, StringComparison.OrdinalIgnoreCase) != 0)
             {
-                var s = $"Unsupported {nameof(service)} type: {service} (should be {Identifiers.Wms})";
-                return BadRequest(s);
+                var message = $"Unknown service: '{service}' (should be '{Identifiers.Wms}')";
+                return ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "service");
             }
 
             if ((String.Compare(version, Identifiers.Version111, StringComparison.Ordinal) != 0) &&
                 (String.Compare(version, Identifiers.Version130, StringComparison.Ordinal) != 0))
             {
-                var s = $"Unsupported {nameof(version)}: {version} (should be one of: {Identifiers.Version111}, {Identifiers.Version130})";
-                return BadRequest(s);
+                var message = $"Unsupported {nameof(version)}: {version} (should be one of: {Identifiers.Version111}, {Identifiers.Version130})";
+                return ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "version");
             }
 
             if ((String.Compare(exceptions, MediaTypeNames.Application.OgcServiceExceptionXml, StringComparison.Ordinal) != 0) &&
                 (String.Compare(exceptions, "XML", StringComparison.Ordinal) != 0))
             {
-                var s = $"Unsupported {nameof(exceptions)}: {exceptions} (should be {MediaTypeNames.Application.OgcServiceExceptionXml})";
-                return BadRequest(s);
+                var message = $"Unsupported {nameof(exceptions)}: {exceptions} (should be {MediaTypeNames.Application.OgcServiceExceptionXml})";
+                return ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "exceptions");
             }
 
-            var wmsVersion = WmsHelper.GetWmsVersion(version);
             if (String.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
             {
-                return this.ProcessGetCapabilitiesRequest(wmsVersion);
+                return this.ProcessGetCapabilitiesRequest(WmsHelper.GetWmsVersion(version));
             }
             else if (String.Compare(request, Identifiers.GetMap, StringComparison.Ordinal) == 0)
             {
                 return await this.ProcessGetMapRequestAsync(
+                    version,
                     layers,
-                    wmsVersion == Wms.Version.Version130 ? crs : srs,
-                    bbox, width, height,
-                    format, 
+                    WmsHelper.GetWmsVersion(version) == Wms.Version.Version130 ? crs : srs,
+                    bbox,
+                    width, height,
+                    format,
                     transparent, bgcolor);
             }
-            else if (String.Compare(request, Identifiers.GetFeatureInfo, StringComparison.Ordinal) == 0)
-            {
-                return BadRequest();
-                ////return await this.ProcessGetFeatureInfoRequestAsync(
-                ////    bbox, width,
-                ////    query_layers, info_format,
-                ////    v == Wms.Version.v130 ? i : x,
-                ////    v == Wms.Version.v130 ? j : y,
-                ////    feature_count);
-            }
+            ////else if (String.Compare(request, Identifiers.GetFeatureInfo, StringComparison.Ordinal) == 0)
+            ////{
+            ////return await this.ProcessGetFeatureInfoRequestAsync(
+            ////    bbox, width,
+            ////    query_layers, info_format,
+            ////    v == Wms.Version.v130 ? i : x,
+            ////    v == Wms.Version.v130 ? j : y,
+            ////    feature_count);
+            ////}
             else
             {
-                var s = $"Unsupported request: {request} ({Identifiers.GetCapabilities}, {Identifiers.GetMap}, {Identifiers.GetFeatureInfo})";
-                return BadRequest(s);
+                var message = $"Unsupported request: '{request}' ({Identifiers.GetCapabilities}, {Identifiers.GetMap}, {Identifiers.GetFeatureInfo})";
+                return ResponseWithServiceExceptionReport(Identifiers.OperationNotSupported, message, version);
             }
         }
 
@@ -146,6 +146,7 @@ namespace TileMapService.Controllers
         }
 
         private async Task<IActionResult> ProcessGetMapRequestAsync(
+            string version,
             string? layers,
             string? srs,
             string? bbox,
@@ -156,28 +157,13 @@ namespace TileMapService.Controllers
             string bgcolor)
         {
             // TODO: config ?
-            const int MinSize = 32;
+            const int MinSize = 1;
             const int MaxSize = 32768;
-
-            if (String.IsNullOrEmpty(layers)) // TODO: return errors in OGC standard formats
-            {
-                return BadRequest("layers");
-            }
-
-            if ((width < MinSize) || (width > MaxSize))
-            {
-                return BadRequest("width");
-            }
-
-            if ((height < MinSize) || (height > MaxSize))
-            {
-                return BadRequest("height");
-            }
-
 
             if (String.IsNullOrEmpty(format))
             {
-                return BadRequest("format");
+                var message = "No map output format was specified";
+                return ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
             }
 
             var isFormatSupported = (String.Compare(format, MediaTypeNames.Image.Png, StringComparison.OrdinalIgnoreCase) == 0) ||
@@ -185,33 +171,55 @@ namespace TileMapService.Controllers
 
             if (!isFormatSupported)
             {
-                return BadRequest("format");
+                var message = $"Image format '{format}' is not supported";
+                return ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
+            }
+
+            if (String.IsNullOrEmpty(layers))
+            {
+                var message = "GetMap request must include a valid LAYERS parameter.";
+                return ResponseWithServiceExceptionReport(Identifiers.LayerNotDefined, message, version);
+            }
+
+            if ((width < MinSize) ||
+                (width > MaxSize) ||
+                (height < MinSize) ||
+                (height > MaxSize))
+            {
+                var message = $"Missing or invalid requested map size. Parameters WIDTH and HEIGHT must present and be positive integers (got WIDTH={width}, HEIGHT={height}).";
+                return ResponseWithServiceExceptionReport(Identifiers.MissingOrInvalidParameter, message, version);
             }
 
             if (String.IsNullOrEmpty(srs))
             {
-                return BadRequest("srs");
+                var message = $"GetMap request must include a valid {(WmsHelper.GetWmsVersion(version) == Wms.Version.Version130 ? "CRS" : "SRS")} parameter.";
+                return ResponseWithServiceExceptionReport(Identifiers.MissingBBox, message, version);
             }
 
+            // TODO: EPSG:4326 output support
             if (String.Compare(srs, Identifiers.EPSG3857, StringComparison.OrdinalIgnoreCase) != 0)
             {
-                return BadRequest("Only EPSG:3857 is currently supported."); // TODO: EPSG:4326 support
+                var message = $"SRS '{srs}' is not supported, only {Identifiers.EPSG3857} is currently supported.";
+                return ResponseWithServiceExceptionReport(Identifiers.InvalidSRS, message, version);
             }
 
             if (bbox == null)
             {
-                return BadRequest("bbox");
+                var message = "GetMap request must include a valid BBOX parameter.";
+                return ResponseWithServiceExceptionReport(Identifiers.MissingBBox, message, version);
             }
 
             var boundingBox = Models.Bounds.FromCommaSeparatedString(bbox);
             if (boundingBox == null)
             {
-                return BadRequest("bbox");
+                var message = $"GetMap request must include a valid BBOX parameter with 4 coordinates (got '{bbox}').";
+                return ResponseWithServiceExceptionReport(null, message, version);
             }
 
-            if (boundingBox.Right < boundingBox.Left)
+            if (boundingBox.Right <= boundingBox.Left || boundingBox.Top <= boundingBox.Bottom)
             {
-                return BadRequest("bbox");
+                var message = $"GetMap request must include a valid BBOX parameter with minX < maxX and minY < maxY coordinates (got '{bbox}').";
+                return ResponseWithServiceExceptionReport(null, message, version);
             }
 
             var layersList = layers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -305,6 +313,22 @@ namespace TileMapService.Controllers
             }
 
             return sourceTiles;
+        }
+
+        private IActionResult ResponseWithExceptionReport(string exceptionCode, string message, string locator)
+        {
+            var xmlDoc = new ExceptionReport(exceptionCode, message, locator).ToXml();
+            Response.ContentType = MediaTypeNames.Application.Xml;
+            Response.StatusCode = (int)HttpStatusCode.OK;
+            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
+        }
+
+        private IActionResult ResponseWithServiceExceptionReport(string? code, string message, string version)
+        {
+            var xmlDoc = new ServiceExceptionReport(code, message, version).ToXml();
+            Response.ContentType = MediaTypeNames.Text.Xml + ";charset=UTF-8";
+            Response.StatusCode = (int)HttpStatusCode.OK;
+            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
         }
     }
 }

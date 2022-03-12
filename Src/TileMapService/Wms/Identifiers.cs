@@ -2,6 +2,12 @@
 {
     static class Identifiers
     {
+        public const string OwsPrefix = "ows";
+
+        public const string OgcNamespaceUri = "http://www.opengis.net/ogc";
+
+        public const string OwsNamespaceUri = "http://www.opengis.net/ows";
+
         public const string Wms = "WMS";
 
         public const string GetCapabilities = "GetCapabilities";
@@ -39,5 +45,37 @@
         public const string LayerElement = "Layer";
 
         public const string QueryableAttribute = "queryable";
+
+        public const string ExceptionReportElement = "ExceptionReport";
+
+        public const string ServiceExceptionReportElement = "ServiceExceptionReport";
+
+        public const string ExceptionElement = "Exception";
+
+        public const string ServiceExceptionElement = "ServiceException";
+
+        public const string ExceptionTextElement = "ExceptionText";
+
+        public const string VersionAttribute = "version";
+
+        public const string LocatorAttribute = "locator";
+
+        public const string ExceptionCodeAttribute = "exceptionCode";
+
+        public const string CodeAttribute = "code";
+
+        public const string InvalidParameterValue = "InvalidParameterValue";
+
+        public const string InvalidFormat = "InvalidFormat";
+
+        public const string OperationNotSupported = "OperationNotSupported";       
+        
+        public const string MissingOrInvalidParameter = "MissingOrInvalidParameter";
+
+        public const string InvalidSRS = "InvalidSRS";
+
+        public const string MissingBBox = "MissingBBox";
+
+        public const string LayerNotDefined = "LayerNotDefined";
     }
 }
