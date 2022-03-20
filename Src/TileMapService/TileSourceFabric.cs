@@ -18,7 +18,7 @@ namespace TileMapService
             this.tileSources = configuration
                     .GetSection("Sources")
                     .Get<IList<SourceConfiguration>>()
-                    .Where(c => !String.IsNullOrEmpty(c.Id))
+                    .Where(c => !String.IsNullOrEmpty(c.Id)) // Skip disabled sources
                     .ToDictionary(c => c.Id, c => CreateTileSource(c));
         }
 
@@ -29,8 +29,15 @@ namespace TileMapService
             foreach (var tileSource in this.tileSources)
             {
                 // TODO: execute in parallel ?
-                // TODO: skip and log exceptions ?
-                await tileSource.Value.InitAsync();
+                try
+                {
+                    await tileSource.Value.InitAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error initializing '{tileSource.Value.Configuration.Id}' source: {ex.Message}");
+                    // TODO: log exceptions
+                }
             }
         }
 
@@ -72,6 +79,7 @@ namespace TileMapService
             {
                 SourceConfiguration.TypeLocalFiles => new LocalFilesTileSource(config),
                 SourceConfiguration.TypeMBTiles => new MBTilesTileSource(config),
+                SourceConfiguration.TypePostGIS => new PostGISTileSource(config),
                 SourceConfiguration.TypeXyz => new HttpTileSource(config),
                 SourceConfiguration.TypeTms => new HttpTileSource(config),
                 SourceConfiguration.TypeWmts => new HttpTileSource(config),

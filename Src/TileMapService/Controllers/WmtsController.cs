@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -48,7 +49,7 @@ namespace TileMapService.Controllers
 
             if (String.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
             {
-                return ProcessGetCapabilitiesRequest();
+                return this.ProcessGetCapabilitiesRequest();
             }
             else if (String.Compare(request, Identifiers.GetTile, StringComparison.Ordinal) == 0)
             {
@@ -77,7 +78,10 @@ namespace TileMapService.Controllers
 
         private IActionResult ProcessGetCapabilitiesRequest()
         {
-            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
+            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources)
+                .Where(l => l.Format == ImageFormats.Png || l.Format == ImageFormats.Jpeg) // Only raster formats
+                .ToList();
+
             var xmlDoc = new CapabilitiesUtility(BaseUrl + "/wmts", layers)
                 .GetCapabilities(); // TODO: fix base URL
 

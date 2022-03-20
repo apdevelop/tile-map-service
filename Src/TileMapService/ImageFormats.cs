@@ -16,6 +16,11 @@
         public const string Jpeg = "jpg";
 
         /// <summary>
+        /// Mapbox Vector Tile.
+        /// </summary>
+        public const string MapboxVectorTile = "mvt";
+
+        /// <summary>
         /// Protobuf.
         /// </summary>
         public const string Protobuf = "pbf";

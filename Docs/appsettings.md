@@ -11,7 +11,7 @@ Tile sources are defined in `Sources` section of `appsettings.json` file.
 Type: `String`<br>
 Required: `true`
 
-Used to define source type, must be one of `file`, `mbtiles`, `xyz`, `tms`, `wmts`, `wms`, `geotiff` (case insensitive).
+Used to define source type, must be one of `file`, `mbtiles`, `postgis`, `xyz`, `tms`, `wmts`, `wms`, `geotiff` (case insensitive).
 
 #### id
 Type: `String`<br>
@@ -41,6 +41,8 @@ Template string uses `{x}`, `{y}`, `{z}` as placeholders for corresponding coord
 
 WMS location should contain base url of WMS service along with `version`, `layers`, `srs`/`crs` values. 
 Other values, like `styles`, `transparent`, `bgcolor` and so on are optional. The only `srs`/`crs` currently supported is `EPSG:3857` or compatible.
+
+PostGIS location should contain connection string for PostgreSQL database.
 
 #### srs
 Type: `String`<br>
@@ -82,3 +84,26 @@ Must be `mbtiles` string.
 Type: `String`<br>
 Required: `true`
 Full path to `mbtiles` database file to store cached tiles. File will be created automatically, if not exists.
+
+
+#### table
+Type: `Object`<br>
+Required: `false`
+
+Table options for source of type `postgis` only.
+
+#### name
+Type: `String`<br>
+Required: `true`
+Name of table with features in database.
+
+#### geometry
+Type: `String`<br>
+Required: `true`
+Name of column with `geometry` data (with `EPSG:3857` SRS only) in table.
+
+#### fields
+Type: `String`<br>
+Required: `false`
+Comma-separated string with column names with additional attributes of features, like id, name and so on.
+Empty string or not defined, if no additional attributes is required.

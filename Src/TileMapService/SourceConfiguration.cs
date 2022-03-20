@@ -9,7 +9,7 @@ namespace TileMapService
     public class SourceConfiguration
     {
         /// <summary>
-        /// Type of source, "file", "mbtiles", "xyz", "tms", "wmts", "wms", "geotiff".
+        /// Type of source, "file", "mbtiles", "postgis", "xyz", "geotiff", "tms", "wmts", "wms".
         /// </summary>
         [JsonPropertyName("type")]
         public string Type { get; set; } = String.Empty;
@@ -26,6 +26,12 @@ namespace TileMapService
         /// </summary>
         [JsonIgnore]
         public const string TypeMBTiles = "mbtiles";
+
+        /// <summary>
+        /// PostGIS database.
+        /// </summary>
+        [JsonIgnore]
+        public const string TypePostGIS = "postgis";
 
         /// <summary>
         /// Tile service with minimalistic REST API (Slippy Map).
@@ -46,7 +52,7 @@ namespace TileMapService
         public const string TypeWmts = "wmts";
 
         /// <summary>
-        /// Wem Map Service (WMS protocol).
+        /// Web Map Service (WMS protocol).
         /// </summary>
         [JsonIgnore]
         public const string TypeWms = "wms";
@@ -65,7 +71,7 @@ namespace TileMapService
         public string Id { get; set; } = String.Empty;
 
         /// <summary>
-        /// Name of image format ("png", "jpg", "pbf").
+        /// Name of image format ("png", "jpg", "mvt", "pbf").
         /// </summary>
         [JsonPropertyName("format")]
         public string? Format { get; set; } // TODO: implement conversion of source formats to output formats
@@ -125,6 +131,12 @@ namespace TileMapService
         /// </summary>
         [JsonPropertyName("cache")]
         public SourceCacheConfiguration? Cache { get; set; }
+
+        /// <summary>
+        /// Table configuration for PostGIS source type.
+        /// </summary>
+        [JsonPropertyName("table")]
+        public SourceTableConfiguration? Table { get; set; }
     }
 
     /// <summary>
@@ -143,5 +155,29 @@ namespace TileMapService
         /// </summary>
         [JsonPropertyName("dbfile")]
         public string? DbFile { get; set; }
+    }
+
+    /// <summary>
+    /// Table configuration for PostGIS source type.
+    /// </summary>
+    public class SourceTableConfiguration
+    {
+        /// <summary>
+        /// Table name.
+        /// </summary>
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        /// <summary>
+        /// Name of geometry field.
+        /// </summary>
+        [JsonPropertyName("geometry")]
+        public string? Geometry { get; set; }
+
+        /// <summary>
+        /// List of fields with object attributes in form of CSV string.
+        /// </summary>
+        [JsonPropertyName("fields")]
+        public string? Fields { get; set; }
     }
 }

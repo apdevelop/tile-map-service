@@ -7,8 +7,6 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Http.Extensions;
-
 using MBT = TileMapService.MBTiles;
 
 namespace TileMapService.TileSources

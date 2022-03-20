@@ -9,16 +9,17 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 
 | Type                      | EPSG:3857  | EPSG:4326  | Notes                                                                                       |
 | ------------------------- |:----------:|:----------:|--------------------------------------------------------------------------------------------|
-| MBTiles (SQLite)          | &#10003;   | &mdash;    | [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md) |
 | Local file system         | &#10003;   | &#10003;   | Each tile in separate file in Z/X/Y.ext folder structure                                    |
-| External web services     | &#10003;   | partial    | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map), [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification), [WMTS](https://www.ogc.org/standards/wmts), WMS (versions 1.1.1 and 1.3.0) services, with local caching feature  |
-| GeoTIFF local file        | &#10003;   | &#10003;   | Basic support with `EPSG:3857` or `EPSG:4326` SRS only)                                                                 |
+| MBTiles (SQLite)          | &#10003;   | &mdash;    | [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md) |
+| PostGIS database          | &#10003;   | &mdash;    | [Mapbox Vector Tiles](https://github.com/mapbox/vector-tile-spec) from `geometry` column with `EPSG:3857` SRS only                                                       |
+| GeoTIFF local file        | &#10003;   | &#10003;   | Basic support (`EPSG:3857` or `EPSG:4326` source image SRS only)                                                                 |
+| External web services     | &#10003;   | partial    | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map), [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification), [WMTS](https://www.ogc.org/standards/wmts), [WMS](https://en.wikipedia.org/wiki/Web_Map_Service) (versions 1.1.1 and 1.3.0) services, with local caching feature  |
 
 * Supported protocols (service endpoints) for serving tiles: 
 
 | Type                                                                              | EPSG:3857  | EPSG:4326  | Endpoint address                                                                      | Notes                                                                                       |
 | --------------------------------------------------------------------------------- |:----------:|:----------:|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map))                | &#10003;   | &#10003;   | [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z})   |      |
+| XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map))                | &#10003;   | &#10003;   | [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z})   | Can serve vector tiles (MVT)  |
 | TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service))          | &#10003;   | &#10003;   | [http://localhost:5000/tms](http://localhost:5000/tms)                                |      |
 | WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)) | &#10003;   | &mdash;    | [http://localhost:5000/wmts](http://localhost:5000/wmts?request=GetCapabilities)      |      |
 | WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))            | &#10003;   | &mdash;    | [http://localhost:5000/wms](http://localhost:5000/wms?request=GetCapabilities)        | Versions 1.1.1 and 1.3.0 |
@@ -34,6 +35,7 @@ Using
 * [Microsoft.Data.Sqlite](https://docs.microsoft.com/ru-ru/dotnet/standard/data/sqlite/) for working with SQLite database.
 * [SkiaSharp](https://github.com/mono/SkiaSharp) for raster images processing.
 * [BitMiracle.LibTiff.NET](https://github.com/BitMiracle/libtiff.net) for reading GeoTIFF source files.
+* [Npgsql](https://github.com/npgsql/npgsql) .NET data provider for PostgreSQL.
 * [Leaflet](https://github.com/Leaflet) for map demo page.
 * [NUnit](https://nunit.org/) for tests.
 
