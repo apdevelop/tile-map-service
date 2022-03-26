@@ -18,7 +18,7 @@ namespace TileMapService.Wms
 
         public XmlDocument CreateCapabilitiesDocument(
             Version version,
-            Service service,
+            ServiceProperties service,
             IList<Layer> layers,
             IList<string> getMapFormats)
         {
@@ -43,23 +43,39 @@ namespace TileMapService.Wms
             var serviceElement = doc.CreateElement(Identifiers.ServiceElement);
             rootElement.AppendChild(serviceElement);
 
-            var serviceName = doc.CreateElement("Name");
-            serviceName.InnerText = "OGC:WMS";
-            serviceElement.AppendChild(serviceName);
+            var serviceNameElement = doc.CreateElement("Name");
+            serviceNameElement.InnerText = "OGC:WMS";
+            serviceElement.AppendChild(serviceNameElement);
 
-            var serviceTitle = doc.CreateElement("Title");
-            serviceTitle.InnerText = service.Title ?? String.Empty;
-            serviceElement.AppendChild(serviceTitle);
+            var serviceTitleElement = doc.CreateElement("Title");
+            serviceTitleElement.InnerText = service.Title ?? String.Empty;
+            serviceElement.AppendChild(serviceTitleElement);
 
-            var serviceAbstract = doc.CreateElement("Abstract");
-            serviceAbstract.InnerText = service.Abstract ?? String.Empty;
-            serviceElement.AppendChild(serviceAbstract);
+            var serviceAbstractElement = doc.CreateElement("Abstract");
+            serviceAbstractElement.InnerText = service.Abstract ?? String.Empty;
+            serviceElement.AppendChild(serviceAbstractElement);
+
+            var serviceKeywordListElement = doc.CreateElement("KeywordList");
+            if (service.Keywords != null)
+            {
+                foreach (var keyword in service.Keywords)
+                {
+                    if (!String.IsNullOrWhiteSpace(keyword))
+                    {
+                        var serviceKeywordElement = doc.CreateElement("Keyword");
+                        serviceKeywordElement.InnerText = keyword;
+                        serviceKeywordListElement.AppendChild(serviceKeywordElement);
+                    }
+                }
+            }
+
+            serviceElement.AppendChild(serviceKeywordListElement);
 
             var serviceOnlineResource = CreateOnlineResourceElement(this.baseUrl);
             serviceElement.AppendChild(serviceOnlineResource);
 
-            var capability = doc.CreateElement(Identifiers.CapabilityElement);
-            rootElement.AppendChild(capability);
+            var capabilityElement = doc.CreateElement(Identifiers.CapabilityElement);
+            rootElement.AppendChild(capabilityElement);
 
             string capabilitiesFormat;
             switch (version)
@@ -73,7 +89,7 @@ namespace TileMapService.Wms
             capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetCapabilities, new[] { capabilitiesFormat }));
             capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetMap, getMapFormats));
             // TODO: ? capabilityRequest.AppendChild(CreateRequestElement(Identifiers.GetFeatureInfo, getFeatureInfoFormats));
-            capability.AppendChild(capabilityRequest);
+            capabilityElement.AppendChild(capabilityRequest);
 
             var capabilityException = doc.CreateElement("Exception");
             var capabilityExceptionFormat = doc.CreateElement("Format");
@@ -86,11 +102,11 @@ namespace TileMapService.Wms
             }
 
             capabilityException.AppendChild(capabilityExceptionFormat);
-            capability.AppendChild(capabilityException);
+            capabilityElement.AppendChild(capabilityException);
 
             foreach (var layer in layers)
             {
-                capability.AppendChild(CreateLayerElement(version, layer));
+                capabilityElement.AppendChild(CreateLayerElement(version, layer));
             }
 
             return doc;

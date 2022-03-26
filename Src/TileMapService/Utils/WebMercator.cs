@@ -100,7 +100,7 @@ namespace TileMapService.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int MapSize(int zoomLevel)
         {
-            return TileSize << zoomLevel;
+            return TileSize << zoomLevel; // TODO: use tile size parameter instead of const
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

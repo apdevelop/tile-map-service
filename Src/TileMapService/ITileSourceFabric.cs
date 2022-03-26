@@ -22,5 +22,7 @@ namespace TileMapService
         ITileSource Get(string id);
 
         List<SourceConfiguration> Sources { get; }
+
+        ServiceProperties ServiceProperties { get; }
     }
 }

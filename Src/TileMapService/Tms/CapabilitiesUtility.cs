@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Xml;
+
 using TileMapService.Utils;
 
 namespace TileMapService.Tms
@@ -12,6 +11,10 @@ namespace TileMapService.Tms
     /// </summary>
     class CapabilitiesUtility
     {
+        private readonly string serviceTitle;
+
+        private readonly string serviceAbstract;
+
         private readonly string baseUrl;
 
         private readonly Models.Layer[] layers;
@@ -28,6 +31,8 @@ namespace TileMapService.Tms
                 throw new ArgumentNullException(nameof(capabilities), "capabilities.Layers is null.");
             }
 
+            this.serviceTitle = capabilities.ServiceTitle;
+            this.serviceAbstract = capabilities.ServiceAbstract;
             this.baseUrl = capabilities.BaseUrl;
             this.layers = capabilities.Layers;
         }
@@ -49,7 +54,7 @@ namespace TileMapService.Tms
             rootElement.AppendChild(tileMapServiceElement);
 
             var titleAttribute = doc.CreateAttribute(Identifiers.TitleAttribute);
-            titleAttribute.Value = String.Empty; // TODO: Title for entire service
+            titleAttribute.Value = this.serviceTitle;
             tileMapServiceElement.Attributes.Append(titleAttribute);
 
             var versionAttribute = doc.CreateAttribute(Identifiers.VersionAttribute);
@@ -82,11 +87,11 @@ namespace TileMapService.Tms
             rootElement.Attributes.Append(versionAttribute);
 
             var titleElement = doc.CreateElement(Identifiers.TitleElement);
-            titleElement.AppendChild(doc.CreateTextNode(String.Empty)); // TODO: Title for entire service
+            titleElement.AppendChild(doc.CreateTextNode(this.serviceTitle));
             rootElement.AppendChild(titleElement);
 
             var abstractElement = doc.CreateElement(Identifiers.AbstractElement);
-            abstractElement.AppendChild(doc.CreateTextNode(String.Empty)); // TODO: Abstract for entire service
+            abstractElement.AppendChild(doc.CreateTextNode(this.serviceAbstract));
             rootElement.AppendChild(abstractElement);
 
             var tileMapsElement = doc.CreateElement("TileMaps");
@@ -145,7 +150,7 @@ namespace TileMapService.Tms
             rootElement.AppendChild(titleElement);
 
             var abstractElement = doc.CreateElement(Identifiers.AbstractElement);
-            abstractElement.AppendChild(doc.CreateTextNode(String.Empty)); // TODO: Abstract for TileMap
+            abstractElement.AppendChild(doc.CreateTextNode(layer.Abstract));
             rootElement.AppendChild(abstractElement);
 
             double unitsWidth, pixelsWidth;

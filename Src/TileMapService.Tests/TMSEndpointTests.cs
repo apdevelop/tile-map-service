@@ -44,12 +44,14 @@ namespace TileMapService.Tests
                 {
                     Type = SourceConfiguration.TypeMBTiles,
                     Id = "world-mercator-hd",
+                    Abstract = "World map",
                     Location = MbtilesFilePath1,
                 },
                 new SourceConfiguration
                 {
                     Type = SourceConfiguration.TypeMBTiles,
                     Id = "small-area",
+                    Abstract = "Small area map",
                     Location = MbtilesFilePath2,
                 },
                 new SourceConfiguration
@@ -135,6 +137,7 @@ namespace TileMapService.Tests
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
+            Assert.AreEqual("World map", xml.SelectSingleNode("/TileMap/Abstract").InnerText);
             var tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
             Assert.AreEqual(512, Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture));
             Assert.AreEqual(512, Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture));
@@ -147,6 +150,7 @@ namespace TileMapService.Tests
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
+            Assert.AreEqual("Small area map", xml.SelectSingleNode("/TileMap/Abstract").InnerText);
             tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
             Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture));
             Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture));
@@ -159,6 +163,7 @@ namespace TileMapService.Tests
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
+            Assert.AreEqual(String.Empty, xml.SelectSingleNode("/TileMap/Abstract").InnerText);
             tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
             Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture));
             Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture));

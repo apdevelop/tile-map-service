@@ -84,6 +84,7 @@ namespace TileMapService.TileSources
                 Type = this.configuration.Type,
                 Format = this.configuration.Format, // TODO: from file properties (extension)
                 Title = title,
+                Abstract = this.configuration.Abstract,
                 Tms = this.configuration.Tms ?? false, // Default is tms=false for file storage
                 Srs = srs,
                 Location = this.configuration.Location,

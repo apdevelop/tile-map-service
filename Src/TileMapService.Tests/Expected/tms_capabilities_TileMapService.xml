@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TileMapService version="1.0.0">
-	<Title/>
+	<Title>WMTS Service</Title>
 	<Abstract/>
 	<TileMaps>
 		<TileMap title="World Countries" href="http://localhost:5000/tms/1.0.0/world-countries" profile="global-mercator" srs="OSGEO:41001"/>

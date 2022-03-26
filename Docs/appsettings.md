@@ -31,6 +31,12 @@ Required: `false`
 
 User-friendly title (displayed name) of tile source.
 
+#### abstract
+Type: `String`<br>
+Required: `false`
+
+Detailed text description of tile source.
+
 #### location
 Type: `String`<br>
 Required: `true`

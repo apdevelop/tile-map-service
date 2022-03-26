@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
-using TileMapService.Models;
+
+using M = TileMapService.Models;
 
 namespace TileMapService.Wmts
 {
@@ -13,9 +14,11 @@ namespace TileMapService.Wmts
     /// </summary>
     class CapabilitiesUtility
     {
+        private readonly ServiceProperties service;
+
         private readonly string baseUrl;
 
-        private readonly Models.Layer[] layers;
+        private readonly M.Layer[] layers;
 
         #region Constants
 
@@ -32,9 +35,11 @@ namespace TileMapService.Wmts
         // TODO: DTO classes for WMTS capabilities description (like Layer, Capabilities)
 
         public CapabilitiesUtility(
+            ServiceProperties service,
             string baseUrl,
-            IEnumerable<Models.Layer> layers)
+            IEnumerable<M.Layer> layers)
         {
+            this.service = service;
             this.baseUrl = baseUrl;
             this.layers = layers.ToArray();
         }
@@ -53,8 +58,28 @@ namespace TileMapService.Wmts
             var serviceIdentificationElement = doc.CreateElement(OwsPrefix, "ServiceIdentification", Identifiers.OwsNamespaceUri);
 
             var titleElement = doc.CreateElement(OwsPrefix, "Title", Identifiers.OwsNamespaceUri);
-            titleElement.InnerText = "WMTS Service";
+            titleElement.InnerText = this.service.Title ?? String.Empty;
             serviceIdentificationElement.AppendChild(titleElement);
+
+            var abstractElement = doc.CreateElement(OwsPrefix, "Abstract", Identifiers.OwsNamespaceUri);
+            abstractElement.InnerText = this.service.Abstract ?? String.Empty;
+            serviceIdentificationElement.AppendChild(abstractElement);
+
+            var serviceKeywordListElement = doc.CreateElement(OwsPrefix, "Keywords", Identifiers.OwsNamespaceUri);
+            if (service.Keywords != null)
+            {
+                foreach (var keyword in service.Keywords)
+                {
+                    if (!String.IsNullOrWhiteSpace(keyword))
+                    {
+                        var serviceKeywordElement = doc.CreateElement(OwsPrefix, "Keyword", Identifiers.OwsNamespaceUri);
+                        serviceKeywordElement.InnerText = keyword;
+                        serviceKeywordListElement.AppendChild(serviceKeywordElement);
+                    }
+                }
+            }
+
+            serviceIdentificationElement.AppendChild(serviceKeywordListElement);
 
             var serviceTypeElement = doc.CreateElement(OwsPrefix, "ServiceType", Identifiers.OwsNamespaceUri);
             serviceTypeElement.InnerText = "OGC WMTS";
@@ -144,7 +169,7 @@ namespace TileMapService.Wmts
         /// </summary>
         /// <param name="xmlDoc">Capabilities XML document.</param>
         /// <returns>List of Layers (flatten, without hierarchy).</returns>
-        public static List<Models.Layer> GetLayers(XmlDocument xmlDoc)
+        public static List<M.Layer> GetLayers(XmlDocument xmlDoc)
         {
             var nsManager = new XmlNamespaceManager(xmlDoc.NameTable);
 
@@ -153,7 +178,7 @@ namespace TileMapService.Wmts
 
             var xpath = "/ns:Capabilities/ns:Contents/ns:Layer";
 
-            var result = new List<Layer>();
+            var result = new List<M.Layer>();
             var layers = xmlDoc.SelectNodes(xpath, nsManager);
             if (layers != null)
             {
@@ -162,7 +187,7 @@ namespace TileMapService.Wmts
                     var layerIdentifier = layer.SelectSingleNode(OwsPrefix + ":" + "Identifier", nsManager);
                     var layerTitle = layer.SelectSingleNode(OwsPrefix + ":" + "Title", nsManager);
 
-                    GeographicalBounds? geographicalBounds = null;
+                    M.GeographicalBounds? geographicalBounds = null;
                     var bbox = layer.SelectSingleNode(OwsPrefix + ":" + "WGS84BoundingBox", nsManager);
                     if (bbox != null)
                     {
@@ -179,13 +204,13 @@ namespace TileMapService.Wmts
                             var miny = Double.Parse(lowerCornerValues[1], CultureInfo.InvariantCulture);
                             var maxx = Double.Parse(upperCornerValues[0], CultureInfo.InvariantCulture);
                             var maxy = Double.Parse(upperCornerValues[1], CultureInfo.InvariantCulture);
-                            geographicalBounds = new GeographicalBounds(minx, miny, maxx, maxy);
+                            geographicalBounds = new M.GeographicalBounds(minx, miny, maxx, maxy);
                         }
 
                         // TODO: use ResourceURL format="image/jpeg"
                     }
 
-                    result.Add(new Layer
+                    result.Add(new M.Layer
                     {
                         Identifier = layerIdentifier != null ? layerIdentifier.InnerText : String.Empty,
                         Title = layerTitle != null ? layerTitle.InnerText : String.Empty,
@@ -230,7 +255,7 @@ namespace TileMapService.Wmts
 
         private static XmlElement CreateLayerElement(
             XmlDocument doc,
-            Models.Layer layer,
+            M.Layer layer,
             string tileMatrixSetIdentifier)
         {
             var layerElement = doc.CreateElement(String.Empty, "Layer", WmtsNamespaceUri);
@@ -239,7 +264,9 @@ namespace TileMapService.Wmts
             titleElement.InnerText = layer.Title ?? String.Empty;
             layerElement.AppendChild(titleElement);
 
-            // TODO: Abstract element
+            var abstractElement = doc.CreateElement(OwsPrefix, "Abstract", Identifiers.OwsNamespaceUri);
+            abstractElement.InnerText = layer.Abstract ?? String.Empty;
+            layerElement.AppendChild(abstractElement);
 
             var identifierElement = doc.CreateElement(OwsPrefix, "Identifier", Identifiers.OwsNamespaceUri);
             identifierElement.InnerText = layer.Identifier ?? String.Empty;
@@ -260,7 +287,7 @@ namespace TileMapService.Wmts
             const string UpperCornerElementName = "UpperCorner";
             var wgs84BoundingBoxElement = doc.CreateElement(OwsPrefix, "WGS84BoundingBox", Identifiers.OwsNamespaceUri);
 
-            static string FormatPoint(Models.GeographicalPoint point)
+            static string FormatPoint(M.GeographicalPoint point)
             {
                 return String.Format( // TODO: rounding in other implementations ?
                     CultureInfo.InvariantCulture,
@@ -275,10 +302,10 @@ namespace TileMapService.Wmts
                     {
                         // Default values if source properties unknown
                         var lowerCorner = layer.GeographicalBounds == null ?
-                            new Models.GeographicalPoint(-180, -85.05112878) :
+                            new M.GeographicalPoint(-180, -85.05112878) :
                             layer.GeographicalBounds.Min;
                         var upperCorner = layer.GeographicalBounds == null ?
-                            new Models.GeographicalPoint(180, 85.05112878) :
+                            new M.GeographicalPoint(180, 85.05112878) :
                             layer.GeographicalBounds.Max;
 
                         var lowerCornerElement = doc.CreateElement(OwsPrefix, LowerCornerElementName, Identifiers.OwsNamespaceUri);
@@ -295,8 +322,8 @@ namespace TileMapService.Wmts
                 case Utils.SrsCodes.EPSG4326:
                     {
                         // TODO: custom bounds from source properties
-                        var lowerCorner = new Models.GeographicalPoint(-180, -90);
-                        var upperCorner = new Models.GeographicalPoint(180, 90);
+                        var lowerCorner = new M.GeographicalPoint(-180, -90);
+                        var upperCorner = new M.GeographicalPoint(180, 90);
 
                         var lowerCornerElement = doc.CreateElement(OwsPrefix, LowerCornerElementName, Identifiers.OwsNamespaceUri);
                         lowerCornerElement.InnerText = FormatPoint(lowerCorner);
@@ -328,7 +355,7 @@ namespace TileMapService.Wmts
 
         private static XmlElement CreateTileMatrixSetElement(
             XmlDocument doc,
-            Models.Layer layer,
+            M.Layer layer,
             string identifier,
             string supportedCrs,
             string wellKnownScaleSet)

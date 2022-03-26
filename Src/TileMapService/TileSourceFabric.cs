@@ -13,6 +13,8 @@ namespace TileMapService
     {
         private readonly Dictionary<string, ITileSource> tileSources;
 
+        private readonly ServiceProperties serviceProperties;
+
         public TileSourceFabric(IConfiguration configuration)
         {
             this.tileSources = configuration
@@ -20,6 +22,15 @@ namespace TileMapService
                     .Get<IList<SourceConfiguration>>()
                     .Where(c => !String.IsNullOrEmpty(c.Id)) // Skip disabled sources
                     .ToDictionary(c => c.Id, c => CreateTileSource(c));
+
+            this.serviceProperties = configuration
+                    .GetSection("Service")
+                    .Get<ServiceProperties>();
+
+            if (this.serviceProperties == null)
+            {
+                this.serviceProperties = new ServiceProperties();
+            }
         }
 
         #region ITileSourceFabric implementation
@@ -58,6 +69,14 @@ namespace TileMapService
                 return this.tileSources
                         .Select(s => s.Value.Configuration)
                         .ToList();
+            }
+        }
+
+        ServiceProperties ITileSourceFabric.ServiceProperties
+        {
+            get
+            {
+                return this.serviceProperties;
             }
         }
 

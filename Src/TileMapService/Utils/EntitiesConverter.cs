@@ -40,6 +40,7 @@ namespace TileMapService.Utils
             {
                 Identifier = c.Id,
                 Title = c.Title,
+                Abstract = c.Abstract,
                 ContentType = c.ContentType,
                 Format = c.Format,
                 Srs = c.Srs,

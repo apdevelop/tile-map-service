@@ -9,7 +9,7 @@
 
         public string? Title { get; set; }
 
-        // TODO: Abstract
+        public string? Abstract { get; set; }
 
         public string? ContentType { get; set; }
 

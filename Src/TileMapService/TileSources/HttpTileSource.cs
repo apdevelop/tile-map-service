@@ -78,8 +78,9 @@ namespace TileMapService.TileSources
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type.ToLowerInvariant(),
-                Format = this.configuration.Format, // TODO: from source service capabilities
+                Format = this.configuration.Format, // TODO: from source service/layer capabilities
                 Title = title,
+                Abstract = this.configuration.Abstract, // TODO: from source layer capabilities
                 Tms = tms,
                 Srs = srs,
                 Location = this.configuration.Location,
@@ -89,7 +90,7 @@ namespace TileMapService.TileSources
                 GeographicalBounds = sourceCapabilities?.GeographicalBounds,
                 TileWidth = sourceCapabilities != null ? sourceCapabilities.TileWidth : Utils.WebMercator.DefaultTileWidth,
                 TileHeight = sourceCapabilities != null ? sourceCapabilities.TileHeight : Utils.WebMercator.DefaultTileHeight,
-                Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only Web Mercator is supported due to mbtiles format limits
+                Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only Web Mercator is supported in MBTiles specification
             };
 
             if (this.configuration.Cache != null)

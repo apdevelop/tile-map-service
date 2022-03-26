@@ -96,7 +96,7 @@ namespace TileMapService.Wms
             var minDistance = Double.MaxValue;
             for (var zoom = 0; zoom < 24; zoom++) // TODO: range?
             {
-                var mapSizeAtZoom = WebMercator.MapSize(zoom);
+                var mapSizeAtZoom = WebMercator.MapSize(zoom); // TODO: ? use tile size parameter instead of const
                 var distance = Math.Abs(mapSize - mapSizeAtZoom);
                 if (distance < minDistance)
                 {

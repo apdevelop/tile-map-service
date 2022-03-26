@@ -130,6 +130,8 @@ namespace TileMapService.Controllers
             var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
             return new Tms.Capabilities
             {
+                ServiceTitle = this.tileSourceFabric.ServiceProperties.Title,
+                ServiceAbstract = this.tileSourceFabric.ServiceProperties.Abstract,
                 BaseUrl = this.BaseUrl,
                 Layers = layers.ToArray(),
             };

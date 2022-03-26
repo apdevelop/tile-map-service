@@ -101,7 +101,12 @@ namespace TileMapService.Tests
                 BaseAddress = new Uri(TestConfiguration.BaseUrl),
             };
 
-            var json = JsonSerializer.Serialize(new { Sources = tileSources });
+            var json = JsonSerializer.Serialize(new
+            {
+                Sources = tileSources,
+                Service = new ServiceProperties { Title = "WMTS Service", Abstract = String.Empty },
+            });
+
             this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.portNumber);
         }
 

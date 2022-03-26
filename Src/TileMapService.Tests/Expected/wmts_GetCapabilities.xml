@@ -2,6 +2,8 @@
 <Capabilities xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml" version="1.0.0" xmlns="http://www.opengis.net/wmts/1.0">
 	<ows:ServiceIdentification>
 		<ows:Title>WMTS Service</ows:Title>
+		<ows:Abstract></ows:Abstract>
+		<ows:Keywords />
 		<ows:ServiceType>OGC WMTS</ows:ServiceType>
 		<ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
 	</ows:ServiceIdentification>
@@ -41,6 +43,7 @@
 	<Contents>
 		<Layer>
 			<ows:Title>World Countries</ows:Title>
+			<ows:Abstract />
 			<ows:Identifier>world-countries</ows:Identifier>
 			<Style isDefault="true">
 				<ows:Identifier>normal</ows:Identifier>
@@ -236,6 +239,7 @@
 		</TileMatrixSet>
 		<Layer>
 			<ows:Title>World Satellite Imagery</ows:Title>
+			<ows:Abstract />
 			<ows:Identifier>world-satellite-imagery</ows:Identifier>
 			<Style isDefault="true">
 				<ows:Identifier>normal</ows:Identifier>
@@ -314,6 +318,7 @@
 		</TileMatrixSet>
 		<Layer>
 			<ows:Title>Caspian Sea</ows:Title>
+			<ows:Abstract />
 			<ows:Identifier>caspian-sea</ows:Identifier>
 			<Style isDefault="true">
 				<ows:Identifier>normal</ows:Identifier>
@@ -392,6 +397,7 @@
 		</TileMatrixSet>
 		<Layer>
 			<ows:Title>Tile Source 3</ows:Title>
+			<ows:Abstract />
 			<ows:Identifier>source3</ows:Identifier>
 			<Style isDefault="true">
 				<ows:Identifier>normal</ows:Identifier>
@@ -443,6 +449,7 @@
 		</TileMatrixSet>
 		<Layer>
 			<ows:Title>HTTP proxy to world-countries</ows:Title>
+			<ows:Abstract />
 			<ows:Identifier>httpproxy</ows:Identifier>
 			<Style isDefault="true">
 				<ows:Identifier>normal</ows:Identifier>

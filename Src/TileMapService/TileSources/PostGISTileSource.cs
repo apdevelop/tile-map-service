@@ -12,7 +12,7 @@ namespace TileMapService.TileSources
     {
         private SourceConfiguration configuration;
 
-        private string connectionString;
+        private readonly string connectionString;
 
         public PostGISTileSource(SourceConfiguration configuration)
         {
@@ -48,6 +48,7 @@ namespace TileMapService.TileSources
                 Type = this.configuration.Type,
                 Format = ImageFormats.MapboxVectorTile,
                 Title = title,
+                Abstract = this.configuration.Abstract,
                 Tms = this.configuration.Tms ?? true,
                 Srs = Utils.SrsCodes.EPSG3857,
                 Location = this.configuration.Location,
@@ -121,7 +122,9 @@ namespace TileMapService.TileSources
             string tableName,
             string geometry,
             string[]? fields,
-            int x, int y, int z)
+            int x,
+            int y,
+            int z)
         {
             // https://blog.crunchydata.com/blog/dynamic-vector-tiles-from-postgis
             // https://postgis.net/docs/manual-3.0/ST_AsMVT.html
@@ -136,7 +139,7 @@ namespace TileMapService.TileSources
                     )
                     SELECT ST_AsMVT(mvtgeom.*, '{this.configuration.Id}')
                     FROM mvtgeom";
-            
+
             // TODO: ? other SRS using reprojection, if needed
             using var connection = new NpgsqlConnection(this.connectionString);
             await connection.OpenAsync();

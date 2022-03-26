@@ -82,7 +82,15 @@ namespace TileMapService.Controllers
                 .Where(l => l.Format == ImageFormats.Png || l.Format == ImageFormats.Jpeg) // Only raster formats
                 .ToList();
 
-            var xmlDoc = new CapabilitiesUtility(BaseUrl + "/wmts", layers)
+            var xmlDoc = new CapabilitiesUtility(
+                new Wmts.ServiceProperties
+                {
+                    Title = this.tileSourceFabric.ServiceProperties.Title,
+                    Abstract = this.tileSourceFabric.ServiceProperties.Abstract,
+                    Keywords = this.tileSourceFabric.ServiceProperties.KeywordsList,
+                },
+                BaseUrl + "/wmts",
+                layers)
                 .GetCapabilities(); // TODO: fix base URL
 
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);

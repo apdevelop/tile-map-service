@@ -77,10 +77,16 @@ namespace TileMapService
         public string? Format { get; set; } // TODO: implement conversion of source formats to output formats
 
         /// <summary>
-        /// User-friendly title (displayed name) of tile source.
+        /// User-friendly title (displayed name) of source.
         /// </summary>
         [JsonPropertyName("title")]
         public string Title { get; set; } = String.Empty;
+
+        /// <summary>
+        /// Detailed text description of source.
+        /// </summary>
+        [JsonPropertyName("abstract")]
+        public string Abstract { get; set; } = String.Empty;
 
         /// <summary>
         /// Location of tiles (path template for "file", full path for "mbtiles", url template for "http").
@@ -117,8 +123,6 @@ namespace TileMapService
 
         [JsonIgnore] // TODO: allow reading from config file
         public int TileHeight { get; set; } = Utils.WebMercator.DefaultTileHeight;
-
-        // TODO: more custom properties, like abstract, attribution and so on.
 
         /// <summary>
         /// Maximum extent of the tiles coordinates in EPSG:4326 coordinate system.

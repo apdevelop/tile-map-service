@@ -122,7 +122,7 @@ namespace TileMapService.Controllers
                 {
                     Name = l.Identifier,
                     Title = String.IsNullOrEmpty(l.Title) ? l.Identifier : l.Title,
-                    Abstract = String.Empty, // TODO: Fill Abstract field
+                    Abstract = l.Abstract,
                     IsQueryable = false,
                     GeographicalBounds = l.GeographicalBounds,
                 })
@@ -130,10 +130,11 @@ namespace TileMapService.Controllers
 
             var xmlDoc = new CapabilitiesUtility(BaseUrl + "/wms").CreateCapabilitiesDocument(
                 version,
-                new Service
+                new Wms.ServiceProperties
                 {
-                    Title = "WMS",
-                    Abstract = "WMS",
+                    Title = this.tileSourceFabric.ServiceProperties.Title,
+                    Abstract = this.tileSourceFabric.ServiceProperties.Abstract,
+                    Keywords = this.tileSourceFabric.ServiceProperties.KeywordsList,
                 },
                 layers,
                 new[]

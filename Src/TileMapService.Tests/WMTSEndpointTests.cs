@@ -68,7 +68,16 @@ namespace TileMapService.Tests
                 BaseAddress = new Uri(TestConfiguration.BaseUrl),
             };
 
-            var json = JsonSerializer.Serialize(new { Sources = tileSources });
+            var json = JsonSerializer.Serialize(
+                new
+                {
+                    Sources = tileSources,
+                    Service = new
+                    {
+                        keywords = "wmts,service,tile"
+                    }
+                });
+
             this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.portNumber);
 
             // TODO: proxy source for WMTS
@@ -104,14 +113,18 @@ namespace TileMapService.Tests
             var attributes = xml.SelectSingleNode("/ns:Capabilities", nsManager).Attributes;
             Assert.AreEqual("1.0.0", attributes["version"].Value);
 
-            // 2. Layers (Sources)
+            // 2. Service properties
+            var keywords = xml.SelectNodes("/ns:Capabilities/ows:ServiceIdentification/ows:Keywords/ows:Keyword", nsManager);
+            Assert.AreEqual(3, keywords.Count);
+
+            // 3. Layers (Sources)
             var layers = xml.SelectNodes("/ns:Capabilities/ns:Contents/ns:Layer", nsManager);
             Assert.AreEqual(3, layers.Count);
 
             var tileMatrixSet = xml.SelectSingleNode("/ns:Capabilities/ns:Contents/ns:Layer/ns:TileMatrixSetLink/ns:TileMatrixSet", nsManager).InnerText;
             Assert.IsNotEmpty(tileMatrixSet);
 
-            var tileMatrix = xml.SelectSingleNode("/ns:Capabilities/ns:Contents/ns:TileMatrixSet[ows:Identifier='"+ tileMatrixSet + "']/ns:TileMatrix[ows:Identifier='0']", nsManager);
+            var tileMatrix = xml.SelectSingleNode("/ns:Capabilities/ns:Contents/ns:TileMatrixSet[ows:Identifier='" + tileMatrixSet + "']/ns:TileMatrix[ows:Identifier='0']", nsManager);
             Assert.IsNotNull(tileMatrix);
 
             Assert.AreEqual(512, Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileWidth", nsManager).InnerText, CultureInfo.InvariantCulture));
@@ -234,6 +247,11 @@ namespace TileMapService.Tests
                 if (File.Exists(MbtilesFilePath1))
                 {
                     File.Delete(MbtilesFilePath1);
+                }
+
+                if (File.Exists(MbtilesFilePath2))
+                {
+                    File.Delete(MbtilesFilePath2);
                 }
 
                 if (Directory.Exists(LocalFilesPath))

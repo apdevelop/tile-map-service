@@ -72,6 +72,7 @@ namespace TileMapService.TileSources
                 Type = this.configuration.Type,
                 Format = ImageFormats.Png, // TODO: ? multiple output formats ?
                 Title = title,
+                Abstract = this.configuration.Abstract,
                 Tms = false,
                 Srs = U.SrsCodes.EPSG3857, // TODO: only EPSG:3857 'output' SRS currently supported
                 Location = this.configuration.Location,
