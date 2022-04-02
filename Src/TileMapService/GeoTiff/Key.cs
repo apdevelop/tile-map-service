@@ -15,6 +15,8 @@
         GeogLinearUnitsGeoKey = 2052,
         GeogLinearUnitSizeGeoKey = 2053, // meters
         GeogAngularUnitsGeoKey = 2054,
+        GeogAngularUnitSizeGeoKey = 2055, // radians
+        GeogEllipsoidGeoKey = 2056, // Section 6.3.2.3 Codes 
         GeogSemiMajorAxisGeoKey = 2057, // GeogLinearUnits  
         GeogSemiMinorAxisGeoKey = 2058, // GeogLinearUnits      
         GeogInvFlatteningGeoKey = 2059,
@@ -23,6 +25,7 @@
 
         // 6.2.3 Projected CS Parameter Keys
         ProjectedCSTypeGeoKey = 3072,
+        PCSCitationGeoKey = 3073,
         ProjCoordTransGeoKey = 3075,
         ProjLinearUnitsGeoKey = 3076,
         ProjLinearUnitSizeGeoKey = 3077,

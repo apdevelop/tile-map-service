@@ -29,8 +29,8 @@ namespace TileMapService.TileSources
         {
             // TODO: report real WMS layer bounds from raster bounds
             // TODO: EPSG:4326 tile response (for WMTS, WMS)
-            // TODO: support for MapInfo RASTER files
-            // TODO: support for multiple rasters (directory with rasters)
+            // TODO: add support for MapInfo RASTER files
+            // TODO: add support for multiple rasters (directory with rasters)
 
             if (String.IsNullOrEmpty(configuration.Id))
             {
@@ -81,6 +81,7 @@ namespace TileMapService.TileSources
                 MaxZoom = maxZoom,
                 GeographicalBounds = this.rasterProperties.GeographicalBounds,
                 Cache = null, // Not used for local raster file source
+                Table = null,
             };
 
             return Task.CompletedTask;
@@ -128,7 +129,7 @@ namespace TileMapService.TileSources
 
                 var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(this.configuration.ContentType);
                 using SKImage image = surface.Snapshot();
-                using SKData data = image.Encode(imageFormat, 90); // TODO: quality parameter
+                using SKData data = image.Encode(imageFormat, 90); // TODO: pass quality parameter
 
                 return await Task.FromResult(data.ToArray());
             }
@@ -259,6 +260,20 @@ namespace TileMapService.TileSources
                                     keyIndex += 4;
                                     break;
                                 }
+                            case (ushort)GeoTiff.Key.GeogGeodeticDatumGeoKey:
+                                {
+                                    // 6.3.2.2 Geodetic Datum Codes
+                                    var geodeticDatum = keys[keyIndex + 3];
+                                    keyIndex += 4;
+                                    break;
+                                }
+                            case (ushort)GeoTiff.Key.GeogPrimeMeridianGeoKey:
+                                {
+                                    // 6.3.2.4 Prime Meridian Codes
+                                    var primeMeridian = keys[keyIndex + 3];
+                                    keyIndex += 4;
+                                    break;
+                                }
                             case (ushort)GeoTiff.Key.GeogAngularUnitsGeoKey:
                                 {
                                     var geogAngularUnit = (GeoTiff.AngularUnits)keys[keyIndex + 3];
@@ -267,6 +282,18 @@ namespace TileMapService.TileSources
                                         throw new FormatException("Only degree angular unit is supported");
                                     }
 
+                                    keyIndex += 4;
+                                    break;
+                                }
+                            case (ushort)GeoTiff.Key.GeogAngularUnitSizeGeoKey:
+                                {
+                                    keyIndex += 4;
+                                    break;
+                                }
+                            case (ushort)GeoTiff.Key.GeogEllipsoidGeoKey:
+                                {
+                                    // 6.3.2.3 Ellipsoid Codes
+                                    var geogEllipsoid = keys[keyIndex + 3];
                                     keyIndex += 4;
                                     break;
                                 }
@@ -303,6 +330,19 @@ namespace TileMapService.TileSources
                                     keyIndex += 4;
                                     break;
                                 }
+                            case (ushort)GeoTiff.Key.GeogAzimuthUnitsGeoKey:
+                                {
+                                    // 6.3.1.4 Angular Units Codes
+                                    var geogAzimuthUnits = (GeoTiff.AngularUnits)keys[keyIndex + 3];
+                                    keyIndex += 4;
+                                    break;
+                                }
+                            case (ushort)GeoTiff.Key.GeogPrimeMeridianLongGeoKey:
+                                {
+                                    var geogPrimeMeridianLong = keys[keyIndex + 3];
+                                    keyIndex += 4;
+                                    break;
+                                }
                             case (ushort)GeoTiff.Key.ProjectedCSTypeGeoKey:
                                 {
                                     var projectedCSType = keys[keyIndex + 3];
@@ -313,6 +353,11 @@ namespace TileMapService.TileSources
 
                                     // TODO: UTM (EPSG:32636 and others) support
                                     srId = projectedCSType;
+                                    keyIndex += 4;
+                                    break;
+                                }
+                            case (ushort)GeoTiff.Key.PCSCitationGeoKey:
+                                {
                                     keyIndex += 4;
                                     break;
                                 }
@@ -329,6 +374,7 @@ namespace TileMapService.TileSources
                                 }
                             default:
                                 {
+                                    keyIndex += 4; // Just skipping all unprocessed keys
                                     break;
                                 }
                         }
@@ -409,31 +455,32 @@ namespace TileMapService.TileSources
 
             // TODO: check if file exists
 
-            using (var tiff = Tiff.Open(path, ModeOpenReadTiff))
-            {
-                // https://bitmiracle.github.io/libtiff.net/help/articles/KB/grayscale-color.html#reading-a-color-image
+            using var tiff = Tiff.Open(path, ModeOpenReadTiff);
+            // https://bitmiracle.github.io/libtiff.net/help/articles/KB/grayscale-color.html#reading-a-color-image
 
-                ////var compression = (Compression)tiff.GetField(TiffTag.COMPRESSION)[0].ToInt();
-                ////var bps = tiff.GetField(TiffTag.BITSPERSAMPLE)[0].ToInt();
-                ////var sf = (SampleFormat)tiff.GetField(TiffTag.SAMPLEFORMAT)[0].ToInt();
-                ////var d = tiff.NumberOfDirectories();
-                ////var s = tiff.NumberOfStrips();
-                ////var t = tiff.NumberOfTiles();
+            var compression = (Compression)tiff.GetField(TiffTag.COMPRESSION)[0].ToInt();
+            var samplesPerPixel = tiff.GetField(TiffTag.SAMPLESPERPIXEL)[0].ToInt();
+            var bitsPerSample = tiff.GetField(TiffTag.BITSPERSAMPLE)[0].ToInt();
+            var sampleFormat = (SampleFormat)tiff.GetField(TiffTag.SAMPLEFORMAT)[0].ToInt();
+            ////var d = tiff.NumberOfDirectories();
+            ////var s = tiff.NumberOfStrips();
+            ////var t = tiff.NumberOfTiles();
 
-                var l = tiff.ReadTile(tileBuffer, 0, pixelX, pixelY, 0, 0);
-            }
+            // TODO: ? check bitsPerSample, sampleFormat
+
+            var l = tiff.ReadTile(tileBuffer, 0, pixelX, pixelY, 0, 0);
 
             const int ARGBPixelDataSize = 4;
             var size = tileWidth * tileHeight * ARGBPixelDataSize;
             var imageBuffer = new byte[size];
 
-            // Flip vertical
+            // Flip vertically
             for (var row = tileHeight - 1; row != -1; row--)
             {
                 for (var col = 0; col < tileWidth; col++)
                 {
                     var pixelNumber = row * tileWidth + col;
-                    var srcOffset = pixelNumber * 3; // TODO: bpp is always 3 bytes = BGR ?
+                    var srcOffset = pixelNumber * samplesPerPixel;
                     var destOffset = pixelNumber * ARGBPixelDataSize;
 
                     imageBuffer[destOffset + 0] = tileBuffer[srcOffset + 0];
