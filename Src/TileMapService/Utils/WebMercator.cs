@@ -11,6 +11,8 @@ namespace TileMapService.Utils
     {
         public const int TileSize = 256; // TODO: cusom resolution values
 
+        public const int DefaultTileSize = 256;
+
         /// <summary>
         /// Default tile width, pixels.
         /// </summary>
@@ -72,7 +74,7 @@ namespace TileMapService.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TileXtoEpsg3857X(int tileX, int zoomLevel)
         {
-            var mapSize = (double)MapSize(zoomLevel);
+            var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
             var pixelX = tileX * TileSize;
             var x = (Utils.MathHelper.Clip(pixelX, 0.0, mapSize) / mapSize) - 0.5;
             var longitude = 360.0 * x;
@@ -83,7 +85,7 @@ namespace TileMapService.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TileYtoEpsg3857Y(int tileY, int zoomLevel)
         {
-            var mapSize = (double)MapSize(zoomLevel);
+            var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
             var pixelY = tileY * TileSize;
             var y = 0.5 - (MathHelper.Clip(pixelY, 0.0, mapSize) / mapSize);
             var latitude = 90.0 - 360.0 * Math.Atan(Math.Exp(-y * 2.0 * Math.PI)) / Math.PI;
@@ -97,10 +99,16 @@ namespace TileMapService.Utils
             return 1 << zoomLevel;
         }
 
+        /// <summary>
+        /// Returns entire world map image size in pixels at given zoom level.
+        /// </summary>
+        /// <param name="zoomLevel">Zoom level.</param>
+        /// <param name="tileSize">Tile size (width and height) in pixels.</param>
+        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int MapSize(int zoomLevel)
+        public static int MapSize(int zoomLevel, int tileSize)
         {
-            return TileSize << zoomLevel; // TODO: use tile size parameter instead of const
+            return tileSize << zoomLevel;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -146,13 +154,13 @@ namespace TileMapService.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LongitudeToPixelXAtZoom(double longitude, int zoomLevel)
         {
-            return LongitudeToPixelX(longitude, (double)MapSize(zoomLevel));
+            return LongitudeToPixelX(longitude, (double)MapSize(zoomLevel, DefaultTileSize));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LatitudeToPixelYAtZoom(double latitude, int zoomLevel)
         {
-            return LatitudeToPixelY(latitude, (double)MapSize(zoomLevel));
+            return LatitudeToPixelY(latitude, (double)MapSize(zoomLevel, DefaultTileSize));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -171,7 +179,7 @@ namespace TileMapService.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double PixelXToLongitude(double pixelX, int zoomLevel)
         {
-            var mapSize = (double)MapSize(zoomLevel);
+            var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
             var x = (MathHelper.Clip(pixelX, 0.0, mapSize) / mapSize) - 0.5;
 
             return 360.0 * x;
@@ -180,7 +188,7 @@ namespace TileMapService.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double PixelYToLatitude(double pixelY, int zoomLevel)
         {
-            var mapSize = (double)MapSize(zoomLevel);
+            var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
             var y = 0.5 - (MathHelper.Clip(pixelY, 0.0, mapSize) / mapSize);
 
             return 90.0 - 360.0 * Math.Atan(Math.Exp(-y * 2.0 * Math.PI)) / Math.PI;

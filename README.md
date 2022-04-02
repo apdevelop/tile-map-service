@@ -10,19 +10,22 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 | Type                      | EPSG:3857  | EPSG:4326  | Notes                                                                                       |
 | ------------------------- |:----------:|:----------:|--------------------------------------------------------------------------------------------|
 | Local file system         | &#10003;   | &#10003;   | Each tile in separate file in Z/X/Y.ext folder structure                                    |
-| MBTiles (SQLite)          | &#10003;   | &mdash;    | [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md) |
-| PostGIS database          | &#10003;   | &mdash;    | [Mapbox Vector Tiles](https://github.com/mapbox/vector-tile-spec) from `geometry` column with `EPSG:3857` SRS only                                                       |
-| GeoTIFF local file        | &#10003;   | &#10003;   | Basic support (`EPSG:3857` or `EPSG:4326` source image SRS only)                                                                 |
-| External web services     | &#10003;   | partial    | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map), [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification), [WMTS](https://www.ogc.org/standards/wmts), [WMS](https://en.wikipedia.org/wiki/Web_Map_Service) (versions 1.1.1 and 1.3.0) services, with local caching feature  |
+| MBTiles (SQLite)          | &#10003;   | &mdash;    | [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md)            |
+| GeoTIFF local file        | &#10003;   | &#10003;   | [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) basic support with `EPSG:3857` or `EPSG:4326` source image SRS only  |
+| XYZ tile service          | &#10003;   | &#10003;   | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) with local cache for `EPSG:3857` SRS                |
+| TMS tile service          | &#10003;   | &#10003;   | [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification) with local cache for `EPSG:3857` SRS |
+| WMTS tile service         | &#10003;   | &#10003;   | [WMTS](https://www.ogc.org/standards/wmts) with local cache for `EPSG:3857` SRS                        |
+| WMS service               | &#10003;   | &mdash;    | [WMS](https://en.wikipedia.org/wiki/Web_Map_Service), WMS versions 1.1.1 and 1.3.0, cache for `EPSG:3857` SRS  |
+| PostGIS database          | &#10003;   | &mdash;    | [Mapbox Vector Tiles](https://github.com/mapbox/vector-tile-spec) from `geometry` column with `EPSG:3857` SRS only |
 
 * Supported protocols (service endpoints) for serving tiles: 
 
-| Type                                                                              | EPSG:3857  | EPSG:4326  | Endpoint address                                                                      | Notes                                                                                       |
-| --------------------------------------------------------------------------------- |:----------:|:----------:|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map))                | &#10003;   | &#10003;   | [http://localhost:5000/xyz](http://localhost:5000/xyz/{tileset}/?x={x}&y={y}&z={z})   | Can serve vector tiles (MVT)  |
-| TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service))          | &#10003;   | &#10003;   | [http://localhost:5000/tms](http://localhost:5000/tms)                                |      |
-| WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)) | &#10003;   | &mdash;    | [http://localhost:5000/wmts](http://localhost:5000/wmts?request=GetCapabilities)      |      |
-| WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))            | &#10003;   | &mdash;    | [http://localhost:5000/wms](http://localhost:5000/wms?request=GetCapabilities)        | Versions 1.1.1 and 1.3.0 |
+| Type                                                                              | EPSG:3857  | EPSG:4326  | Endpoint address       | Notes                                     |
+| --------------------------------------------------------------------------------- |:----------:|:----------:|------------------------|--------------------------------------------------------------------------------------------|
+| XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map))                | &#10003;   | &#10003;   | /xyz                   | Can also serve vector tiles (MVT); Can be REST style url (/{z}/{x}/{y}.ext) or url with parameters (&x={x}&y={y}&z={z}) |
+| TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service))          | &#10003;   | &#10003;   | /tms                   |                                  |
+| WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)) | &#10003;   | &mdash;    | /wmts                  | Support both `RESTful` and `KVP` `GetTile` url syntax   |
+| WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))            | &#10003;   | &mdash;    | /wms                   | WMS versions `1.1.1` and `1.3.0` |
 
 * Coordinate system / tile grid support: [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection), basic support for geodetic `EPSG:4326`.
 * Tile image formats: raster (`PNG`, `JPEG`) 256&#215;256 pixels tiles and basic support of `PBF` / `MVT` vector tiles.
@@ -59,8 +62,9 @@ After start, it will listen on default TCP port 5000 (using in-process `Kestrel`
 and tile service with demo page will be available on http://localhost:5000/ address; to enable remote calls allow connections to this port in firewall settings.
 
 ### TODOs
-* Support for more formats (vector tiles) and coordinate systems (tile grids).
+* Support for more formats (image formats, vector tiles) and coordinate systems (tile grids).
 * Include test dataset(s) created from free data.
+* Flexible settings of tile sources.
 * Compare with reference implementations.
 * Using metatiles for better tiles quality.
 * Configuration Web UI.
@@ -75,9 +79,10 @@ and tile service with demo page will be available on http://localhost:5000/ addr
 
 All external tile sources (services) in the provided `appsettings.json` file are only for development / testing, not for production use.
 
-### References
+### Some references
 * [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md)
 * [Tile Map Service Specification](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification)
 * [OpenGIS Web Map Tile Service Implementation Standard](https://www.ogc.org/standards/wmts)
+* [Serving Dynamic Vector Tiles from PostGIS](https://blog.crunchydata.com/blog/dynamic-vector-tiles-from-postgis)
 * [Using TMS in Leaflet](https://leafletjs.com/examples/wms/wms.html)
 * [QGIS as OGC Data Client](https://docs.qgis.org/2.18/en/docs/user_manual/working_with_ogc/ogc_client_support.html)

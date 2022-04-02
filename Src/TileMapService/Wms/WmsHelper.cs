@@ -24,7 +24,8 @@ namespace TileMapService.Wms
 
         public static void DrawWebMercatorTilesToRasterCanvas(
             SKCanvas outputCanvas,
-            int width, int height,
+            int width,
+            int height,
             Models.Bounds boundingBox,
             IList<Models.TileDataset> sourceTiles,
             uint backgroundColor,
@@ -70,10 +71,18 @@ namespace TileMapService.Wms
             outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKPaint { FilterQuality = SKFilterQuality.High, });
         }
 
+        public static void DrawImageUnscaledToRasterCanvas(
+            SKCanvas outputCanvas,
+            byte[] imageData)
+        {
+            using var sourceImage = SKImage.FromEncodedData(imageData);
+            outputCanvas.DrawImage(sourceImage, SKRect.Create(0, 0, sourceImage.Width, sourceImage.Height));
+        }
+
         public static List<Models.TileCoordinates> BuildTileCoordinatesList(Models.Bounds boundingBox, int width)
         {
             var geoBBox = EntitiesConverter.MapRectangleToGeographicalBounds(boundingBox);
-            var zoomLevel = FindOptimalTileZoom(width, geoBBox);
+            var zoomLevel = FindOptimalTileZoomLevel(width, geoBBox);
             var tileCoordMin = GetTileCoordinatesAtPoint(geoBBox.MinLongitude, geoBBox.MinLatitude, zoomLevel);
             var tileCoordMax = GetTileCoordinatesAtPoint(geoBBox.MaxLongitude, geoBBox.MaxLatitude, zoomLevel);
 
@@ -89,14 +98,14 @@ namespace TileMapService.Wms
             return tileCoordinates;
         }
 
-        private static int FindOptimalTileZoom(int width, Models.GeographicalBounds geoBBox)
+        private static int FindOptimalTileZoomLevel(int width, Models.GeographicalBounds geoBBox)
         {
             var mapSize = WebMercator.MapSize(width, geoBBox.MinLongitude, geoBBox.MaxLongitude);
             var minZoom = 0;
             var minDistance = Double.MaxValue;
             for (var zoom = 0; zoom < 24; zoom++) // TODO: range?
             {
-                var mapSizeAtZoom = WebMercator.MapSize(zoom); // TODO: ? use tile size parameter instead of const
+                var mapSizeAtZoom = WebMercator.MapSize(zoom, WebMercator.DefaultTileSize); // TODO: ? use tile size parameter instead of const
                 var distance = Math.Abs(mapSize - mapSizeAtZoom);
                 if (distance < minDistance)
                 {

@@ -92,6 +92,33 @@ Required: `true`
 Full path to `mbtiles` database file to store cached tiles. File will be created automatically, if not exists.
 
 
+#### wmts
+Type: `Object`<br>
+Required: `false`
+
+Remote service properties for source of type `wmts`.
+
+#### capabilitiesurl
+Type: `String`<br>
+Required: `true`
+WMTS Capabilities document url like `http://example.com/wmts/1.0.0/WMTSCapabilities.xml` or just base WMTS service url like `http://example.com/wmts/`.
+
+#### layer
+Type: `String`<br>
+Required: `true`
+Layer identifier.
+
+#### style
+Type: `String`<br>
+Required: `false`
+Style identifier, `default` if not defined.
+
+#### tilematrixset
+Type: `String`<br>
+Required: `true`
+TileMatrixSet identifier.
+
+
 #### table
 Type: `Object`<br>
 Required: `false`

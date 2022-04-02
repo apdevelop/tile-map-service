@@ -168,13 +168,43 @@ namespace TileMapService.Tests
         }
 
         [Test]
-        public async Task GetWebMercatorTile000Async()
+        public async Task GetTile000KvpSyntaxAsync()
         {
             var db = new MBT.Repository(MbtilesFilePath1);
             var expected = db.ReadTile(0, 0, 0);
 
             var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            var actual = await r.Content.ReadAsByteArrayAsync();
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public async Task GetTile000KvpSyntaxOtherFormatAsync()
+        {
+            var db = new MBT.Repository(MbtilesFilePath1);
+            var expected = Utils.ImageHelper.ConvertImageToFormat(db.ReadTile(0, 0, 0), MediaTypeNames.Image.Jpeg, 90);
+
+            var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
+            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            var actual = await r.Content.ReadAsByteArrayAsync();
+
+            Assert.AreEqual(MediaTypeNames.Image.Jpeg, r.Content.Headers.ContentType.MediaType);
+            Assert.AreEqual(MediaTypeNames.Image.Jpeg, Utils.ImageHelper.GetImageMediaType(actual));
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public async Task GetTile000RestfulSyntaxAsync()
+        {
+            var db = new MBT.Repository(MbtilesFilePath1);
+            var expected = db.ReadTile(0, 0, 0);
+
+            var r = await client.GetAsync("/wmts/tile/1.0.0/world-mercator-hd/normal/EPSG:3857/0/0/0.png");
+            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.AreEqual(MediaTypeNames.Image.Png, r.Content.Headers.ContentType.MediaType);
             var actual = await r.Content.ReadAsByteArrayAsync();
 
             Assert.AreEqual(expected, actual);
@@ -197,6 +227,8 @@ namespace TileMapService.Tests
             Assert.IsTrue(messageNode.InnerText.Length > 10);
             Assert.AreEqual("Not Found", messageNode.Attributes["exceptionCode"].Value);
         }
+
+        #region Utility methods
 
         private static async Task PrepareTestDataAsync()
         {
@@ -260,5 +292,7 @@ namespace TileMapService.Tests
                 }
             }
         }
+
+        #endregion
     }
 }

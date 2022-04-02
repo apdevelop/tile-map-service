@@ -60,7 +60,7 @@ namespace TileMapService.Controllers
             ////int feature_count = 1
             )
         {
-            // $"WMS [{Request.GetOwinContext().Request.RemoteIpAddress}:{Request.GetOwinContext().Request.RemotePort}] {Request.RequestUri}";
+            //// $"WMS [{Request.GetOwinContext().Request.RemoteIpAddress}:{Request.GetOwinContext().Request.RemotePort}] {Request.RequestUri}";
 
             if (String.Compare(service, Identifiers.Wms, StringComparison.OrdinalIgnoreCase) != 0)
             {
@@ -93,9 +93,11 @@ namespace TileMapService.Controllers
                     layers,
                     WmsHelper.GetWmsVersion(version) == Wms.Version.Version130 ? crs : srs,
                     bbox,
-                    width, height,
+                    width,
+                    height,
                     format,
-                    transparent, bgcolor);
+                    transparent,
+                    bgcolor);
             }
             ////else if (String.Compare(request, Identifiers.GetFeatureInfo, StringComparison.Ordinal) == 0)
             ////{
@@ -227,7 +229,7 @@ namespace TileMapService.Controllers
 
             var isTransparent = transparent ?? false;
             var backgroundColor = U.EntitiesConverter.GetArgbColorFromString(bgcolor, isTransparent);
-            var imageData = await CreateMapImageAsync(width, height, boundingBox, format, backgroundColor, layersList);
+            var imageData = await CreateMapImageAsync(width, height, boundingBox, format, isTransparent, backgroundColor, layersList);
 
             return File(imageData, format);
         }
@@ -237,6 +239,7 @@ namespace TileMapService.Controllers
             int height,
             Models.Bounds boundingBox,
             string format,
+            bool isTransparent,
             uint backgroundColor,
             IList<string> layerNames)
         {
@@ -252,16 +255,17 @@ namespace TileMapService.Controllers
 
             foreach (var layerName in layerNames)
             {
-                // TODO: ? optimize - single WMS request for WMS source type
-                // TODO: check SRS support in source
                 if (this.tileSourceFabric.Contains(layerName))
                 {
                     await DrawLayerAsync(
-                        width, height,
+                        this.tileSourceFabric.Get(layerName),
+                        width,
+                        height,
                         boundingBox,
                         canvas,
-                        this.tileSourceFabric.Get(layerName),
-                        backgroundColor);
+                        isTransparent,
+                        backgroundColor,
+                        format);
                 }
             }
 
@@ -273,17 +277,34 @@ namespace TileMapService.Controllers
         }
 
         private static async Task DrawLayerAsync(
-            int width, int height,
+            ITileSource source,
+            int width,
+            int height,
             Models.Bounds boundingBox,
             SKCanvas outputCanvas,
-            ITileSource source,
-            uint backgroundColor)
+            bool isTransparent,
+            uint backgroundColor,
+            string format)
         {
-            var tileCoordinates = WmsHelper.BuildTileCoordinatesList(boundingBox, width);
-            var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);
-            if (sourceTiles.Count > 0)
+            // TODO: check SRS support in source
+            if ((String.Compare(source.Configuration.Type, SourceConfiguration.TypeWms) == 0) &&
+                (source.Configuration.Cache == null))
             {
-                WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, U.WebMercator.TileSize);
+                // Cascading GetMap request to WMS source as single GetMap request
+                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor, format);
+                if (imageData != null)
+                {
+                    WmsHelper.DrawImageUnscaledToRasterCanvas(outputCanvas, imageData);
+                }
+            }
+            else
+            {
+                var tileCoordinates = WmsHelper.BuildTileCoordinatesList(boundingBox, width);
+                var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);
+                if (sourceTiles.Count > 0)
+                {
+                    WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, U.WebMercator.TileSize);
+                }
             }
         }
 

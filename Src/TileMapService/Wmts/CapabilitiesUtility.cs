@@ -28,8 +28,6 @@ namespace TileMapService.Wmts
 
         private const string XlinkPrefix = "xlink";
 
-        private const string XlinkNamespaceUri = "http://www.w3.org/1999/xlink";
-
         #endregion
 
         // TODO: DTO classes for WMTS capabilities description (like Layer, Capabilities)
@@ -49,7 +47,7 @@ namespace TileMapService.Wmts
             var doc = new XmlDocument();
             var rootElement = doc.CreateElement(String.Empty, "Capabilities", WmtsNamespaceUri);
             rootElement.SetAttribute("xmlns:" + OwsPrefix, Identifiers.OwsNamespaceUri);
-            rootElement.SetAttribute("xmlns:" + XlinkPrefix, XlinkNamespaceUri);
+            rootElement.SetAttribute("xmlns:" + XlinkPrefix, Identifiers.XlinkNamespaceUri);
             rootElement.SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             rootElement.SetAttribute("xmlns:gml", "http://www.opengis.net/gml");
             rootElement.SetAttribute("version", Identifiers.Version100);
@@ -57,22 +55,22 @@ namespace TileMapService.Wmts
 
             var serviceIdentificationElement = doc.CreateElement(OwsPrefix, "ServiceIdentification", Identifiers.OwsNamespaceUri);
 
-            var titleElement = doc.CreateElement(OwsPrefix, "Title", Identifiers.OwsNamespaceUri);
+            var titleElement = doc.CreateElement(OwsPrefix, Identifiers.TitleElement, Identifiers.OwsNamespaceUri);
             titleElement.InnerText = this.service.Title ?? String.Empty;
             serviceIdentificationElement.AppendChild(titleElement);
 
-            var abstractElement = doc.CreateElement(OwsPrefix, "Abstract", Identifiers.OwsNamespaceUri);
+            var abstractElement = doc.CreateElement(OwsPrefix, Identifiers.AbstractElement, Identifiers.OwsNamespaceUri);
             abstractElement.InnerText = this.service.Abstract ?? String.Empty;
             serviceIdentificationElement.AppendChild(abstractElement);
 
-            var serviceKeywordListElement = doc.CreateElement(OwsPrefix, "Keywords", Identifiers.OwsNamespaceUri);
+            var serviceKeywordListElement = doc.CreateElement(OwsPrefix, Identifiers.KeywordsElement, Identifiers.OwsNamespaceUri);
             if (service.Keywords != null)
             {
                 foreach (var keyword in service.Keywords)
                 {
                     if (!String.IsNullOrWhiteSpace(keyword))
                     {
-                        var serviceKeywordElement = doc.CreateElement(OwsPrefix, "Keyword", Identifiers.OwsNamespaceUri);
+                        var serviceKeywordElement = doc.CreateElement(OwsPrefix, Identifiers.KeywordElement, Identifiers.OwsNamespaceUri);
                         serviceKeywordElement.InnerText = keyword;
                         serviceKeywordListElement.AppendChild(serviceKeywordElement);
                     }
@@ -100,15 +98,28 @@ namespace TileMapService.Wmts
 
             rootElement.AppendChild(serviceProviderElement);
 
-            var operationsMetadataElement = doc.CreateElement(OwsPrefix, "OperationsMetadata", Identifiers.OwsNamespaceUri);
-            operationsMetadataElement.AppendChild(CreateOperationElement(doc, this.baseUrl, "GetCapabilities"));
-            operationsMetadataElement.AppendChild(CreateOperationElement(doc, this.baseUrl, "GetTile"));
-            // TODO: GetFeatureInfo
+            var operationsMetadataElement = doc.CreateElement(OwsPrefix, Identifiers.OperationsMetadataElement, Identifiers.OwsNamespaceUri);
+            operationsMetadataElement.AppendChild(CreateOperationElement(
+                doc,
+                new[] 
+                {
+                    new OperationProperties { Href = this.baseUrl + $"/{Identifiers.Version100}/WMTSCapabilities.xml", Encoding = Identifiers.RESTful },
+                    new OperationProperties { Href = this.baseUrl + "?", Encoding = Identifiers.KVP },
+                },
+                Identifiers.GetCapabilities));
+            operationsMetadataElement.AppendChild(CreateOperationElement(
+                doc,
+                new[]
+                {
+                    new OperationProperties { Href = this.baseUrl + $"/tile/{Identifiers.Version100}/", Encoding = Identifiers.RESTful },
+                    new OperationProperties { Href = this.baseUrl + "?", Encoding = Identifiers.KVP },
+                },
+                Identifiers.GetTile));
+            // TODO: ? GetFeatureInfo
             rootElement.AppendChild(operationsMetadataElement);
 
             var contentsElement = doc.CreateElement(String.Empty, "Contents", WmtsNamespaceUri);
 
-            // TODO: EPSG:4326 support
             var identifiers = new HashSet<string>();
             foreach (var layer in this.layers)
             {
@@ -117,7 +128,7 @@ namespace TileMapService.Wmts
                     case Utils.SrsCodes.EPSG3857:
                         {
                             var identifier = String.Format(CultureInfo.InvariantCulture, "google3857_{0}-{1}", layer.MinZoom, layer.MaxZoom);
-                            contentsElement.AppendChild(CreateLayerElement(doc, layer, identifier));
+                            contentsElement.AppendChild(CreateLayerElement(doc, this.baseUrl, layer, identifier));
 
                             if (!identifiers.Contains(identifier))
                             {
@@ -135,7 +146,7 @@ namespace TileMapService.Wmts
                     case Utils.SrsCodes.EPSG4326:
                         {
                             var identifier = String.Format(CultureInfo.InvariantCulture, "WGS84_{0}-{1}", layer.MinZoom, layer.MaxZoom);
-                            contentsElement.AppendChild(CreateLayerElement(doc, layer, identifier));
+                            contentsElement.AppendChild(CreateLayerElement(doc, this.baseUrl, layer, identifier));
 
                             if (!identifiers.Contains(identifier))
                             {
@@ -222,43 +233,48 @@ namespace TileMapService.Wmts
             return result;
         }
 
-        private static XmlElement CreateOperationElement(XmlDocument doc, string baseUrl, string name)
+        private static XmlElement CreateOperationElement(XmlDocument doc, OperationProperties[] props, string name)
         {
             var operationElement = doc.CreateElement(OwsPrefix, "Operation", Identifiers.OwsNamespaceUri);
             operationElement.SetAttribute("name", name);
 
-            var DCP = doc.CreateElement(OwsPrefix, "DCP", Identifiers.OwsNamespaceUri);
-            var HTTP = doc.CreateElement(OwsPrefix, "HTTP", Identifiers.OwsNamespaceUri);
+            var DCPElement = doc.CreateElement(OwsPrefix, "DCP", Identifiers.OwsNamespaceUri);
+            var HTTPElement = doc.CreateElement(OwsPrefix, "HTTP", Identifiers.OwsNamespaceUri);
 
-            var getElement = doc.CreateElement(OwsPrefix, "Get", Identifiers.OwsNamespaceUri);
-            var hrefAttribute = doc.CreateAttribute(XlinkPrefix, "href", XlinkNamespaceUri);
-            hrefAttribute.Value = baseUrl + "?";
-            getElement.Attributes.Append(hrefAttribute);
+            foreach (var prop in props)
+            {
+                var getElement = doc.CreateElement(OwsPrefix, "Get", Identifiers.OwsNamespaceUri);
+                var hrefAttribute = doc.CreateAttribute(XlinkPrefix, "href", Identifiers.XlinkNamespaceUri);
+                hrefAttribute.Value = prop.Href;
+                getElement.Attributes.Append(hrefAttribute);
 
-            var constraintElement = doc.CreateElement(OwsPrefix, "Constraint", Identifiers.OwsNamespaceUri);
-            constraintElement.SetAttribute("name", "GetEncoding");
+                var constraintElement = doc.CreateElement(OwsPrefix, "Constraint", Identifiers.OwsNamespaceUri);
+                constraintElement.SetAttribute("name", "GetEncoding");
 
-            var allowedValuesElement = doc.CreateElement(OwsPrefix, "AllowedValues", Identifiers.OwsNamespaceUri);
+                var allowedValuesElement = doc.CreateElement(OwsPrefix, "AllowedValues", Identifiers.OwsNamespaceUri);
+                var valueElement = doc.CreateElement(OwsPrefix, "Value", Identifiers.OwsNamespaceUri);
+                valueElement.InnerText = prop.Encoding;
+                allowedValuesElement.AppendChild(valueElement);
 
-            var valueElement = doc.CreateElement(OwsPrefix, "Value", Identifiers.OwsNamespaceUri);
-            valueElement.InnerText = "KVP";
+                constraintElement.AppendChild(allowedValuesElement);
+                getElement.AppendChild(constraintElement);
 
-            allowedValuesElement.AppendChild(valueElement);
-            constraintElement.AppendChild(allowedValuesElement);
-            getElement.AppendChild(constraintElement);
-            HTTP.AppendChild(getElement);
-            DCP.AppendChild(HTTP);
-            operationElement.AppendChild(DCP);
+                HTTPElement.AppendChild(getElement);
+            }
+
+            DCPElement.AppendChild(HTTPElement);
+            operationElement.AppendChild(DCPElement);
 
             return operationElement;
         }
 
         private static XmlElement CreateLayerElement(
             XmlDocument doc,
+            string baseUrl,
             M.Layer layer,
             string tileMatrixSetIdentifier)
         {
-            var layerElement = doc.CreateElement(String.Empty, "Layer", WmtsNamespaceUri);
+            var layerElement = doc.CreateElement(String.Empty, Identifiers.LayerElement, WmtsNamespaceUri);
 
             var titleElement = doc.CreateElement(OwsPrefix, "Title", Identifiers.OwsNamespaceUri);
             titleElement.InnerText = layer.Title ?? String.Empty;
@@ -272,9 +288,11 @@ namespace TileMapService.Wmts
             identifierElement.InnerText = layer.Identifier ?? String.Empty;
             layerElement.AppendChild(identifierElement);
 
+            const string StyleNormal = "normal";
+
             var styleElement = doc.CreateElement(String.Empty, "Style", WmtsNamespaceUri);
             var styleIdentifierElement = doc.CreateElement(OwsPrefix, "Identifier", Identifiers.OwsNamespaceUri);
-            styleIdentifierElement.InnerText = "normal";
+            styleIdentifierElement.InnerText = StyleNormal;
             styleElement.SetAttribute("isDefault", "true");
             styleElement.AppendChild(styleIdentifierElement);
             layerElement.AppendChild(styleElement);
@@ -289,7 +307,7 @@ namespace TileMapService.Wmts
 
             static string FormatPoint(M.GeographicalPoint point)
             {
-                return String.Format( // TODO: rounding in other implementations ?
+                return String.Format( // TODO: rounding rule ?
                     CultureInfo.InvariantCulture,
                     "{0:0.000000##########} {1:0.000000##########}",
                     point.Longitude,
@@ -349,6 +367,13 @@ namespace TileMapService.Wmts
 
             tileMatrixSetLinkElement.AppendChild(tileMatrixSetElement);
             layerElement.AppendChild(tileMatrixSetLinkElement);
+
+            // https://<wmts-url>/tile/<wmts-version>/<layer>/<style>/<tilematrixset>/<tilematrix>/<tilerow>/<tilecol>.<format>
+            var resourceURLElement = doc.CreateElement(String.Empty, Identifiers.ResourceURLElement, WmtsNamespaceUri);
+            resourceURLElement.SetAttribute("format", layer.ContentType ?? String.Empty);
+            resourceURLElement.SetAttribute("template", $"{baseUrl}/tile/{Identifiers.Version100}/{layer.Identifier}/{{Style}}/{{TileMatrixSet}}/{{TileMatrix}}/{{TileRow}}/{{TileCol}}.{layer.Format}");
+            resourceURLElement.SetAttribute("resourceType", "tile");
+            layerElement.AppendChild(resourceURLElement);
 
             return layerElement;
         }
@@ -477,6 +502,13 @@ namespace TileMapService.Wmts
             }
 
             return tileMatrixSetElement;
+        }
+
+        class OperationProperties
+        {
+            public string Href { get; set; } = String.Empty;
+
+            public string Encoding { get; set; } = String.Empty;
         }
     }
 }

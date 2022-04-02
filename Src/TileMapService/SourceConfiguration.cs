@@ -137,10 +137,18 @@ namespace TileMapService
         public SourceCacheConfiguration? Cache { get; set; }
 
         /// <summary>
+        ///  WMTS source type configuration.
+        /// </summary>
+        [JsonPropertyName("wmts")]
+        public WmtsSourceConfiguration? Wmts { get; set; }
+
+        // TODO: separate PostGIS configuration object naming "postgis"
+
+        /// <summary>
         /// Table configuration for PostGIS source type.
         /// </summary>
         [JsonPropertyName("table")]
-        public SourceTableConfiguration? Table { get; set; }
+        public PostGisSourceTableConfiguration? Table { get; set; }
     }
 
     /// <summary>
@@ -162,9 +170,9 @@ namespace TileMapService
     }
 
     /// <summary>
-    /// Table configuration for PostGIS source type.
+    /// PostGIS source type configuration.
     /// </summary>
-    public class SourceTableConfiguration
+    public class PostGisSourceTableConfiguration
     {
         /// <summary>
         /// Table name.
@@ -183,5 +191,35 @@ namespace TileMapService
         /// </summary>
         [JsonPropertyName("fields")]
         public string? Fields { get; set; }
+    }
+
+    /// <summary>
+    /// WMTS source type configuration.
+    /// </summary>
+    public class WmtsSourceConfiguration
+    {
+        /// <summary>
+        /// WMTS Capabilities document URL.
+        /// </summary>
+        [JsonPropertyName("capabilitiesurl")]
+        public string? CapabilitiesUrl { get; set; }
+
+        /// <summary>
+        /// Layer identifier.
+        /// </summary>
+        [JsonPropertyName("layer")]
+        public string? Layer { get; set; }
+
+        /// <summary>
+        /// Style identifier.
+        /// </summary>
+        [JsonPropertyName("style")]
+        public string? Style { get; set; }
+
+        /// <summary>
+        /// TileMatrixSet identifier.
+        /// </summary>
+        [JsonPropertyName("tilematrixset")]
+        public string? TileMatrixSet { get; set; }
     }
 }

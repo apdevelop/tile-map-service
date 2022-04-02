@@ -48,8 +48,7 @@ namespace TileMapService.TileSources
 
             this.client = new HttpClient(); // TODO: custom headers from configuration
 
-            // TODO: read and use metadata from TMS, WMTS sources - implement TMS, WMTS capabilities client and DTO classes
-            var sourceCapabilities = await GetSourceCapabilitiesAsync();
+            var sourceCapabilities = await this.GetSourceCapabilitiesAsync();
 
             // TODO: combine capabilies with configuration
             var title = String.IsNullOrEmpty(this.configuration.Title) ?
@@ -91,6 +90,8 @@ namespace TileMapService.TileSources
                 TileWidth = sourceCapabilities != null ? sourceCapabilities.TileWidth : Utils.WebMercator.DefaultTileWidth,
                 TileHeight = sourceCapabilities != null ? sourceCapabilities.TileHeight : Utils.WebMercator.DefaultTileHeight,
                 Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only Web Mercator is supported in MBTiles specification
+                Wmts = this.configuration.Wmts,
+                Table = null,
             };
 
             if (this.configuration.Cache != null)
@@ -156,13 +157,28 @@ namespace TileMapService.TileSources
                                 result.TileHeight = properties.TileHeight;
                             }
                         }
+
                         break;
                     }
                 case SourceConfiguration.TypeWmts:
                     {
-                        var sourceLayerName = Utils.UrlHelper.GetQueryParameters(this.configuration.Location).First(p => p.Key == "layer");
-                        var url = Wmts.QueryUtility.GetCapabilitiesWmsUrl(this.configuration.Location);
-                        var r = await this.client.GetAsync(url);
+                        string? sourceLayerIdentifier = null, capabilitiesUrl = null;
+                        if (this.configuration.Wmts != null)
+                        {
+                            capabilitiesUrl = (!String.IsNullOrWhiteSpace(this.configuration.Wmts.CapabilitiesUrl) && this.configuration.Wmts.CapabilitiesUrl.EndsWith(".xml")) ?
+                                this.configuration.Wmts.CapabilitiesUrl :
+                                Wmts.QueryUtility.GetCapabilitiesUrl(this.configuration.Location);
+                            sourceLayerIdentifier = this.configuration.Wmts.Layer;
+                        }
+                        else
+                        {
+                            capabilitiesUrl = Wmts.QueryUtility.GetCapabilitiesUrl(this.configuration.Location);
+                            sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(this.configuration.Location)
+                                .First(p => String.Compare(p.Key, Wmts.QueryUtility.WmtsQueryLayer, StringComparison.OrdinalIgnoreCase) == 0)
+                                .Value;
+                        }
+
+                        var r = await this.client.GetAsync(capabilitiesUrl);
                         if (r.IsSuccessStatusCode)
                         {
                             var xml = await r.Content.ReadAsStringAsync();
@@ -171,13 +187,14 @@ namespace TileMapService.TileSources
                                 var doc = new System.Xml.XmlDocument();
                                 doc.LoadXml(xml);
                                 var layers = Wmts.CapabilitiesUtility.GetLayers(doc);
-                                var layer = layers.FirstOrDefault(l => l.Identifier == sourceLayerName.Value);
+                                var layer = layers.FirstOrDefault(l => l.Identifier == sourceLayerIdentifier);
                                 if (layer != null)
                                 {
                                     result.GeographicalBounds = layer.GeographicalBounds;
                                 }
 
-                                // TODO: use ResourceURL resourceType="tile" template="..."
+                                // TODO: detect KVP/RESTful syntax support for GetTile from source capabilities
+                                // TODO: use ResourceURL resourceType="tile" template="...", change Location ?
                             }
                         }
 
@@ -186,7 +203,7 @@ namespace TileMapService.TileSources
                 case SourceConfiguration.TypeWms:
                     {
                         var sourceLayerName = Utils.UrlHelper.GetQueryParameters(this.configuration.Location).First(p => p.Key == "layers");
-                        var url = Wms.QueryUtility.GetCapabilitiesWmsUrl(this.configuration.Location);
+                        var url = Wms.QueryUtility.GetCapabilitiesUrl(this.configuration.Location);
                         var r = await this.client.GetAsync(url);
                         if (r.IsSuccessStatusCode)
                         {
@@ -234,7 +251,9 @@ namespace TileMapService.TileSources
                     throw new InvalidOperationException("HTTP client was not initialized.");
                 }
 
-                var url = GetSourceUrl(x, y, z);
+                // TODO: use metatiles to avoid clipping at tile borders
+
+                var url = GetSourceTileUrl(x, y, z);
                 var response = await client.GetAsync(url);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -263,8 +282,50 @@ namespace TileMapService.TileSources
             }
         }
 
+        internal async Task<byte[]?> GetWmsMapAsync(
+            int width,
+            int height,
+            Models.Bounds boundingBox,
+            bool isTransparent,
+            uint backgroundColor,
+            string format)
+        {
+            if (this.client == null)
+            {
+                throw new InvalidOperationException("HTTP client was not initialized.");
+            }
+
+            if (String.IsNullOrEmpty(this.configuration.Location))
+            {
+                throw new InvalidOperationException("configuration.Location is null or empty");
+            }
+
+            var url = Wms.QueryUtility.GetMapUrl(this.configuration.Location, width, height, boundingBox, isTransparent, backgroundColor, format);
+            var response = await client.GetAsync(url);
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                if (response.Content.Headers.ContentType != null &&
+                    response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
+                {
+                    var message = await response.Content.ReadAsStringAsync();
+                    System.Diagnostics.Debug.WriteLine(message); // TODO: write error details to log
+                    return null;
+                }
+
+                // TODO: more checks of Content-Type, response size, etc.
+
+                var data = await response.Content.ReadAsByteArrayAsync();
+
+                return data;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private string GetSourceUrl(int x, int y, int z)
+        private string GetSourceTileUrl(int x, int y, int z)
         {
             if (String.IsNullOrEmpty(this.configuration.Location))
             {
@@ -291,7 +352,7 @@ namespace TileMapService.TileSources
             {
                 SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, y, z),
                 SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, y, z),
-                SourceConfiguration.TypeWmts => Wmts.QueryUtility.GetTileUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
+                SourceConfiguration.TypeWmts => Wmts.QueryUtility.GetTileKvpUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
                 SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
                 _ => throw new InvalidOperationException($"Source type '{this.configuration.Type}' is not supported."),
             };

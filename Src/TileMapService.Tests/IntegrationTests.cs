@@ -265,7 +265,7 @@ namespace TileMapService.Tests
             var actual1 = new TileDataStub(await r1.Content.ReadAsByteArrayAsync());
             Assert.AreEqual(expected000, actual1);
 
-            var r2 = await client.GetAsync("/wmts?layer=world-satellite-imagery&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=0&TileCol=0&TileRow=0");
+            var r2 = await client.GetAsync("/wmts?layer=world-satellite-imagery&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=0&TileCol=0&TileRow=0&Format=image/jpeg");
             Assert.AreEqual(HttpStatusCode.OK, r2.StatusCode);
             var actual2 = new TileDataStub(await r2.Content.ReadAsByteArrayAsync());
             Assert.AreEqual(expected000, actual2);

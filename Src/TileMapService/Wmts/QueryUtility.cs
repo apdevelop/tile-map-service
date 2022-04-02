@@ -14,7 +14,7 @@ namespace TileMapService.Wmts
         private const string WmtsQueryRequest = "request";
         private const string WmtsQueryFormat = "format";
 
-        private const string WmtsQueryLayer = "layer";
+        internal const string WmtsQueryLayer = "layer";
         private const string WmtsQueryStyle = "style";
         private const string WmtsQueryTilematrixSet = "tilematrixset";
 
@@ -22,14 +22,14 @@ namespace TileMapService.Wmts
         private const string WmtsQueryTileCol = "tilecol";
         private const string WmtsQueryTileRow = "tilerow";
 
-        public static string GetCapabilitiesWmsUrl(string baseUrl)
+        public static string GetCapabilitiesUrl(string url)
         {
             // Rebuilding url from configuration  https://stackoverflow.com/a/43407008/1182448
             // All parameters with values are taken from provided url
             // Mandatory parameters added if needed, with default (standard) values
 
-            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
-            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
+            var baseUri = Utils.UrlHelper.GetQueryBase(url);
+            var items = Utils.UrlHelper.GetQueryParameters(url);
 
             items.RemoveAll(kvp => kvp.Key == WmtsQueryLayer);
             items.RemoveAll(kvp => kvp.Key == WmtsQueryStyle);
@@ -52,39 +52,58 @@ namespace TileMapService.Wmts
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetTileUrl(string baseUrl, string format, int x, int y, int z)
+        public static string GetTileKvpUrl(string baseUrl, string format, int x, int y, int z)
         {
-            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
-            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
-
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryFormat);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileMatrix);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileCol);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileRow);
-
-            var qb = new QueryBuilder(items);
-            if (!items.Any(kvp => kvp.Key == WmtsQueryService))
+            // TODO: choose WMTS query with parameters or ResourceUrl with placeholders
+            if (IsResourceUrl(baseUrl))
             {
-                qb.Add(WmtsQueryService, Identifiers.WMTS);
+                return baseUrl
+                    .Replace("{" + WmtsQueryTileCol + "}", x.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
+                    .Replace("{" + WmtsQueryTileRow + "}", y.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
+                    .Replace("{" + WmtsQueryTileMatrix + "}", z.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase);
             }
-
-            if (!items.Any(kvp => kvp.Key == WmtsQueryVersion))
+            else
             {
-                qb.Add(WmtsQueryVersion, Identifiers.Version100);
+                var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
+                var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
+
+                items.RemoveAll(kvp => kvp.Key == WmtsQueryFormat);
+                items.RemoveAll(kvp => kvp.Key == WmtsQueryTileMatrix);
+                items.RemoveAll(kvp => kvp.Key == WmtsQueryTileCol);
+                items.RemoveAll(kvp => kvp.Key == WmtsQueryTileRow);
+
+                var qb = new QueryBuilder(items);
+                if (!items.Any(kvp => kvp.Key == WmtsQueryService))
+                {
+                    qb.Add(WmtsQueryService, Identifiers.WMTS);
+                }
+
+                if (!items.Any(kvp => kvp.Key == WmtsQueryVersion))
+                {
+                    qb.Add(WmtsQueryVersion, Identifiers.Version100);
+                }
+
+                if (!items.Any(kvp => kvp.Key == WmtsQueryRequest))
+                {
+                    qb.Add(WmtsQueryRequest, Identifiers.GetTile);
+                }
+
+                qb.Add(WmtsQueryFormat, format);
+
+                qb.Add(WmtsQueryTileMatrix, z.ToString(CultureInfo.InvariantCulture));
+                qb.Add(WmtsQueryTileCol, x.ToString(CultureInfo.InvariantCulture));
+                qb.Add(WmtsQueryTileRow, y.ToString(CultureInfo.InvariantCulture));
+
+                return baseUri + qb.ToQueryString();
             }
+        }
 
-            if (!items.Any(kvp => kvp.Key == WmtsQueryRequest))
-            {
-                qb.Add(WmtsQueryRequest, Identifiers.GetTile);
-            }
-
-            qb.Add(WmtsQueryFormat, format);
-
-            qb.Add(WmtsQueryTileMatrix, z.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmtsQueryTileCol, x.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmtsQueryTileRow, y.ToString(CultureInfo.InvariantCulture));
-
-            return baseUri + qb.ToQueryString();
+        public static bool IsResourceUrl(string url)
+        {
+            return
+                (url.IndexOf("{" + WmtsQueryTileMatrix + "}", StringComparison.InvariantCultureIgnoreCase) > 0) &&
+                (url.IndexOf("{" + WmtsQueryTileRow + "}", StringComparison.InvariantCultureIgnoreCase) > 0) &&
+                (url.IndexOf("{" + WmtsQueryTileCol + "}", StringComparison.InvariantCultureIgnoreCase) > 0);
         }
     }
 }

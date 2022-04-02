@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 using SkiaSharp;
 
@@ -55,6 +56,12 @@ namespace TileMapService.Utils
             return zero;
         }
 
+        public static string GetImageMediaType(byte[] imageData)
+        {
+            var codec = SKCodec.Create(new MemoryStream(imageData));
+            return MediaTypeFromSKEncodedImageFormat(codec.EncodedFormat);
+        }
+
         public static (int Width, int Height)? GetImageSize(byte[] imageData)
         {
             using var image = SKImage.FromEncodedData(imageData);
@@ -71,6 +78,31 @@ namespace TileMapService.Utils
                 MediaTypeNames.Image.Jpeg => SKEncodedImageFormat.Jpeg,
                 _ => throw new ArgumentOutOfRangeException(nameof(mediaType), $"Media type '{mediaType}' is not supported."),
             };
+        }
+
+        public static string MediaTypeFromSKEncodedImageFormat(SKEncodedImageFormat format)
+        {
+            return format switch
+            {
+                SKEncodedImageFormat.Png => MediaTypeNames.Image.Png,
+                SKEncodedImageFormat.Jpeg => MediaTypeNames.Image.Jpeg,
+                _ => throw new ArgumentOutOfRangeException(nameof(format), $"Format '{format}' is not supported."),
+            };
+        }
+
+        public static byte[]? ConvertImageToFormat(byte[] originalImage, string outputFormat, int quality)
+        {
+            using var image = SKImage.FromEncodedData(originalImage);
+            if (image != null)
+            {
+                using var stream = new MemoryStream();
+                image.Encode(SKEncodedImageFormatFromMediaType(outputFormat), quality).SaveTo(stream);
+                return stream.ToArray();
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

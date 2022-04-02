@@ -6,7 +6,7 @@
     /// <remarks>
     /// Structure is similar to <see cref="System.Net.Mime.MediaTypeNames"/> class.
     /// </remarks>
-    internal static class MediaTypeNames
+    public static class MediaTypeNames
     {
         public static class Image
         {

@@ -16,6 +16,13 @@
 		<ows:Operation name="GetCapabilities">
 			<ows:DCP>
 				<ows:HTTP>
+					<ows:Get xlink:href="http://localhost:5000/wmts/1.0.0/WMTSCapabilities.xml">
+						<ows:Constraint name="GetEncoding">
+							<ows:AllowedValues>
+								<ows:Value>RESTful</ows:Value>
+							</ows:AllowedValues>
+						</ows:Constraint>
+					</ows:Get>
 					<ows:Get xlink:href="http://localhost:5000/wmts?">
 						<ows:Constraint name="GetEncoding">
 							<ows:AllowedValues>
@@ -29,6 +36,13 @@
 		<ows:Operation name="GetTile">
 			<ows:DCP>
 				<ows:HTTP>
+					<ows:Get xlink:href="http://localhost:5000/wmts/tile/1.0.0/">
+						<ows:Constraint name="GetEncoding">
+							<ows:AllowedValues>
+								<ows:Value>RESTful</ows:Value>
+							</ows:AllowedValues>
+						</ows:Constraint>
+					</ows:Get>
 					<ows:Get xlink:href="http://localhost:5000/wmts?">
 						<ows:Constraint name="GetEncoding">
 							<ows:AllowedValues>
@@ -56,6 +70,7 @@
 			<TileMatrixSetLink>
 				<TileMatrixSet>google3857_0-18</TileMatrixSet>
 			</TileMatrixSetLink>
+			<ResourceURL format="image/png" template="http://localhost:5000/wmts/tile/1.0.0/world-countries/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png" resourceType="tile"/>
 		</Layer>
 		<TileMatrixSet>
 			<ows:Identifier>google3857_0-18</ows:Identifier>
@@ -252,6 +267,7 @@
 			<TileMatrixSetLink>
 				<TileMatrixSet>google3857_0-5</TileMatrixSet>
 			</TileMatrixSetLink>
+			<ResourceURL format="image/jpeg" template="http://localhost:5000/wmts/tile/1.0.0/world-satellite-imagery/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg" resourceType="tile"/>
 		</Layer>
 		<TileMatrixSet>
 			<ows:Identifier>google3857_0-5</ows:Identifier>
@@ -331,6 +347,7 @@
 			<TileMatrixSetLink>
 				<TileMatrixSet>google3857_5-10</TileMatrixSet>
 			</TileMatrixSetLink>
+			<ResourceURL format="image/png" template="http://localhost:5000/wmts/tile/1.0.0/caspian-sea/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png" resourceType="tile"/>
 		</Layer>
 		<TileMatrixSet>
 			<ows:Identifier>google3857_5-10</ows:Identifier>
@@ -410,6 +427,7 @@
 			<TileMatrixSetLink>
 				<TileMatrixSet>google3857_0-2</TileMatrixSet>
 			</TileMatrixSetLink>
+			<ResourceURL format="image/png" template="http://localhost:5000/wmts/tile/1.0.0/source3/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png" resourceType="tile"/>
 		</Layer>
 		<TileMatrixSet>
 			<ows:Identifier>google3857_0-2</ows:Identifier>
@@ -462,6 +480,7 @@
 			<TileMatrixSetLink>
 				<TileMatrixSet>google3857_0-2</TileMatrixSet>
 			</TileMatrixSetLink>
+			<ResourceURL format="image/png" template="http://localhost:5000/wmts/tile/1.0.0/httpproxy/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png" resourceType="tile"/>
 		</Layer>
 	</Contents>
 </Capabilities>
