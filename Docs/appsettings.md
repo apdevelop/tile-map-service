@@ -96,7 +96,7 @@ Full path to `mbtiles` database file to store cached tiles. File will be created
 Type: `Object`<br>
 Required: `false`
 
-Remote service properties for source of type `wmts`.
+Source of type `wmts` (WMTS service and layer) properties. This values has priority over `location` url parameters.
 
 #### capabilitiesurl
 Type: `String`<br>
@@ -119,13 +119,30 @@ Required: `true`
 TileMatrixSet identifier.
 
 
-#### table
+#### wms
+Type: `Object`<br>
+Required: `false`
+
+Source of type `wms` (WMS service and layer) properties. This values has priority over `location` url parameters.
+
+#### layer
+Type: `String`<br>
+Required: `true`
+Layer identifier (`layers` parameter is WMS request).
+
+#### version
+Type: `String`<br>
+Required: `true`
+WMS version identifier (must be `1.1.1` or `1.3.0`).
+
+
+#### postgis
 Type: `Object`<br>
 Required: `false`
 
 Table options for source of type `postgis` only.
 
-#### name
+#### table
 Type: `String`<br>
 Required: `true`
 Name of table with features in database.

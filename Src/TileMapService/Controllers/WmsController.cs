@@ -47,17 +47,17 @@ namespace TileMapService.Controllers
               bool? transparent = false,
               string bgcolor = Identifiers.DefaultBackgroundColor,
               string exceptions = MediaTypeNames.Application.OgcServiceExceptionXml
-            ////string time = null,
-            ////string sld = null,
-            ////string sld_body = null,
-            // GetFeatureInfo request parameters
-            ////string query_layers = null,
-            ////string info_format = MediaTypeNames.Text.Plain,
-            ////int x = 0,
-            ////int y = 0,
-            ////int i = 0, // WMS version 1.3.0
-            ////int j = 0, // WMS version 1.3.0
-            ////int feature_count = 1
+              ////string time = null,
+              ////string sld = null,
+              ////string sld_body = null,
+              // GetFeatureInfo request parameters
+              ////string query_layers = null,
+              ////string info_format = MediaTypeNames.Text.Plain,
+              ////int x = 0,
+              ////int y = 0,
+              ////int i = 0, // WMS version 1.3.0
+              ////int j = 0, // WMS version 1.3.0
+              ////int feature_count = 1
             )
         {
             //// $"WMS [{Request.GetOwinContext().Request.RemoteIpAddress}:{Request.GetOwinContext().Request.RemotePort}] {Request.RequestUri}";
@@ -169,12 +169,13 @@ namespace TileMapService.Controllers
                 return ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
             }
 
+            // TODO: more output formats
             var isFormatSupported = (String.Compare(format, MediaTypeNames.Image.Png, StringComparison.OrdinalIgnoreCase) == 0) ||
                                     (String.Compare(format, MediaTypeNames.Image.Jpeg, StringComparison.OrdinalIgnoreCase) == 0);
 
             if (!isFormatSupported)
             {
-                var message = $"Image format '{format}' is not supported";
+                var message = $"Image output format '{format}' is not supported";
                 return ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
             }
 
@@ -238,7 +239,7 @@ namespace TileMapService.Controllers
             int width,
             int height,
             Models.Bounds boundingBox,
-            string format,
+            string mediaType,
             bool isTransparent,
             uint backgroundColor,
             IList<string> layerNames)
@@ -264,14 +265,13 @@ namespace TileMapService.Controllers
                         boundingBox,
                         canvas,
                         isTransparent,
-                        backgroundColor,
-                        format);
+                        backgroundColor);
                 }
             }
 
-            var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(format);
+            var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(mediaType);
             using SKImage image = surface.Snapshot();
-            using SKData data = image.Encode(imageFormat, 90); // TODO: ? parameter
+            using SKData data = image.Encode(imageFormat, 90); // TODO: ? quality parameter
 
             return data.ToArray();
         }
@@ -283,15 +283,14 @@ namespace TileMapService.Controllers
             Models.Bounds boundingBox,
             SKCanvas outputCanvas,
             bool isTransparent,
-            uint backgroundColor,
-            string format)
+            uint backgroundColor)
         {
             // TODO: check SRS support in source
             if ((String.Compare(source.Configuration.Type, SourceConfiguration.TypeWms) == 0) &&
                 (source.Configuration.Cache == null))
             {
                 // Cascading GetMap request to WMS source as single GetMap request
-                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor, format);
+                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor);
                 if (imageData != null)
                 {
                     WmsHelper.DrawImageUnscaledToRasterCanvas(outputCanvas, imageData);

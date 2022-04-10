@@ -137,8 +137,7 @@ namespace TileMapService.Wms
                     }
                 case Version.Version130:
                     {
-                        // TODO: ! support for 1.3.0 bboxElementName = "EX_GeographicBoundingBox";
-                        bboxElementName = null;
+                        bboxElementName = "EX_GeographicBoundingBox";
                         defaultNsPrefix = "ns:";
                         nsManager.AddNamespace("ns", "http://www.opengis.net/wms");
                         xpath = $@"/ns:{Identifiers.WMS_CapabilitiesElement}//ns:Capability//ns:{Identifiers.LayerElement}[not(descendant::*[local-name() = '{Identifiers.LayerElement}'])]";
@@ -158,14 +157,33 @@ namespace TileMapService.Wms
                     var layerTitle = layer.SelectSingleNode(defaultNsPrefix + "Title", nsManager);
                     var layerQueryable = layer.Attributes?[Identifiers.QueryableAttribute];
 
-                    XmlAttribute? minxAttribute = null, minyAttribute = null, maxxAttribute = null, maxyAttribute = null;
+                    string? minx = null, miny = null, maxx = null, maxy = null;
                     var bbox = bboxElementName != null ? layer.SelectSingleNode(defaultNsPrefix + bboxElementName, nsManager) : null;
-                    if (bbox != null && bbox.Attributes != null)
+                    if (bbox != null)
                     {
-                        minxAttribute = bbox.Attributes["minx"];
-                        minyAttribute = bbox.Attributes["miny"];
-                        maxxAttribute = bbox.Attributes["maxx"];
-                        maxyAttribute = bbox.Attributes["maxy"];
+                        switch (version)
+                        {
+                            case Version.Version111:
+                                {
+                                    if (bbox.Attributes != null)
+                                    {
+                                        minx = bbox.Attributes["minx"]?.Value;
+                                        miny = bbox.Attributes["miny"]?.Value;
+                                        maxx = bbox.Attributes["maxx"]?.Value;
+                                        maxy = bbox.Attributes["maxy"]?.Value;
+                                    }
+
+                                    break;
+                                }
+                            case Version.Version130:
+                                {
+                                    minx = bbox.SelectSingleNode(defaultNsPrefix + "westBoundLongitude", nsManager)?.InnerText;
+                                    maxx = bbox.SelectSingleNode(defaultNsPrefix + "eastBoundLongitude", nsManager)?.InnerText;
+                                    miny = bbox.SelectSingleNode(defaultNsPrefix + "southBoundLatitude", nsManager)?.InnerText;
+                                    maxy = bbox.SelectSingleNode(defaultNsPrefix + "northBoundLatitude", nsManager)?.InnerText;
+                                    break;
+                                }
+                        }
                     }
 
                     result.Add(new Layer
@@ -175,10 +193,10 @@ namespace TileMapService.Wms
                         IsQueryable = layerQueryable != null && layerQueryable.Value == "1",
                         GeographicalBounds = bbox != null && bbox.Attributes != null ?
                             new Models.GeographicalBounds(
-                                minxAttribute != null ? Double.Parse(minxAttribute.Value, CultureInfo.InvariantCulture) : 0.0,
-                                minyAttribute != null ? Double.Parse(minyAttribute.Value, CultureInfo.InvariantCulture) : 0.0,
-                                maxxAttribute != null ? Double.Parse(maxxAttribute.Value, CultureInfo.InvariantCulture) : 0.0,
-                                maxyAttribute != null ? Double.Parse(maxyAttribute.Value, CultureInfo.InvariantCulture) : 0.0) :
+                                minx != null ? Double.Parse(minx, CultureInfo.InvariantCulture) : 0.0,
+                                miny != null ? Double.Parse(miny, CultureInfo.InvariantCulture) : 0.0,
+                                maxx != null ? Double.Parse(maxx, CultureInfo.InvariantCulture) : 0.0,
+                                maxy != null ? Double.Parse(maxy, CultureInfo.InvariantCulture) : 0.0) :
                             null,
                     });
                 }

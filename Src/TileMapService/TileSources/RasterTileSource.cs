@@ -81,7 +81,7 @@ namespace TileMapService.TileSources
                 MaxZoom = maxZoom,
                 GeographicalBounds = this.rasterProperties.GeographicalBounds,
                 Cache = null, // Not used for local raster file source
-                Table = null,
+                PostGis = null,
             };
 
             return Task.CompletedTask;

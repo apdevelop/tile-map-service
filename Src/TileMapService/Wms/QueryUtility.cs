@@ -12,6 +12,7 @@ namespace TileMapService.Wms
         private const string WmsQueryService = "service";
         private const string WmsQueryVersion = "version";
         private const string WmsQueryRequest = "request";
+        internal const string WmsQueryLayers = "layers";
         private const string WmsQuerySrs = "srs";
         private const string WmsQueryCrs = "crs";
         private const string WmsQueryBBox = "bbox";
@@ -23,139 +24,122 @@ namespace TileMapService.Wms
 
         private const string EPSG3857 = Utils.SrsCodes.EPSG3857; // TODO: EPSG:4326 support
 
-        public static string GetCapabilitiesUrl(string baseUrl)
+        public static string GetCapabilitiesUrl(SourceConfiguration configuration)
         {
-            // Rebuilding url from configuration  https://stackoverflow.com/a/43407008/1182448
-            // All parameters with values are taken from provided url
-            // Mandatory parameters added if needed, with default (standard) values
-
-            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
-            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
-
-            items.RemoveAll(kvp => kvp.Key == WmsQuerySrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryCrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryBBox);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryWidth);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryHeight);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryFormat);
-
-            var qb = new QueryBuilder(items);
-            if (!items.Any(kvp => kvp.Key == WmsQueryService))
+            var location = configuration.Location;
+            if (String.IsNullOrWhiteSpace(location))
             {
-                qb.Add(WmsQueryService, Identifiers.Wms);
+                throw new ArgumentException("Location must be valid string");
             }
 
-            if (!items.Any(kvp => kvp.Key == WmsQueryRequest))
+            var baseUri = Utils.UrlHelper.GetQueryBase(location);
+            var items = Utils.UrlHelper.GetQueryParameters(location);
+
+            // Version
+            var wmsVersion = Identifiers.Version111; // Default WMS version is 1.1.1
+            if (configuration.Wms != null && !String.IsNullOrWhiteSpace(configuration.Wms.Version))
             {
-                qb.Add(WmsQueryRequest, Identifiers.GetCapabilities);
+                wmsVersion = configuration.Wms.Version;
+            }
+            else if (items.Any(kvp => kvp.Key == WmsQueryVersion))
+            {
+                wmsVersion = items.First(kvp => kvp.Key == WmsQueryVersion).Value;
+            }
+
+            var qb = new QueryBuilder
+            {
+                { WmsQueryService, Identifiers.Wms },
+                { WmsQueryRequest, Identifiers.GetCapabilities }
+            };
+
+            // GeoServer specific parameter
+            if (items.Any(kvp => kvp.Key == "map")) // TODO: add custom parameters to WMS configuration
+            {
+                qb.Add("map", items.First(kvp => kvp.Key == "map").Value);
             }
 
             return baseUri + qb.ToQueryString();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetTileUrl(string baseUrl, string format, int x, int y, int z)
+        public static string GetTileUrl(
+            SourceConfiguration configuration,
+            int x, int y, int z)
         {
-            // Rebuilding url from configuration  https://stackoverflow.com/a/43407008/1182448
-            // All parameters with values are taken from provided url
-            // Mandatory parameters added if needed, with default (standard) values
-
-            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
-            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
-
-            // Will be replaced
-            items.RemoveAll(kvp => kvp.Key == WmsQuerySrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryCrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryBBox);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryWidth);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryHeight);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryFormat);
-
-            var qb = new QueryBuilder(items);
-            if (!items.Any(kvp => kvp.Key == WmsQueryService))
-            {
-                qb.Add(WmsQueryService, Identifiers.Wms);
-            }
-
-            var wmsVersion = String.Empty;
-            if (!items.Any(kvp => kvp.Key == WmsQueryVersion))
-            {
-                qb.Add(WmsQueryVersion, Identifiers.Version111); // Default WMS version is 1.1.1
-                wmsVersion = Identifiers.Version111;
-            }
-            else
-            {
-                wmsVersion = items.First(kvp => kvp.Key == WmsQueryVersion).Value;
-            }
-
-            if (!items.Any(kvp => kvp.Key == WmsQueryRequest))
-            {
-                qb.Add(WmsQueryRequest, Identifiers.GetMap);
-            }
-
-            qb.Add((wmsVersion == Identifiers.Version130) ? WmsQueryCrs : WmsQuerySrs, EPSG3857);
-            qb.Add(WmsQueryBBox, Utils.WebMercator.GetTileBounds(x, y, z).ToBBoxString());
-            qb.Add(WmsQueryWidth, Utils.WebMercator.TileSize.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmsQueryHeight, Utils.WebMercator.TileSize.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmsQueryFormat, format); // TODO: check WMS capabilities
-                                           
-            // TODO: ? transparency/bgcolor if needed?
-            qb.Add(WmsQueryTransparent, "true");
-
-            return baseUri + qb.ToQueryString();
+            return GetMapUrl(
+                configuration,
+                Utils.WebMercator.TileSize, // TODO: ? high resolution tiles ?
+                Utils.WebMercator.TileSize,
+                Utils.WebMercator.GetTileBounds(x, y, z),
+                true,
+                0xFFFFFF);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetMapUrl(
-            string baseUrl,
+            SourceConfiguration configuration,
             int width,
             int height,
             Models.Bounds boundingBox,
             bool isTransparent,
-            uint backgroundColor,
-            string format)
+            uint backgroundColor)
         {
-            // All parameters with values are taken from provided url
-            // Mandatory parameters added if needed, with default (standard) values
-
-            var baseUri = Utils.UrlHelper.GetQueryBase(baseUrl);
-            var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
-
-            // Will be replaced
-            items.RemoveAll(kvp => kvp.Key == WmsQuerySrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryCrs);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryBBox);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryWidth);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryHeight);
-            items.RemoveAll(kvp => kvp.Key == WmsQueryFormat);
-
-            var qb = new QueryBuilder(items);
-            if (!items.Any(kvp => kvp.Key == WmsQueryService))
+            var location = configuration.Location;
+            if (String.IsNullOrWhiteSpace(location))
             {
-                qb.Add(WmsQueryService, Identifiers.Wms);
+                throw new ArgumentException("Location must be valid string");
             }
 
-            var wmsVersion = String.Empty;
-            if (!items.Any(kvp => kvp.Key == WmsQueryVersion))
+            var baseUri = Utils.UrlHelper.GetQueryBase(location);
+            var items = Utils.UrlHelper.GetQueryParameters(location);
+
+            // Version
+            var wmsVersion = Identifiers.Version111; // Default WMS version is 1.1.1
+            if (configuration.Wms != null && !String.IsNullOrWhiteSpace(configuration.Wms.Version))
             {
-                qb.Add(WmsQueryVersion, Identifiers.Version111); // Default WMS version is 1.1.1
-                wmsVersion = Identifiers.Version111;
+                wmsVersion = configuration.Wms.Version;
             }
-            else
+            else if (items.Any(kvp => kvp.Key == WmsQueryVersion))
             {
                 wmsVersion = items.First(kvp => kvp.Key == WmsQueryVersion).Value;
             }
 
-            if (!items.Any(kvp => kvp.Key == WmsQueryRequest))
+            // Layers
+            var layers = String.Empty;
+            if (configuration.Wms != null && !String.IsNullOrWhiteSpace(configuration.Wms.Layer))
             {
-                qb.Add(WmsQueryRequest, Identifiers.GetMap);
+                layers = configuration.Wms.Layer; // TODO: ? multiple layers
+            }
+            else if (items.Any(kvp => kvp.Key == WmsQueryLayers))
+            {
+                layers = items.First(kvp => kvp.Key == WmsQueryLayers).Value;
             }
 
-            qb.Add((wmsVersion == Identifiers.Version130) ? WmsQueryCrs : WmsQuerySrs, EPSG3857);
-            qb.Add(WmsQueryBBox, boundingBox.ToBBoxString());
-            qb.Add(WmsQueryWidth, width.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmsQueryHeight, height.ToString(CultureInfo.InvariantCulture));
-            qb.Add(WmsQueryFormat, format); // TODO: check WMS capabilities
+            // Format
+            var format = MediaTypeNames.Image.Png;
+            if (!String.IsNullOrWhiteSpace(configuration.ContentType))
+            {
+                format = configuration.ContentType;
+            }
+
+            var qb = new QueryBuilder
+            {
+                { WmsQueryService, Identifiers.Wms },
+                { WmsQueryRequest, Identifiers.GetMap },
+                { WmsQueryVersion, wmsVersion },
+                { WmsQueryLayers, layers },
+                { (wmsVersion == Identifiers.Version130) ? WmsQueryCrs : WmsQuerySrs, EPSG3857 }, // TODO: EPSG:4326 support
+                { WmsQueryBBox, boundingBox.ToBBoxString() },
+                { WmsQueryWidth, width.ToString(CultureInfo.InvariantCulture) },
+                { WmsQueryHeight, height.ToString(CultureInfo.InvariantCulture) },
+                { WmsQueryFormat, format },
+            };
+
+            // GeoServer specific parameter
+            if (items.Any(kvp => kvp.Key == "map")) // TODO: add custom parameters to WMS configuration
+            {
+                qb.Add("map", items.First(kvp => kvp.Key == "map").Value);
+            }
 
             if (isTransparent)
             {

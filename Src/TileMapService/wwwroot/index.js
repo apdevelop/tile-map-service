@@ -31,11 +31,15 @@
             attribution: 'Esri',
             maxZoom: 12
         }),
-        'GeoServer Demo (WMS)': L.tileLayer('/xyz/wms-demo-geoserver/{z}/{x}/{y}.png', {
+        'marine-vts.site Temperature (WMS)': L.tileLayer('/xyz/wms-demo-geoserver-temperature/{z}/{x}/{y}.png', {
             attribution: 'gis.marine-vts.site',
             maxZoom: 10
         }),
-        'GeoServer Demo (WMS) SAR GRID': L.tileLayer('/xyz/wms-demo-geoserver-sar-grid/{z}/{x}/{y}.png', {
+        'marine-vts.site Pressure (WMS)': L.tileLayer('/xyz/wms-demo-geoserver-pressure/{z}/{x}/{y}.png', {
+            attribution: 'gis.marine-vts.site',
+            maxZoom: 10
+        }),
+        'marine-vts.site SAR GRID (WMS)': L.tileLayer('/xyz/wms-demo-geoserver-sar-grid/{z}/{x}/{y}.png', {
             attribution: 'gis.marine-vts.site',
             maxZoom: 12
         }),

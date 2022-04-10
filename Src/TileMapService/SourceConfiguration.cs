@@ -3,6 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace TileMapService
 {
+    // The [JsonPropertyName("...")] attribute is actually ignored on properties when loading configuration
+    // https://stackoverflow.com/questions/60470583/handling-key-names-with-periods-in-net-core-appsettings-configuration
+    // https://github.com/dotnet/runtime/issues/36010
+
     /// <summary>
     /// Represents source configuration and properties.
     /// </summary>
@@ -137,18 +141,22 @@ namespace TileMapService
         public SourceCacheConfiguration? Cache { get; set; }
 
         /// <summary>
-        ///  WMTS source type configuration.
+        /// WMTS source type configuration.
         /// </summary>
         [JsonPropertyName("wmts")]
         public WmtsSourceConfiguration? Wmts { get; set; }
 
-        // TODO: separate PostGIS configuration object naming "postgis"
+        /// <summary>
+        /// WMS source type configuration.
+        /// </summary>
+        [JsonPropertyName("wms")]
+        public WmsSourceConfiguration? Wms { get; set; }
 
         /// <summary>
-        /// Table configuration for PostGIS source type.
+        /// PostGIS  source type configuration.
         /// </summary>
-        [JsonPropertyName("table")]
-        public PostGisSourceTableConfiguration? Table { get; set; }
+        [JsonPropertyName("postgis")]
+        public PostGisSourceTableConfiguration? PostGis { get; set; }
     }
 
     /// <summary>
@@ -177,8 +185,8 @@ namespace TileMapService
         /// <summary>
         /// Table name.
         /// </summary>
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
+        [JsonPropertyName("table")]
+        public string? Table { get; set; }
 
         /// <summary>
         /// Name of geometry field.
@@ -221,5 +229,19 @@ namespace TileMapService
         /// </summary>
         [JsonPropertyName("tilematrixset")]
         public string? TileMatrixSet { get; set; }
+    }
+
+    /// <summary>
+    /// WMS source type configuration.
+    /// </summary>
+    public class WmsSourceConfiguration
+    {
+        /// <summary>
+        /// Layer identifier.
+        /// </summary>
+        [JsonPropertyName("layer")]
+        public string? Layer { get; set; } // TODO: ? multiple layers
+
+        public string? Version { get; set; }
     }
 }

@@ -51,9 +51,9 @@ namespace TileMapService.TileSources
 
             // Detect zoom levels range - build list of folders
             var zoomLevels = new List<int>();
-            var xIndex = this.configuration.Location.IndexOf("{x}", StringComparison.InvariantCultureIgnoreCase);
-            var yIndex = this.configuration.Location.IndexOf("{y}", StringComparison.InvariantCultureIgnoreCase);
-            var zIndex = this.configuration.Location.IndexOf("{z}", StringComparison.InvariantCultureIgnoreCase);
+            var xIndex = this.configuration.Location.IndexOf("{x}", StringComparison.OrdinalIgnoreCase);
+            var yIndex = this.configuration.Location.IndexOf("{y}", StringComparison.OrdinalIgnoreCase);
+            var zIndex = this.configuration.Location.IndexOf("{z}", StringComparison.OrdinalIgnoreCase);
             if ((zIndex < yIndex) && (zIndex < xIndex))
             {
                 var baseFolder = new Uri(this.configuration.Location.Substring(0, zIndex)).LocalPath;
@@ -144,9 +144,9 @@ namespace TileMapService.TileSources
         private static string GetLocalFilePath(string template, int x, int y, int z)
         {
             return template
-                    .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
-                    .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
-                    .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase);
+                    .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+                    .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+                    .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);
         }
     }
 }

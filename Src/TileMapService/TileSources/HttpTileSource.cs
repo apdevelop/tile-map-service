@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Xml;
 
 using MBT = TileMapService.MBTiles;
 
@@ -91,7 +92,8 @@ namespace TileMapService.TileSources
                 TileHeight = sourceCapabilities != null ? sourceCapabilities.TileHeight : Utils.WebMercator.DefaultTileHeight,
                 Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only Web Mercator is supported in MBTiles specification
                 Wmts = this.configuration.Wmts,
-                Table = null,
+                Wms = this.configuration.Wms,
+                PostGis = null,
             };
 
             if (this.configuration.Cache != null)
@@ -149,7 +151,7 @@ namespace TileMapService.TileSources
                             var xml = await r.Content.ReadAsStringAsync();
                             if (!String.IsNullOrEmpty(xml))
                             {
-                                var doc = new System.Xml.XmlDocument();
+                                var doc = new XmlDocument();
                                 doc.LoadXml(xml);
 
                                 var properties = Tms.CapabilitiesUtility.ParseTileMap(doc);
@@ -167,12 +169,12 @@ namespace TileMapService.TileSources
                         {
                             capabilitiesUrl = (!String.IsNullOrWhiteSpace(this.configuration.Wmts.CapabilitiesUrl) && this.configuration.Wmts.CapabilitiesUrl.EndsWith(".xml")) ?
                                 this.configuration.Wmts.CapabilitiesUrl :
-                                Wmts.QueryUtility.GetCapabilitiesUrl(this.configuration.Location);
+                                Wmts.QueryUtility.GetCapabilitiesKvpUrl(this.configuration.Location);
                             sourceLayerIdentifier = this.configuration.Wmts.Layer;
                         }
                         else
                         {
-                            capabilitiesUrl = Wmts.QueryUtility.GetCapabilitiesUrl(this.configuration.Location);
+                            capabilitiesUrl = Wmts.QueryUtility.GetCapabilitiesKvpUrl(this.configuration.Location);
                             sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(this.configuration.Location)
                                 .First(p => String.Compare(p.Key, Wmts.QueryUtility.WmtsQueryLayer, StringComparison.OrdinalIgnoreCase) == 0)
                                 .Value;
@@ -184,7 +186,7 @@ namespace TileMapService.TileSources
                             var xml = await r.Content.ReadAsStringAsync();
                             if (!String.IsNullOrEmpty(xml))
                             {
-                                var doc = new System.Xml.XmlDocument();
+                                var doc = new XmlDocument();
                                 doc.LoadXml(xml);
                                 var layers = Wmts.CapabilitiesUtility.GetLayers(doc);
                                 var layer = layers.FirstOrDefault(l => l.Identifier == sourceLayerIdentifier);
@@ -195,6 +197,7 @@ namespace TileMapService.TileSources
 
                                 // TODO: detect KVP/RESTful syntax support for GetTile from source capabilities
                                 // TODO: use ResourceURL resourceType="tile" template="...", change Location ?
+                                // TODO: ContentType/Format
                             }
                         }
 
@@ -202,22 +205,36 @@ namespace TileMapService.TileSources
                     }
                 case SourceConfiguration.TypeWms:
                     {
-                        var sourceLayerName = Utils.UrlHelper.GetQueryParameters(this.configuration.Location).First(p => p.Key == "layers");
-                        var url = Wms.QueryUtility.GetCapabilitiesUrl(this.configuration.Location);
+                        string? sourceLayerIdentifier = null;
+                        if (this.configuration.Wms != null)
+                        {
+                            sourceLayerIdentifier = this.configuration.Wms.Layer;
+                        }
+                        else
+                        {
+                            sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(this.configuration.Location)
+                                .First(p => String.Compare(p.Key, Wms.QueryUtility.WmsQueryLayers, StringComparison.OrdinalIgnoreCase) == 0)
+                                .Value;
+                        }
+
+                        // TODO: cache XML Capabilities documents from same source
+                        var url = Wms.QueryUtility.GetCapabilitiesUrl(this.configuration);
                         var r = await this.client.GetAsync(url);
                         if (r.IsSuccessStatusCode)
                         {
                             var xml = await r.Content.ReadAsStringAsync();
                             if (!String.IsNullOrEmpty(xml))
                             {
-                                var doc = new System.Xml.XmlDocument();
+                                var doc = new XmlDocument();
                                 doc.LoadXml(xml);
                                 var layers = Wms.CapabilitiesUtility.GetLayers(doc);
-                                var layer = layers.FirstOrDefault(l => l.Name == sourceLayerName.Value);
+                                var layer = layers.FirstOrDefault(l => l.Name == sourceLayerIdentifier);
                                 if (layer != null)
                                 {
                                     result.GeographicalBounds = layer.GeographicalBounds;
                                 }
+
+                                // TODO: ContentType/Format
                             }
                         }
 
@@ -287,8 +304,7 @@ namespace TileMapService.TileSources
             int height,
             Models.Bounds boundingBox,
             bool isTransparent,
-            uint backgroundColor,
-            string format)
+            uint backgroundColor)
         {
             if (this.client == null)
             {
@@ -300,7 +316,7 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            var url = Wms.QueryUtility.GetMapUrl(this.configuration.Location, width, height, boundingBox, isTransparent, backgroundColor, format);
+            var url = Wms.QueryUtility.GetMapUrl(this.configuration, width, height, boundingBox, isTransparent, backgroundColor);
             var response = await client.GetAsync(url);
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -352,8 +368,8 @@ namespace TileMapService.TileSources
             {
                 SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, y, z),
                 SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, y, z),
-                SourceConfiguration.TypeWmts => Wmts.QueryUtility.GetTileKvpUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
-                SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(this.configuration.Location, this.configuration.ContentType, x, y, z),
+                SourceConfiguration.TypeWmts => Wmts.QueryUtility.GetTileKvpUrl(this.configuration, x, y, z),
+                SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(this.configuration, x, y, z),
                 _ => throw new InvalidOperationException($"Source type '{this.configuration.Type}' is not supported."),
             };
         }
@@ -374,9 +390,9 @@ namespace TileMapService.TileSources
         private static string GetTileXyzUrl(string baseUrl, int x, int y, int z)
         {
             return baseUrl
-                .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
-                .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase)
-                .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.InvariantCultureIgnoreCase);
+                .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+                .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+                .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

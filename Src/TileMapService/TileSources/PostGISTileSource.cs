@@ -59,7 +59,7 @@ namespace TileMapService.TileSources
                 TileWidth = Utils.WebMercator.DefaultTileWidth,
                 TileHeight = Utils.WebMercator.DefaultTileHeight,
                 Cache = null, // TODO: ? possible to implement
-                Table = configuration.Table,
+                PostGis = configuration.PostGis,
             };
 
             return Task.CompletedTask;
@@ -78,31 +78,31 @@ namespace TileMapService.TileSources
             }
             else
             {
-                var table = this.configuration.Table;
-                if (table == null)
+                var postgis = this.configuration.PostGis;
+                if (postgis == null)
                 {
                     throw new InvalidOperationException("Table must be defined.");
                 }
 
-                if (String.IsNullOrWhiteSpace(table.Name))
+                if (String.IsNullOrWhiteSpace(postgis.Table))
                 {
                     throw new InvalidOperationException("Table name must be defined.");
                 }
 
-                if (String.IsNullOrWhiteSpace(table.Geometry))
+                if (String.IsNullOrWhiteSpace(postgis.Geometry))
                 {
                     throw new InvalidOperationException("Table geometry field must be defined.");
                 }
 
                 string[]? fields = null;
-                if (!String.IsNullOrWhiteSpace(table.Fields))
+                if (!String.IsNullOrWhiteSpace(postgis.Fields))
                 {
-                    fields = table.Fields.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    fields = postgis.Fields.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 }
 
                 return await this.ReadPostGISVectorTileAsync(
-                    table.Name,
-                    table.Geometry,
+                    postgis.Table,
+                    postgis.Geometry,
                     fields,
                     x, Utils.WebMercator.FlipYCoordinate(y, z), z);
             }
