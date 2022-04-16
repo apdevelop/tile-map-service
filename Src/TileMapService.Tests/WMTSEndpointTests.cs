@@ -181,19 +181,30 @@ namespace TileMapService.Tests
         }
 
         [Test]
-        public async Task GetTile000KvpSyntaxOtherFormatAsync()
+        public async Task GetTile000KvpSyntaxChangeFormatAsync()
         {
             var db = new MBT.Repository(MbtilesFilePath1);
-            var expected = Utils.ImageHelper.ConvertImageToFormat(db.ReadTile(0, 0, 0), MediaTypeNames.Image.Jpeg, 90);
+            var original = db.ReadTile(0, 0, 0);
 
-            var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
-            var actual = await r.Content.ReadAsByteArrayAsync();
+            {
+                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
+                var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
+                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                var actual = await r.Content.ReadAsByteArrayAsync();
+                Assert.AreEqual(MediaTypeNames.Image.Jpeg, r.Content.Headers.ContentType.MediaType);
+                Assert.AreEqual(MediaTypeNames.Image.Jpeg, Utils.ImageHelper.GetImageMediaType(actual));
+                Assert.AreEqual(expected, actual);
+            }
 
-            Assert.AreEqual(MediaTypeNames.Image.Jpeg, r.Content.Headers.ContentType.MediaType);
-            Assert.AreEqual(MediaTypeNames.Image.Jpeg, Utils.ImageHelper.GetImageMediaType(actual));
-
-            Assert.AreEqual(expected, actual);
+            {
+                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
+                var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/webp&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
+                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                var actual = await r.Content.ReadAsByteArrayAsync();
+                Assert.AreEqual(MediaTypeNames.Image.Webp, r.Content.Headers.ContentType.MediaType);
+                Assert.AreEqual(MediaTypeNames.Image.Webp, Utils.ImageHelper.GetImageMediaType(actual));
+                Assert.AreEqual(expected, actual);
+            }
         }
 
         [Test]

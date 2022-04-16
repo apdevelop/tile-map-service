@@ -473,7 +473,7 @@ namespace TileMapService.TileSources
             const int ARGBPixelDataSize = 4;
             var size = tileWidth * tileHeight * ARGBPixelDataSize;
             var imageBuffer = new byte[size];
-
+            // TODO: improve performance of pixels processing, maybe using unsafe/pointers
             // Flip vertically
             for (var row = tileHeight - 1; row != -1; row--)
             {

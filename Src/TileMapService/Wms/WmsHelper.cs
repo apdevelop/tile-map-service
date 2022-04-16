@@ -1,9 +1,12 @@
-﻿using SkiaSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+using SkiaSharp;
 
 using TileMapService.Utils;
+using U = TileMapService.Utils;
 
 namespace TileMapService.Wms
 {
@@ -22,7 +25,59 @@ namespace TileMapService.Wms
             return wmsVersion;
         }
 
-        public static void DrawWebMercatorTilesToRasterCanvas(
+        public static async Task DrawLayerAsync(
+            ITileSource source,
+            int width,
+            int height,
+            Models.Bounds boundingBox,
+            SKCanvas outputCanvas,
+            bool isTransparent,
+            uint backgroundColor)
+        {
+            // TODO: check SRS support in source
+            if ((String.Compare(source.Configuration.Type, SourceConfiguration.TypeWms, StringComparison.OrdinalIgnoreCase) == 0) &&
+                (source.Configuration.Cache == null))
+            {
+                // Cascading GetMap request to WMS source as single GetMap request
+                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor);
+                if (imageData != null)
+                {
+                    WmsHelper.DrawImageUnscaledToRasterCanvas(outputCanvas, imageData);
+                }
+            }
+            else
+            {
+                var tileCoordinates = WmsHelper.BuildTileCoordinatesList(boundingBox, width);
+                var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);
+                if (sourceTiles.Count > 0)
+                {
+                    WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, U.WebMercator.TileSize);
+                }
+            }
+        }
+
+        private static async Task<List<Models.TileDataset>> GetSourceTilesAsync(
+            ITileSource source,
+            IList<Models.TileCoordinates> tileCoordinates)
+        {
+            var sourceTiles = new List<Models.TileDataset>(tileCoordinates.Count);
+            foreach (var tc in tileCoordinates)
+            {
+                // 180 degrees
+                var tileCount = U.WebMercator.TileCount(tc.Z);
+                var x = tc.X % tileCount;
+
+                var tileData = await source.GetTileAsync(x, U.WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
+                if (tileData != null)
+                {
+                    sourceTiles.Add(new Models.TileDataset(tc.X, tc.Y, tc.Z, tileData));
+                }
+            }
+
+            return sourceTiles;
+        }
+
+        private static void DrawWebMercatorTilesToRasterCanvas(
             SKCanvas outputCanvas,
             int width,
             int height,
@@ -49,13 +104,13 @@ namespace TileMapService.Wms
             using var canvas = surface.Canvas;
             canvas.Clear(new SKColor(backgroundColor));
 
-            // Draw all tiles without scaling
+            // Draw all tiles
             foreach (var sourceTile in sourceTiles)
             {
                 var offsetX = (sourceTile.X - tileMinX) * tileSize;
                 var offsetY = (sourceTile.Y - tileMinY) * tileSize;
                 using var sourceImage = SKImage.FromEncodedData(sourceTile.ImageData);
-                canvas.DrawImage(sourceImage, SKRect.Create(offsetX, offsetY, sourceImage.Width, sourceImage.Height));
+                canvas.DrawImage(sourceImage, SKRect.Create(offsetX, offsetY, tileSize, tileSize)); // Source tile scaled to dest rectangle, if needed
             }
 
             // Clip and scale to requested size of output image

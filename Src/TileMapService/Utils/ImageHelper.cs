@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 
+using BitMiracle.LibTiff.Classic;
 using SkiaSharp;
 
 namespace TileMapService.Utils
@@ -28,6 +29,43 @@ namespace TileMapService.Utils
             using SKData data = image.Encode(format, quality);
 
             return data.ToArray();
+        }
+
+        public static byte[] CreateTiffImage(byte[] raster, int width, int height)
+        {
+            using var ms = new MemoryStream();
+            var stm = new TiffStream();
+            using (var tiff = Tiff.ClientOpen(String.Empty, "w", ms, stm))
+            {
+                tiff.SetField(TiffTag.IMAGEWIDTH, width);
+                tiff.SetField(TiffTag.IMAGELENGTH, height);
+                tiff.SetField(TiffTag.COMPRESSION, Compression.LZW);
+                tiff.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
+
+                tiff.SetField(TiffTag.ROWSPERSTRIP, height);
+
+                ////tif.SetField(TiffTag.XRESOLUTION, horizontalResolution);
+                ////tif.SetField(TiffTag.YRESOLUTION, verticalResolution);
+
+                tiff.SetField(TiffTag.BITSPERSAMPLE, 8);
+                tiff.SetField(TiffTag.SAMPLESPERPIXEL, 4);
+
+                tiff.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                tiff.SetField(TiffTag.EXTRASAMPLES, 1, new short[] { (short)ExtraSample.UNASSALPHA });
+
+                // TODO: Write GeoTIFF tags 
+
+                var stride = raster.Length / height;
+                for (int i = 0, offset = 0; i < height; i++)
+                {
+                    tiff.WriteScanline(raster, offset, i, 0);
+                    offset += stride;
+                }
+
+                tiff.Close();
+            }
+
+            return ms.ToArray();
         }
 
         /// <summary>
@@ -76,6 +114,7 @@ namespace TileMapService.Utils
             {
                 MediaTypeNames.Image.Png => SKEncodedImageFormat.Png,
                 MediaTypeNames.Image.Jpeg => SKEncodedImageFormat.Jpeg,
+                MediaTypeNames.Image.Webp => SKEncodedImageFormat.Webp,
                 _ => throw new ArgumentOutOfRangeException(nameof(mediaType), $"Media type '{mediaType}' is not supported."),
             };
         }
@@ -86,17 +125,18 @@ namespace TileMapService.Utils
             {
                 SKEncodedImageFormat.Png => MediaTypeNames.Image.Png,
                 SKEncodedImageFormat.Jpeg => MediaTypeNames.Image.Jpeg,
+                SKEncodedImageFormat.Webp => MediaTypeNames.Image.Webp,
                 _ => throw new ArgumentOutOfRangeException(nameof(format), $"Format '{format}' is not supported."),
             };
         }
 
-        public static byte[]? ConvertImageToFormat(byte[] originalImage, string outputFormat, int quality)
+        public static byte[]? ConvertImageToFormat(byte[] originalImage, string mediaType, int quality)
         {
             using var image = SKImage.FromEncodedData(originalImage);
             if (image != null)
             {
                 using var stream = new MemoryStream();
-                image.Encode(SKEncodedImageFormatFromMediaType(outputFormat), quality).SaveTo(stream);
+                image.Encode(SKEncodedImageFormatFromMediaType(mediaType), quality).SaveTo(stream);
                 return stream.ToArray();
             }
             else

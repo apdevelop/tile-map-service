@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace TileMapService.Controllers
 {
@@ -34,7 +35,15 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            return await this.GetTileAsync(id, x, y, z);
+            if (!this.tileSourceFabric.Contains(id))
+            {
+                return NotFound($"Specified tileset '{id}' not found");
+            }
+
+            var tileSource = this.tileSourceFabric.Get(id);
+            var mediaType = tileSource.Configuration.ContentType;
+
+            return await this.GetTileAsync(id, x, y, z, mediaType);
         }
 
         /// <summary>
@@ -55,8 +64,12 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            // TODO: check extension == tileset.Configuration.Format
-            return await this.GetTileAsync(id, x, y, z);
+            if (!this.tileSourceFabric.Contains(id))
+            {
+                return NotFound($"Specified tileset '{id}' not found");
+            }
+
+            return await this.GetTileAsync(id, x, y, z, Utils.EntitiesConverter.ExtensionToMediaType(extension));
         }
 
         /// <summary>
@@ -76,31 +89,71 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            return await this.GetTileAsync(id, x, y, z);
+            if (!this.tileSourceFabric.Contains(id))
+            {
+                return NotFound($"Specified tileset '{id}' not found");
+            }
+
+            var tileSource = this.tileSourceFabric.Get(id);
+            var mediaType = tileSource.Configuration.ContentType;
+
+            return await this.GetTileAsync(id, x, y, z, mediaType);
         }
 
-        private async Task<IActionResult> GetTileAsync(string id, int x, int y, int z)
+        private async Task<IActionResult> GetTileAsync(string id, int x, int y, int z, string? mediaType)
         {
-            if (String.IsNullOrEmpty(id))
+            var tileSource = this.tileSourceFabric.Get(id);
+
+            if (!Utils.WebMercator.IsInsideBBox(x, y, z, tileSource.Configuration.Srs))
             {
-                return BadRequest();
+                return NotFound();
             }
-            else if (this.tileSourceFabric.Contains(id))
+
+            var data = await tileSource.GetTileAsync(x, Utils.WebMercator.FlipYCoordinate(y, z), z);
+            if (data != null && data.Length > 0)
             {
-                var tileSource = this.tileSourceFabric.Get(id);
-                var data = await tileSource.GetTileAsync(x, Utils.WebMercator.FlipYCoordinate(y, z), z);
-                if (data != null)
+                if (String.IsNullOrEmpty(mediaType))
                 {
-                    return File(data, tileSource.Configuration.ContentType);
+                    mediaType = MediaTypeNames.Image.Png;
+                }
+
+                if (String.Compare(mediaType, tileSource.Configuration.ContentType, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return File(data, mediaType); // Return original source image
                 }
                 else
                 {
-                    return NotFound();
+                    var isFormatSupported = Utils.EntitiesConverter.IsFormatInList(
+                        new[]
+                        {
+                            MediaTypeNames.Image.Png,
+                            MediaTypeNames.Image.Jpeg,
+                            MediaTypeNames.Image.Webp,
+                        },
+                        mediaType);
+
+                    // Convert source image to requested output format, if possible
+                    if (isFormatSupported)
+                    {
+                        var outputImage = Utils.ImageHelper.ConvertImageToFormat(data, mediaType, 90); // TODO: quality parameter
+                        if (outputImage != null)
+                        {
+                            return File(outputImage, mediaType);
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                    }
+                    else
+                    {
+                        return File(data, mediaType); // Conversion not possible
+                    }
                 }
             }
             else
             {
-                return NotFound($"Specified tileset '{id}' not found");
+                return NotFound();
             }
         }
     }

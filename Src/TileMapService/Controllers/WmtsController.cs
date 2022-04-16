@@ -89,7 +89,7 @@ namespace TileMapService.Controllers
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
                 }
 
-                return await GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), format);
+                return await GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EntitiesConverter.TileFormatToContentType(format));
             }
             else
             {
@@ -127,7 +127,7 @@ namespace TileMapService.Controllers
         /// <param name="tileMatrix">TileMatrix identifier.</param>
         /// <param name="tileRow">Row index of a tile matrix.</param>
         /// <param name="tileCol">Column index of a tile matrix.</param>
-        /// <param name="format">Output format (MIME type) of the tile.</param>
+        /// <param name="format">Output image format (MIME type) of the tile.</param>
         /// <returns></returns>
         [HttpGet("tile/{version}/{layer}/{style}/{tilematrixset}/{tilematrix}/{tilerow}/{tilecol}.{format}")]
         public async Task<IActionResult> ProcessGetTileRestfulRequestAsync(
@@ -172,9 +172,7 @@ namespace TileMapService.Controllers
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
             }
 
-            format = EntitiesConverter.TileFormatToContentType(format);
-
-            return await GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), format);
+            return await GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EntitiesConverter.TileFormatToContentType(format));
         }
 
         private IActionResult ProcessGetCapabilitiesRequest()
@@ -197,28 +195,49 @@ namespace TileMapService.Controllers
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
 
-        private async Task<IActionResult> GetTileAsync(string tileset, int tileCol, int tileRow, int tileMatrix, string format)
+        private async Task<IActionResult> GetTileAsync(string tileset, int tileCol, int tileRow, int tileMatrix, string mediaType)
         {
             var tileSource = this.tileSourceFabric.Get(tileset);
-            var data = await tileSource.GetTileAsync(tileCol, WebMercator.FlipYCoordinate(tileRow, tileMatrix), tileMatrix); // In WMTS Y axis goes down from the top
-            if (data != null)
+
+            if (!WebMercator.IsInsideBBox(tileCol, tileRow, tileMatrix, tileSource.Configuration.Srs))
             {
-                if (String.Compare(format, tileSource.Configuration.ContentType) == 0)
+                return ResponseWithNotFoundError(Identifiers.NotFound, "The requested tile is outside the bounding box of the tile map.");
+            }
+
+            var data = await tileSource.GetTileAsync(tileCol, WebMercator.FlipYCoordinate(tileRow, tileMatrix), tileMatrix); // In WMTS Y axis goes down from the top
+            if (data != null && data.Length > 0)
+            {
+                if (String.Compare(mediaType, tileSource.Configuration.ContentType, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    // Return original source image
-                    return File(data, format);
+                    return File(data, mediaType); // Return original source image
                 }
                 else
                 {
-                    // Convert source image to requested output format
-                    var outputImage = ImageHelper.ConvertImageToFormat(data, format, 90);
-                    if (outputImage != null)
+                    var isFormatSupported = Utils.EntitiesConverter.IsFormatInList(
+                    new[]
                     {
-                        return File(outputImage, format); // TODO: quality parameter
+                        MediaTypeNames.Image.Png,
+                        MediaTypeNames.Image.Jpeg,
+                        MediaTypeNames.Image.Webp,
+                    },
+                    mediaType);
+
+                    // Convert source image to requested output format, if possible
+                    if (isFormatSupported)
+                    {
+                        var outputImage = ImageHelper.ConvertImageToFormat(data, mediaType, 90); // TODO: quality parameter
+                        if (outputImage != null)
+                        {
+                            return File(outputImage, mediaType);
+                        }
+                        else
+                        {
+                            return ResponseWithNotFoundError(Identifiers.NotFound, "Specified tile was not found");
+                        }
                     }
                     else
                     {
-                        return ResponseWithNotFoundError(Identifiers.NotFound, "Specified tile was not found");
+                        return File(data, mediaType); // Conversion not possible
                     }
                 }
             }

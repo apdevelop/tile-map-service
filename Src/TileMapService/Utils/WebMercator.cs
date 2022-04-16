@@ -7,7 +7,7 @@ namespace TileMapService.Utils
     /// Various utility functions for EPSG:3857 / Web Mercator SRS and tile system.
     /// (<see href="https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system">Bing Maps Tile System</see>)
     /// </summary>
-    static class WebMercator
+    public static class WebMercator
     {
         public const int TileSize = 256; // TODO: cusom resolution values
 
@@ -26,6 +26,22 @@ namespace TileMapService.Utils
         private static readonly double EarthRadius = 6378137.0;
 
         private static readonly double MaxLatitude = 85.0511287798;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInsideBBox(int x, int y, int z, string? srs)
+        {
+            int xmin, xmax;
+            int ymin = 0;
+            int ymax = (1 << z) - 1;
+            switch (srs)
+            {
+                case SrsCodes.EPSG3857: { xmin = 0; xmax =  (1 << z) - 1; break; }
+                case SrsCodes.EPSG4326: { xmin = 0; xmax =  2 * (1 << z) - 1; break; }
+                default: throw new ArgumentOutOfRangeException(nameof(srs));
+            }
+
+            return x >= xmin && x <= xmax && y >= ymin && y <= ymax;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Longitude(double x)

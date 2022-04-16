@@ -37,7 +37,7 @@ namespace TileMapService.Controllers
               string? request = null,
               string? layers = null,
               ////string styles = null,
-              string? srs = null,
+              string? srs = null, // WMS version 1.1.1
               string? crs = null, // WMS version 1.3.0
               string? bbox = null,
               int width = 0,
@@ -47,17 +47,17 @@ namespace TileMapService.Controllers
               bool? transparent = false,
               string bgcolor = Identifiers.DefaultBackgroundColor,
               string exceptions = MediaTypeNames.Application.OgcServiceExceptionXml
-              ////string time = null,
-              ////string sld = null,
-              ////string sld_body = null,
-              // GetFeatureInfo request parameters
-              ////string query_layers = null,
-              ////string info_format = MediaTypeNames.Text.Plain,
-              ////int x = 0,
-              ////int y = 0,
-              ////int i = 0, // WMS version 1.3.0
-              ////int j = 0, // WMS version 1.3.0
-              ////int feature_count = 1
+            ////string time = null,
+            ////string sld = null,
+            ////string sld_body = null,
+            // GetFeatureInfo request parameters
+            ////string query_layers = null,
+            ////string info_format = MediaTypeNames.Text.Plain,
+            ////int x = 0,
+            ////int y = 0,
+            ////int i = 0, // WMS version 1.3.0
+            ////int j = 0, // WMS version 1.3.0
+            ////int feature_count = 1
             )
         {
             //// $"WMS [{Request.GetOwinContext().Request.RemoteIpAddress}:{Request.GetOwinContext().Request.RemotePort}] {Request.RequestUri}";
@@ -143,6 +143,7 @@ namespace TileMapService.Controllers
                 {
                     MediaTypeNames.Image.Png,
                     MediaTypeNames.Image.Jpeg,
+                    MediaTypeNames.Image.Tiff,
                 });
 
             return File(U.EntitiesConverter.ToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
@@ -170,8 +171,14 @@ namespace TileMapService.Controllers
             }
 
             // TODO: more output formats
-            var isFormatSupported = (String.Compare(format, MediaTypeNames.Image.Png, StringComparison.OrdinalIgnoreCase) == 0) ||
-                                    (String.Compare(format, MediaTypeNames.Image.Jpeg, StringComparison.OrdinalIgnoreCase) == 0);
+            var isFormatSupported = U.EntitiesConverter.IsFormatInList(
+                        new[]
+                        {
+                            MediaTypeNames.Image.Png,
+                            MediaTypeNames.Image.Jpeg,
+                            MediaTypeNames.Image.Tiff,
+                        },
+                        format);
 
             if (!isFormatSupported)
             {
@@ -230,7 +237,7 @@ namespace TileMapService.Controllers
 
             var isTransparent = transparent ?? false;
             var backgroundColor = U.EntitiesConverter.GetArgbColorFromString(bgcolor, isTransparent);
-            var imageData = await CreateMapImageAsync(width, height, boundingBox, format, isTransparent, backgroundColor, layersList);
+            var imageData = await this.CreateMapImageAsync(width, height, boundingBox, format, isTransparent, backgroundColor, layersList);
 
             return File(imageData, format);
         }
@@ -258,7 +265,7 @@ namespace TileMapService.Controllers
             {
                 if (this.tileSourceFabric.Contains(layerName))
                 {
-                    await DrawLayerAsync(
+                    await WmsHelper.DrawLayerAsync( // TODO: ? pass required format to avoid conversions
                         this.tileSourceFabric.Get(layerName),
                         width,
                         height,
@@ -269,41 +276,21 @@ namespace TileMapService.Controllers
                 }
             }
 
-            var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(mediaType);
             using SKImage image = surface.Snapshot();
-            using SKData data = image.Encode(imageFormat, 90); // TODO: ? quality parameter
 
-            return data.ToArray();
-        }
-
-        private static async Task DrawLayerAsync(
-            ITileSource source,
-            int width,
-            int height,
-            Models.Bounds boundingBox,
-            SKCanvas outputCanvas,
-            bool isTransparent,
-            uint backgroundColor)
-        {
-            // TODO: check SRS support in source
-            if ((String.Compare(source.Configuration.Type, SourceConfiguration.TypeWms) == 0) &&
-                (source.Configuration.Cache == null))
+            if (String.Compare(mediaType, MediaTypeNames.Image.Tiff, StringComparison.OrdinalIgnoreCase) == 0)
             {
-                // Cascading GetMap request to WMS source as single GetMap request
-                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor);
-                if (imageData != null)
-                {
-                    WmsHelper.DrawImageUnscaledToRasterCanvas(outputCanvas, imageData);
-                }
+                using var bitmap = SKBitmap.FromImage(image);
+                // TODO: improve performance of pixels processing, maybe using unsafe/pointers
+                var pixels = bitmap.Pixels.SelectMany(p => new byte[] { p.Red, p.Green, p.Blue, p.Alpha }).ToArray();
+                var tiff = ImageHelper.CreateTiffImage(pixels, image.Width, image.Height);
+                return tiff;
             }
             else
             {
-                var tileCoordinates = WmsHelper.BuildTileCoordinatesList(boundingBox, width);
-                var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);
-                if (sourceTiles.Count > 0)
-                {
-                    WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, U.WebMercator.TileSize);
-                }
+                var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(mediaType);
+                using SKData data = image.Encode(imageFormat, 90); // TODO: ? quality parameter
+                return data.ToArray();
             }
         }
 
@@ -313,27 +300,6 @@ namespace TileMapService.Controllers
             {
                 return $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
             }
-        }
-
-        private static async Task<List<Models.TileDataset>> GetSourceTilesAsync(
-            ITileSource source,
-            IList<Models.TileCoordinates> tileCoordinates)
-        {
-            var sourceTiles = new List<Models.TileDataset>(tileCoordinates.Count);
-            foreach (var tc in tileCoordinates)
-            {
-                // 180 degrees
-                var tileCount = U.WebMercator.TileCount(tc.Z);
-                var x = tc.X % tileCount;
-
-                var tileData = await source.GetTileAsync(x, U.WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
-                if (tileData != null)
-                {
-                    sourceTiles.Add(new Models.TileDataset(tc.X, tc.Y, tc.Z, tileData));
-                }
-            }
-
-            return sourceTiles;
         }
 
         private IActionResult ResponseWithExceptionReport(string exceptionCode, string message, string locator)

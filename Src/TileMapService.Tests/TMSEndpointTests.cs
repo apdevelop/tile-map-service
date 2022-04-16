@@ -207,12 +207,45 @@ namespace TileMapService.Tests
         }
 
         [Test]
+        public async Task GetWebMercatorTmsTileChangeFormatAsync()
+        {
+            var db = new MBT.Repository(MbtilesFilePath1);
+            var original = db.ReadTile(0, 0, 0);
+
+            {
+                var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.png");
+                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                var actual = await r.Content.ReadAsByteArrayAsync();
+                Assert.AreEqual(MediaTypeNames.Image.Png, r.Content.Headers.ContentType.MediaType);
+                Assert.AreEqual(original, actual);
+            }
+
+            {
+                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
+                var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.jpeg");
+                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                var actual = await r.Content.ReadAsByteArrayAsync();
+                Assert.AreEqual(MediaTypeNames.Image.Jpeg, r.Content.Headers.ContentType.MediaType);
+                Assert.AreEqual(expected, actual);
+            }
+
+            {
+                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
+                var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.webp");
+                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                var actual = await r.Content.ReadAsByteArrayAsync();
+                Assert.AreEqual(MediaTypeNames.Image.Webp, r.Content.Headers.ContentType.MediaType);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
         public async Task GetSmallAreaTmsTile800Async()
         {
             var db = new MBT.Repository(MbtilesFilePath2);
             var expected = db.ReadTile(0, 0, 8);
 
-            var r = await client.GetAsync("/tms/1.0.0/small-area/8/0/0.png");
+            var r = await client.GetAsync("/tms/1.0.0/small-area/8/0/0.jpg");
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
             var actual = await r.Content.ReadAsByteArrayAsync();
 

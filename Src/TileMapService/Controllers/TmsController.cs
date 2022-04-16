@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 using TileMapService.Utils;
+using U = TileMapService.Utils;
 
 namespace TileMapService.Controllers
 {
@@ -81,15 +82,49 @@ namespace TileMapService.Controllers
                 // TODO: ? convert source format to requested output format
                 var tileSource = this.tileSourceFabric.Get(tileset);
 
-                if (IsOutOfBBox(x, y, z, tileSource.Configuration.Srs))
+                if (!WebMercator.IsInsideBBox(x, y, z, tileSource.Configuration.Srs))
                 {
                     return ResponseWithNotFoundError("The requested tile is outside the bounding box of the tile map.");
                 }
 
                 var data = await tileSource.GetTileAsync(x, y, z);
-                if (data != null)
+                if (data != null && data.Length > 0)
                 {
-                    return File(data, tileSource.Configuration.ContentType);
+                    var mediaType = U.EntitiesConverter.ExtensionToMediaType(extension);
+
+                    if (String.Compare(mediaType, tileSource.Configuration.ContentType, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        return File(data, mediaType); // Return original source image
+                    }
+                    else
+                    {
+                        var isFormatSupported = U.EntitiesConverter.IsFormatInList(
+                            new[]
+                            {
+                                MediaTypeNames.Image.Png,
+                                MediaTypeNames.Image.Jpeg,
+                                MediaTypeNames.Image.Webp,
+                            },
+                            mediaType);
+
+                        // Convert source image to requested output format, if possible
+                        if (isFormatSupported)
+                        {
+                            var outputImage = U.ImageHelper.ConvertImageToFormat(data, mediaType, 90); // TODO: quality parameter
+                            if (outputImage != null)
+                            {
+                                return File(outputImage, mediaType);
+                            }
+                            else
+                            {
+                                return NotFound();
+                            }
+                        }
+                        else
+                        {
+                            return File(data, mediaType); // Conversion not possible
+                        }
+                    }
                 }
                 else
                 {
@@ -108,21 +143,6 @@ namespace TileMapService.Controllers
             Response.ContentType = MediaTypeNames.Text.Xml + "; charset=utf-8"; // TODO: better way?
             Response.StatusCode = (int)HttpStatusCode.NotFound;
             return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
-        }
-
-        private static bool IsOutOfBBox(int x, int y, int z, string? srs) // TODO: shared function
-        {
-            int xmin, xmax;
-            int ymin = 0;
-            int ymax = z << 1;
-            switch (srs)
-            {
-                case SrsCodes.EPSG3857: { xmin = 0; xmax = 1 << z; break; }
-                case SrsCodes.EPSG4326: { xmin = 0; xmax = 2 * (1 << z); break; }
-                default: throw new ArgumentOutOfRangeException(nameof(srs));
-            }
-
-            return x < xmin || x > xmax || y < ymin || y > ymax;
         }
 
         private Tms.Capabilities GetCapabilities()

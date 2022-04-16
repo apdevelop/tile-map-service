@@ -25,24 +25,13 @@ namespace TileMapService.Wmts
         public static string GetCapabilitiesKvpUrl(string url)
         {
             var baseUri = Utils.UrlHelper.GetQueryBase(url);
-            var items = Utils.UrlHelper.GetQueryParameters(url);
 
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryLayer);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryStyle);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryFormat);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryTileMatrix);
-            items.RemoveAll(kvp => kvp.Key == WmtsQueryTilematrixSet);
-
-            var qb = new QueryBuilder(items);
-            if (!items.Any(kvp => kvp.Key == WmtsQueryService))
+            var qb = new QueryBuilder
             {
-                qb.Add(WmtsQueryService, Identifiers.WMTS);
-            }
-
-            if (!items.Any(kvp => kvp.Key == WmtsQueryRequest))
-            {
-                qb.Add(WmtsQueryRequest, Identifiers.GetCapabilities);
-            }
+                { WmtsQueryService, Identifiers.WMTS },
+                { WmtsQueryRequest, Identifiers.GetCapabilities },
+                { WmtsQueryVersion, Identifiers.Version100 },
+            };
 
             return baseUri + qb.ToQueryString();
         }

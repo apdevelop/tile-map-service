@@ -27,6 +27,28 @@ namespace TileMapService.Utils
             };
         }
 
+        public static string ExtensionToMediaType(string extension)
+        {
+            return extension switch
+            {
+                "png" => MediaTypeNames.Image.Png,
+                "jpg" => MediaTypeNames.Image.Jpeg,
+                "jpeg" => MediaTypeNames.Image.Jpeg,
+                "webp" => MediaTypeNames.Image.Webp,
+                "tif" => MediaTypeNames.Image.Tiff,
+                "tiff" => MediaTypeNames.Image.Tiff,
+                "mvt" => MediaTypeNames.Application.MapboxVectorTile,
+                // TODO: other possible types
+                _ => extension,
+            };
+        }
+
+        public static bool IsFormatInList(IList<string> mediaTypes, string mediaType)
+        {
+            return mediaTypes.Any(mt =>
+                String.Compare(mediaType, mt, StringComparison.OrdinalIgnoreCase) == 0);
+        }
+
         public static List<Layer> SourcesToLayers(IEnumerable<SourceConfiguration> sources)
         {
             return sources

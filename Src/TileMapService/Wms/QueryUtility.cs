@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -10,9 +11,10 @@ namespace TileMapService.Wms
     class QueryUtility
     {
         private const string WmsQueryService = "service";
-        private const string WmsQueryVersion = "version";
         private const string WmsQueryRequest = "request";
+        private const string WmsQueryVersion = "version";
         internal const string WmsQueryLayers = "layers";
+        private const string WmsQueryStyles = "styles";
         private const string WmsQuerySrs = "srs";
         private const string WmsQueryCrs = "crs";
         private const string WmsQueryBBox = "bbox";
@@ -36,7 +38,7 @@ namespace TileMapService.Wms
             var items = Utils.UrlHelper.GetQueryParameters(location);
 
             // Version
-            var wmsVersion = Identifiers.Version111; // Default WMS version is 1.1.1
+            var wmsVersion = String.Empty; // Default WMS version not set for GetCapabilities
             if (configuration.Wms != null && !String.IsNullOrWhiteSpace(configuration.Wms.Version))
             {
                 wmsVersion = configuration.Wms.Version;
@@ -46,16 +48,18 @@ namespace TileMapService.Wms
                 wmsVersion = items.First(kvp => kvp.Key == WmsQueryVersion).Value;
             }
 
-            var qb = new QueryBuilder
+            RemoveKnownParameters(items);
+            items.RemoveAll(kvp => String.Compare(kvp.Key, WmsQueryStyles, StringComparison.OrdinalIgnoreCase) == 0); // TODO: add styles to WMS configuration and RemoveKnownParameters()
+
+            var qb = new QueryBuilder(items)
             {
                 { WmsQueryService, Identifiers.Wms },
                 { WmsQueryRequest, Identifiers.GetCapabilities }
             };
 
-            // GeoServer specific parameter
-            if (items.Any(kvp => kvp.Key == "map")) // TODO: add custom parameters to WMS configuration
+            if (!String.IsNullOrEmpty(wmsVersion))
             {
-                qb.Add("map", items.First(kvp => kvp.Key == "map").Value);
+                qb.Add(WmsQueryVersion, wmsVersion);
             }
 
             return baseUri + qb.ToQueryString();
@@ -122,7 +126,9 @@ namespace TileMapService.Wms
                 format = configuration.ContentType;
             }
 
-            var qb = new QueryBuilder
+            RemoveKnownParameters(items);
+
+            var qb = new QueryBuilder(items)
             {
                 { WmsQueryService, Identifiers.Wms },
                 { WmsQueryRequest, Identifiers.GetMap },
@@ -135,12 +141,6 @@ namespace TileMapService.Wms
                 { WmsQueryFormat, format },
             };
 
-            // GeoServer specific parameter
-            if (items.Any(kvp => kvp.Key == "map")) // TODO: add custom parameters to WMS configuration
-            {
-                qb.Add("map", items.First(kvp => kvp.Key == "map").Value);
-            }
-
             if (isTransparent)
             {
                 qb.Add(WmsQueryTransparent, "true");
@@ -149,6 +149,20 @@ namespace TileMapService.Wms
             qb.Add(WmsQueryBackgroundColor, "0x" + backgroundColor.ToString("X8"));
 
             return baseUri + qb.ToQueryString();
+        }
+
+        private static void RemoveKnownParameters(List<KeyValuePair<string, string>> items)
+        {
+            // Location url can contain some specific parameters, like GeoServer-specific "map" parameter
+            foreach (var known in new[] {
+                WmsQueryService, WmsQueryRequest, WmsQueryVersion,
+                WmsQueryLayers,
+                WmsQuerySrs, WmsQueryCrs, WmsQueryBBox,
+                WmsQueryFormat, WmsQueryTransparent, WmsQueryBackgroundColor,
+                WmsQueryWidth, WmsQueryHeight })
+            {
+                items.RemoveAll(kvp => String.Compare(kvp.Key, known, StringComparison.OrdinalIgnoreCase) == 0);
+            }
         }
     }
 }

@@ -12,7 +12,11 @@
         {
             public const string Png = "image/png";
 
-            public const string Jpeg = "image/jpeg";
+            public const string Jpeg = "image/jpeg"; 
+            
+            public const string Tiff = "image/tiff";
+
+            public const string Webp = "image/webp";
         }
 
         public static class Text
