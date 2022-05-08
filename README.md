@@ -7,16 +7,16 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 ### Features
 * Supported tile sources:
 
-| Type                      | EPSG:3857  | EPSG:4326  | Notes                                                                                                  |
-| ------------------------- |:----------:|:----------:|--------------------------------------------------------------------------------------------------------|
-| Local file system         | &#10003;   | &#10003;   | Each tile in separate file in Z/X/Y.ext folder structure                                               |
-| MBTiles (SQLite)          | &#10003;   | &mdash;    | [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md)            |
-| GeoTIFF local file        | &#10003;   | &#10003;   | [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) basic support with `EPSG:3857` or `EPSG:4326` source image SRS only  |
-| XYZ tile service          | &#10003;   | &#10003;   | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) with local cache for `EPSG:3857` SRS                |
-| TMS tile service          | &#10003;   | &#10003;   | [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification) with local cache for `EPSG:3857` SRS |
-| WMTS tile service         | &#10003;   | &#10003;   | [WMTS](https://www.ogc.org/standards/wmts) with local cache for `EPSG:3857` SRS                        |
-| WMS service               | &#10003;   | &mdash;    | [WMS](https://en.wikipedia.org/wiki/Web_Map_Service), WMS versions 1.1.1 and 1.3.0, cache for `EPSG:3857` SRS  |
-| PostGIS database          | &#10003;   | &mdash;    | [Mapbox Vector Tiles](https://github.com/mapbox/vector-tile-spec) from `geometry` column with `EPSG:3857` SRS only |
+| Source type               | EPSG:3857  | EPSG:4326 | Notes                                                                                                  |
+| ------------------------- |:----------:|:---------:|--------------------------------------------------------------------------------------------------------|
+| Local file system         | &#10003;   | &#10003;  | Each tile in separate file in Z/X/Y.ext folder structure                                               |
+| MBTiles (SQLite)          | &#10003;   | &mdash;   | [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md)            |
+| GeoTIFF local file        | &#10003;   | &#10003;  | [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) basic support with `EPSG:3857` or `EPSG:4326` source image SRS only  |
+| XYZ tile service          | &#10003;   | &#10003;  | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) with local cache for `EPSG:3857` SRS                |
+| TMS tile service          | &#10003;   | &#10003;  | [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification) with local cache for `EPSG:3857` SRS |
+| WMTS tile service         | &#10003;   | &#10003;  | [WMTS](https://www.ogc.org/standards/wmts) with local cache for `EPSG:3857` SRS                        |
+| WMS service               | &#10003;   | &mdash;   | [WMS](https://en.wikipedia.org/wiki/Web_Map_Service), WMS versions 1.1.1 and 1.3.0, cache for `EPSG:3857` SRS  |
+| PostGIS database          | &#10003;   | &mdash;   | [Mapbox Vector Tiles](https://github.com/mapbox/vector-tile-spec) from `geometry` column with `EPSG:3857` SRS only |
 
 * Supported protocols (service endpoints) for serving tiles: 
 
