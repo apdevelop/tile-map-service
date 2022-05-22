@@ -47,7 +47,7 @@ namespace TileMapService.TileSources
             // 2. Actual values (from source metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            this.client = new HttpClient(); // TODO: custom headers from configuration
+            this.client = new HttpClient() { Timeout = TimeSpan.FromSeconds(15), }; // TODO: custom headers from configuration
 
             var sourceCapabilities = await this.GetSourceCapabilitiesAsync();
 
