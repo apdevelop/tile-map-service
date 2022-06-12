@@ -1,11 +1,42 @@
 ### Configuration file structure
 
+### Common service properties
+
+Common service properties are defined in `Service` section of `appsettings.json` file and mostly common used in WMTS and WMS capabilities documents.
+
+#### title
+Type: `String`<br>
+Required: `false`
+
+User-friendly title (displayed name) of service.
+
+#### abstract
+Type: `String`<br>
+Required: `false`
+
+Detailed text description of service.
+
+#### keywords
+Type: `String`<br>
+Required: `false`
+
+Keywords describing service.
+
+#### jpegQuality
+Type: `Number`<br>
+Required: `false`
+
+Quality (compression level) for JPEG output in WMS endpoint, in 0..100 range, default 90.
+
+
+### Tile sources
+
+Tile sources are defined in `Sources` section of `appsettings.json` file.
+
 Configuration values priority:
 * Default values for given tile source type.
 * Actual values (`MBTiles` metadata, files properties).
 * Values from configuration file - highest priority, overrides given above, if provided.
-
-Tile sources are defined in `Sources` section of `appsettings.json` file.
 
 #### type
 Type: `String`<br>

@@ -90,7 +90,7 @@ namespace TileMapService.Controllers
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null && data.Length > 0)
                 {
-                    var mediaType = U.EntitiesConverter.ExtensionToMediaType(extension);
+                    var mediaType = EntitiesConverter.ExtensionToMediaType(extension);
 
                     if (String.Compare(mediaType, tileSource.Configuration.ContentType, StringComparison.OrdinalIgnoreCase) == 0)
                     {
@@ -110,7 +110,7 @@ namespace TileMapService.Controllers
                         // Convert source image to requested output format, if possible
                         if (isFormatSupported)
                         {
-                            var outputImage = U.ImageHelper.ConvertImageToFormat(data, mediaType, 90); // TODO: quality parameter
+                            var outputImage = ImageHelper.ConvertImageToFormat(data, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality);
                             if (outputImage != null)
                             {
                                 return File(outputImage, mediaType);

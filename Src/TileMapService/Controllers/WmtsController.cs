@@ -89,7 +89,7 @@ namespace TileMapService.Controllers
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
                 }
 
-                return await GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EntitiesConverter.TileFormatToContentType(format));
+                return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EntitiesConverter.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality);
             }
             else
             {
@@ -172,7 +172,7 @@ namespace TileMapService.Controllers
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
             }
 
-            return await GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EntitiesConverter.TileFormatToContentType(format));
+            return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EntitiesConverter.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality);
         }
 
         private IActionResult ProcessGetCapabilitiesRequest()
@@ -195,7 +195,13 @@ namespace TileMapService.Controllers
             return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
         }
 
-        private async Task<IActionResult> GetTileAsync(string tileset, int tileCol, int tileRow, int tileMatrix, string mediaType)
+        private async Task<IActionResult> GetTileAsync(
+            string tileset, 
+            int tileCol, 
+            int tileRow, 
+            int tileMatrix, 
+            string mediaType,
+            int quality)
         {
             var tileSource = this.tileSourceFabric.Get(tileset);
 
@@ -213,7 +219,7 @@ namespace TileMapService.Controllers
                 }
                 else
                 {
-                    var isFormatSupported = Utils.EntitiesConverter.IsFormatInList(
+                    var isFormatSupported = EntitiesConverter.IsFormatInList(
                     new[]
                     {
                         MediaTypeNames.Image.Png,
@@ -225,7 +231,7 @@ namespace TileMapService.Controllers
                     // Convert source image to requested output format, if possible
                     if (isFormatSupported)
                     {
-                        var outputImage = ImageHelper.ConvertImageToFormat(data, mediaType, 90); // TODO: quality parameter
+                        var outputImage = ImageHelper.ConvertImageToFormat(data, mediaType, quality);
                         if (outputImage != null)
                         {
                             return File(outputImage, mediaType);

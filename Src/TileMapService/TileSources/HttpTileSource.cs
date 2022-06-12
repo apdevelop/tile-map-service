@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,14 +18,18 @@ namespace TileMapService.TileSources
     /// </summary>
     class HttpTileSource : ITileSource
     {
+        private readonly ILogger<HttpTileSource> logger;
+
         private SourceConfiguration configuration;
 
         private HttpClient? client;
 
         private MBT.CacheRepository? cache = null;
 
-        public HttpTileSource(SourceConfiguration configuration)
+        public HttpTileSource(SourceConfiguration configuration, ILogger<HttpTileSource> logger)
         {
+            this.logger = logger;
+
             if (String.IsNullOrEmpty(configuration.Id))
             {
                 throw new ArgumentException("Source identifier is null or empty string");
@@ -47,7 +52,7 @@ namespace TileMapService.TileSources
             // 2. Actual values (from source metadata).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            this.client = new HttpClient() { Timeout = TimeSpan.FromSeconds(15), }; // TODO: custom headers from configuration
+            this.client = new HttpClient { Timeout = TimeSpan.FromSeconds(15), }; // TODO: add custom headers from configuration
 
             var sourceCapabilities = await this.GetSourceCapabilitiesAsync();
 
@@ -113,6 +118,8 @@ namespace TileMapService.TileSources
                     this.cache = MBT.CacheRepository.CreateEmpty(dbpath);
                 }
             }
+
+            this.logger.LogInformation($"Source '{this.configuration.Id}' initialization completed.");
         }
 
         private async Task<Models.Layer?> GetSourceCapabilitiesAsync()
@@ -277,7 +284,7 @@ namespace TileMapService.TileSources
                     if (response.Content.Headers.ContentType != null && response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
                     {
                         var message = await response.Content.ReadAsStringAsync();
-                        System.Diagnostics.Debug.WriteLine(message); // TODO: write error details to log
+                        this.logger.LogWarning($"Error reading tile: '{message}'.");
                         return null;
                     }
 
@@ -324,7 +331,7 @@ namespace TileMapService.TileSources
                     response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
                 {
                     var message = await response.Content.ReadAsStringAsync();
-                    System.Diagnostics.Debug.WriteLine(message); // TODO: write error details to log
+                    this.logger.LogWarning($"Error reading tile: '{message}'.");
                     return null;
                 }
 

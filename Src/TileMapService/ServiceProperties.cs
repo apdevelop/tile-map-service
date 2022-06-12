@@ -35,5 +35,11 @@ namespace TileMapService
                         this.Keywords.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
         }
+
+        /// <summary>
+        /// Quality (compression level) for JPEG output in WMS endpoint.
+        /// </summary>
+        [JsonPropertyName("jpegQuality")] // TODO: ? separate output options config ?
+        public int JpegQuality { get; set; } = 90;
     }
 }

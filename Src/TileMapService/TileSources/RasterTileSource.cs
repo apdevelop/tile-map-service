@@ -126,7 +126,7 @@ namespace TileMapService.TileSources
                 canvas.Clear(new SKColor(0));
 
                 DrawGeoTiffTilesToRasterCanvas(canvas, width, width, tileBounds, tileCoordinates, 0, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight);
-
+                // TODO: use lossless format for using image in WMS endpoint
                 var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(this.configuration.ContentType);
                 using SKImage image = surface.Snapshot();
                 using SKData data = image.Encode(imageFormat, 90); // TODO: pass quality parameter

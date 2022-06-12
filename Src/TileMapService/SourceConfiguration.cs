@@ -3,13 +3,14 @@ using System.Text.Json.Serialization;
 
 namespace TileMapService
 {
-    // The [JsonPropertyName("...")] attribute is actually ignored on properties when loading configuration
-    // https://stackoverflow.com/questions/60470583/handling-key-names-with-periods-in-net-core-appsettings-configuration
-    // https://github.com/dotnet/runtime/issues/36010
-
     /// <summary>
     /// Represents source configuration and properties.
     /// </summary>
+    /// <remarks>
+    /// The [JsonPropertyName("...")] attribute is actually ignored on properties when loading configuration
+    /// https://stackoverflow.com/questions/60470583/handling-key-names-with-periods-in-net-core-appsettings-configuration
+    /// https://github.com/dotnet/runtime/issues/36010
+    /// </remarks>
     public class SourceConfiguration
     {
         /// <summary>
@@ -71,7 +72,7 @@ namespace TileMapService
         /// <summary>
         /// String identifier of tile source (case-sensitive).
         /// </summary>
-        [JsonPropertyName("id")] // TODO: ! JsonPropertyName("...") actually ignored
+        [JsonPropertyName("id")]
         public string Id { get; set; } = String.Empty;
 
         /// <summary>

@@ -171,7 +171,7 @@ namespace TileMapService.Controllers
             }
 
             // TODO: more output formats
-            var isFormatSupported = U.EntitiesConverter.IsFormatInList(
+            var isFormatSupported = EntitiesConverter.IsFormatInList(
                         new[]
                         {
                             MediaTypeNames.Image.Png,
@@ -236,8 +236,8 @@ namespace TileMapService.Controllers
             var layersList = layers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
             var isTransparent = transparent ?? false;
-            var backgroundColor = U.EntitiesConverter.GetArgbColorFromString(bgcolor, isTransparent);
-            var imageData = await this.CreateMapImageAsync(width, height, boundingBox, format, isTransparent, backgroundColor, layersList);
+            var backgroundColor = EntitiesConverter.GetArgbColorFromString(bgcolor, isTransparent);
+            var imageData = await this.CreateMapImageAsync(width, height, boundingBox, format, this.tileSourceFabric.ServiceProperties.JpegQuality, isTransparent, backgroundColor, layersList);
 
             return File(imageData, format);
         }
@@ -247,6 +247,7 @@ namespace TileMapService.Controllers
             int height,
             Models.Bounds boundingBox,
             string mediaType,
+            int quality,
             bool isTransparent,
             uint backgroundColor,
             IList<string> layerNames)
@@ -289,7 +290,7 @@ namespace TileMapService.Controllers
             else
             {
                 var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(mediaType);
-                using SKData data = image.Encode(imageFormat, 90); // TODO: ? quality parameter
+                using SKData data = image.Encode(imageFormat, quality);
                 return data.ToArray();
             }
         }

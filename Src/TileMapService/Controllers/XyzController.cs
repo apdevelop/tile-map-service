@@ -43,7 +43,7 @@ namespace TileMapService.Controllers
             var tileSource = this.tileSourceFabric.Get(id);
             var mediaType = tileSource.Configuration.ContentType;
 
-            return await this.GetTileAsync(id, x, y, z, mediaType);
+            return await this.GetTileAsync(id, x, y, z, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality);
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace TileMapService.Controllers
                 return NotFound($"Specified tileset '{id}' not found");
             }
 
-            return await this.GetTileAsync(id, x, y, z, Utils.EntitiesConverter.ExtensionToMediaType(extension));
+            return await this.GetTileAsync(id, x, y, z, Utils.EntitiesConverter.ExtensionToMediaType(extension), this.tileSourceFabric.ServiceProperties.JpegQuality);
         }
 
         /// <summary>
@@ -97,10 +97,10 @@ namespace TileMapService.Controllers
             var tileSource = this.tileSourceFabric.Get(id);
             var mediaType = tileSource.Configuration.ContentType;
 
-            return await this.GetTileAsync(id, x, y, z, mediaType);
+            return await this.GetTileAsync(id, x, y, z, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality);
         }
 
-        private async Task<IActionResult> GetTileAsync(string id, int x, int y, int z, string? mediaType)
+        private async Task<IActionResult> GetTileAsync(string id, int x, int y, int z, string? mediaType, int quality)
         {
             var tileSource = this.tileSourceFabric.Get(id);
 
@@ -135,7 +135,7 @@ namespace TileMapService.Controllers
                     // Convert source image to requested output format, if possible
                     if (isFormatSupported)
                     {
-                        var outputImage = Utils.ImageHelper.ConvertImageToFormat(data, mediaType, 90); // TODO: quality parameter
+                        var outputImage = Utils.ImageHelper.ConvertImageToFormat(data, mediaType, quality);
                         if (outputImage != null)
                         {
                             return File(outputImage, mediaType);

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 using TileMapService.TileSources;
 
@@ -11,12 +12,22 @@ namespace TileMapService
 {
     class TileSourceFabric : ITileSourceFabric
     {
+        private readonly ILogger<TileSourceFabric> logger;
+
+        private readonly ILoggerFactory loggerFactory;
+
         private readonly Dictionary<string, ITileSource> tileSources;
 
         private readonly ServiceProperties serviceProperties;
 
-        public TileSourceFabric(IConfiguration configuration)
+        public TileSourceFabric(IConfiguration configuration, ILogger<TileSourceFabric> logger)
         {
+            this.logger = logger;
+            this.loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole();
+            });
+
             this.tileSources = configuration
                     .GetSection("Sources")
                     .Get<IList<SourceConfiguration>>()
@@ -46,8 +57,7 @@ namespace TileMapService
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error initializing '{tileSource.Value.Configuration.Id}' source: {ex.Message}");
-                    // TODO: log exceptions
+                    this.logger.LogError(ex, $"Error initializing '{tileSource.Value.Configuration.Id}' source.");
                 }
             }
         }
@@ -82,7 +92,7 @@ namespace TileMapService
 
         #endregion
 
-        private static ITileSource CreateTileSource(SourceConfiguration config)
+        private ITileSource CreateTileSource(SourceConfiguration config)
         {
             if (config == null)
             {
@@ -99,10 +109,10 @@ namespace TileMapService
                 SourceConfiguration.TypeLocalFiles => new LocalFilesTileSource(config),
                 SourceConfiguration.TypeMBTiles => new MBTilesTileSource(config),
                 SourceConfiguration.TypePostGIS => new PostGISTileSource(config),
-                SourceConfiguration.TypeXyz => new HttpTileSource(config),
-                SourceConfiguration.TypeTms => new HttpTileSource(config),
-                SourceConfiguration.TypeWmts => new HttpTileSource(config),
-                SourceConfiguration.TypeWms => new HttpTileSource(config),
+                SourceConfiguration.TypeXyz => new HttpTileSource(config, loggerFactory.CreateLogger<HttpTileSource>()),
+                SourceConfiguration.TypeTms => new HttpTileSource(config, loggerFactory.CreateLogger<HttpTileSource>()),
+                SourceConfiguration.TypeWmts => new HttpTileSource(config, loggerFactory.CreateLogger<HttpTileSource>()),
+                SourceConfiguration.TypeWms => new HttpTileSource(config, loggerFactory.CreateLogger<HttpTileSource>()),
                 SourceConfiguration.TypeGeoTiff => new RasterTileSource(config),
                 _ => throw new InvalidOperationException($"Unknown tile source type '{config.Type}'"),
             };

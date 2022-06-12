@@ -54,6 +54,7 @@ namespace TileMapService.Wms
                     WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, U.WebMercator.TileSize);
                 }
             }
+            // TODO: optimize reading of Raster source (skip splitting to tiles)
         }
 
         private static async Task<List<Models.TileDataset>> GetSourceTilesAsync(
@@ -64,10 +65,10 @@ namespace TileMapService.Wms
             foreach (var tc in tileCoordinates)
             {
                 // 180 degrees
-                var tileCount = U.WebMercator.TileCount(tc.Z);
+                var tileCount = WebMercator.TileCount(tc.Z);
                 var x = tc.X % tileCount;
 
-                var tileData = await source.GetTileAsync(x, U.WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
+                var tileData = await source.GetTileAsync(x, WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
                 if (tileData != null)
                 {
                     sourceTiles.Add(new Models.TileDataset(tc.X, tc.Y, tc.Z, tileData));
