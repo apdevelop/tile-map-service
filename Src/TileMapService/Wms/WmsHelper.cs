@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using SkiaSharp;
 
 using TileMapService.Utils;
-using U = TileMapService.Utils;
 
 namespace TileMapService.Wms
 {
@@ -42,7 +41,17 @@ namespace TileMapService.Wms
                 var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor);
                 if (imageData != null)
                 {
-                    WmsHelper.DrawImageUnscaledToRasterCanvas(outputCanvas, imageData);
+                    using var sourceImage = SKImage.FromEncodedData(imageData);
+                    outputCanvas.DrawImage(sourceImage, SKRect.Create(0, 0, sourceImage.Width, sourceImage.Height));
+                }
+            }
+            else if (String.Compare(source.Configuration.Type, SourceConfiguration.TypeGeoTiff, StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                // Get part of GeoTIFF source image in single request
+                using var image = await ((TileSources.RasterTileSource)source).GetImagePartAsync(width, height, boundingBox, backgroundColor);
+                if (image != null)
+                {
+                    outputCanvas.DrawImage(image, SKRect.Create(0, 0, image.Width, image.Height));
                 }
             }
             else
@@ -51,10 +60,9 @@ namespace TileMapService.Wms
                 var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);
                 if (sourceTiles.Count > 0)
                 {
-                    WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, U.WebMercator.TileSize);
+                    WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, WebMercator.TileSize);
                 }
             }
-            // TODO: optimize reading of Raster source (skip splitting to tiles)
         }
 
         private static async Task<List<Models.TileDataset>> GetSourceTilesAsync(
@@ -125,14 +133,6 @@ namespace TileMapService.Wms
 
             using SKImage canvasImage = surface.Snapshot();
             outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKPaint { FilterQuality = SKFilterQuality.High, });
-        }
-
-        public static void DrawImageUnscaledToRasterCanvas(
-            SKCanvas outputCanvas,
-            byte[] imageData)
-        {
-            using var sourceImage = SKImage.FromEncodedData(imageData);
-            outputCanvas.DrawImage(sourceImage, SKRect.Create(0, 0, sourceImage.Width, sourceImage.Height));
         }
 
         public static List<Models.TileCoordinates> BuildTileCoordinatesList(Models.Bounds boundingBox, int width)

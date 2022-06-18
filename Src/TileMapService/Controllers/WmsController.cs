@@ -289,19 +289,13 @@ namespace TileMapService.Controllers
             }
             else
             {
-                var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(mediaType);
+                var imageFormat = ImageHelper.SKEncodedImageFormatFromMediaType(mediaType);
                 using SKData data = image.Encode(imageFormat, quality);
                 return data.ToArray();
             }
         }
 
-        private string BaseUrl
-        {
-            get
-            {
-                return $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
-            }
-        }
+        private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
 
         private IActionResult ResponseWithExceptionReport(string exceptionCode, string message, string locator)
         {

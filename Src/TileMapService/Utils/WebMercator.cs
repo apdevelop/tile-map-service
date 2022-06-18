@@ -69,10 +69,19 @@ namespace TileMapService.Utils
             return EarthRadius * MathHelper.Artanh(Math.Sin(MathHelper.DegreesToRadians(lat)));
         }
 
+        /// <summary>
+        /// Computes tile bounds for given coordinates (x, y, z).
+        /// </summary>
+        /// <param name="tileX">Tile X coordinate.</param>
+        /// <param name="tileY">Tile Y coordinate.</param>
+        /// <param name="zoomLevel">Zoom level.</param>
+        /// <returns>Tile bounds.</returns>
+        /// <remarks>
+        /// Similar to PostGIS ST_TileEnvelope function: https://postgis.net/docs/ST_TileEnvelope.html
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Models.Bounds GetTileBounds(int tileX, int tileY, int zoomLevel)
         {
-            // PostGIS ST_TileEnvelope: https://postgis.net/docs/ST_TileEnvelope.html
             return new Models.Bounds(
                 TileXtoEpsg3857X(tileX, zoomLevel),
                 TileYtoEpsg3857Y(tileY + 1, zoomLevel),

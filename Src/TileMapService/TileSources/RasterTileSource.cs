@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -89,7 +90,7 @@ namespace TileMapService.TileSources
 
         async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            if (rasterProperties == null)
+            if (this.rasterProperties == null)
             {
                 throw new InvalidOperationException("rasterProperties property is null.");
             }
@@ -105,16 +106,15 @@ namespace TileMapService.TileSources
             }
             else
             {
-                var tileBounds = U.WebMercator.GetTileBounds(x, U.WebMercator.FlipYCoordinate(y, z), z);
-                var tileCoordinates = BuildTileCoordinatesList(this.rasterProperties, tileBounds);
-                if (tileCoordinates.Count == 0)
+                var requestedTileBounds = U.WebMercator.GetTileBounds(x, U.WebMercator.FlipYCoordinate(y, z), z);
+                var sourceTileCoordinates = this.BuildTileCoordinatesList(requestedTileBounds);
+                if (sourceTileCoordinates.Count == 0)
                 {
                     return null;
                 }
 
                 var width = U.WebMercator.TileSize;
                 var height = U.WebMercator.TileSize;
-
                 var imageInfo = new SKImageInfo(
                     width: width,
                     height: height,
@@ -123,10 +123,9 @@ namespace TileMapService.TileSources
 
                 using var surface = SKSurface.Create(imageInfo);
                 using var canvas = surface.Canvas;
-                canvas.Clear(new SKColor(0));
+                canvas.Clear(new SKColor(0)); // TODO: pass and use backgroundColor
 
-                DrawGeoTiffTilesToRasterCanvas(canvas, width, width, tileBounds, tileCoordinates, 0, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight);
-                // TODO: use lossless format for using image in WMS endpoint
+                DrawGeoTiffTilesToRasterCanvas(canvas, width, height, requestedTileBounds, sourceTileCoordinates, 0, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight);
                 var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(this.configuration.ContentType);
                 using SKImage image = surface.Snapshot();
                 using SKData data = image.Encode(imageFormat, 90); // TODO: pass quality parameter
@@ -135,15 +134,41 @@ namespace TileMapService.TileSources
             }
         }
 
-        SourceConfiguration ITileSource.Configuration
-        {
-            get
-            {
-                return this.configuration;
-            }
-        }
+        SourceConfiguration ITileSource.Configuration => this.configuration;
 
         #endregion
+
+        internal async Task<SKImage?> GetImagePartAsync(
+            int width,
+            int height,
+            M.Bounds boundingBox,
+            uint backgroundColor)
+        {
+            if (this.rasterProperties == null)
+            {
+                throw new InvalidOperationException("rasterProperties property is null.");
+            }
+
+            var sourceTileCoordinates = this.BuildTileCoordinatesList(boundingBox);
+            if (sourceTileCoordinates.Count == 0)
+            {
+                return null;
+            }
+
+            var imageInfo = new SKImageInfo(
+                width: width,
+                height: height,
+                colorType: SKColorType.Rgba8888,
+                alphaType: SKAlphaType.Premul);
+
+            using var surface = SKSurface.Create(imageInfo);
+            using var canvas = surface.Canvas;
+            canvas.Clear(new SKColor(backgroundColor));
+
+            DrawGeoTiffTilesToRasterCanvas(canvas, width, height, boundingBox, sourceTileCoordinates, backgroundColor, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight);
+
+            return await Task.FromResult(surface.Snapshot());
+        }
 
         #region GeoTIFF files processing
 
@@ -151,6 +176,11 @@ namespace TileMapService.TileSources
 
         private static M.RasterProperties ReadGeoTiffProperties(string path)
         {
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException($"Source file '{path}' was not found.");
+            }
+
             using var tiff = Tiff.Open(path, ModeOpenReadTiff);
 
             var planarConfig = (PlanarConfig)tiff.GetField(TiffTag.PLANARCONFIG)[0].ToInt();
@@ -497,29 +527,27 @@ namespace TileMapService.TileSources
 
         #region Coordinates utils
 
-        private static List<GeoTiff.TileCoordinates> BuildTileCoordinatesList(
-            M.RasterProperties rasterProperties,
-            M.Bounds bounds)
+        private List<GeoTiff.TileCoordinates> BuildTileCoordinatesList(M.Bounds bounds)
         {
-            if (rasterProperties == null)
+            if (this.rasterProperties == null)
             {
-                throw new ArgumentNullException(nameof(rasterProperties));
+                throw new InvalidOperationException(nameof(rasterProperties));
             }
 
-            if (rasterProperties.ProjectedBounds == null)
+            if (this.rasterProperties.ProjectedBounds == null)
             {
                 throw new ArgumentException("ProjectedBounds property is null.");
             }
 
             var tileCoordMin = GetGeoTiffTileCoordinatesAtPoint(
-                rasterProperties,
-                Math.Max(bounds.Left, rasterProperties.ProjectedBounds.Left),
-                Math.Min(bounds.Top, rasterProperties.ProjectedBounds.Top));
+                this.rasterProperties,
+                Math.Max(bounds.Left, this.rasterProperties.ProjectedBounds.Left),
+                Math.Min(bounds.Top, this.rasterProperties.ProjectedBounds.Top));
 
             var tileCoordMax = GetGeoTiffTileCoordinatesAtPoint(
-                rasterProperties,
-                Math.Min(bounds.Right, rasterProperties.ProjectedBounds.Right),
-                Math.Min(bounds.Bottom, rasterProperties.ProjectedBounds.Bottom));
+                this.rasterProperties,
+                Math.Min(bounds.Right, this.rasterProperties.ProjectedBounds.Right),
+                Math.Min(bounds.Bottom, this.rasterProperties.ProjectedBounds.Bottom));
 
             var tileCoordinates = new List<GeoTiff.TileCoordinates>();
             for (var tileX = tileCoordMin.X; tileX <= tileCoordMax.X; tileX++)
@@ -568,7 +596,8 @@ namespace TileMapService.TileSources
 
         private void DrawGeoTiffTilesToRasterCanvas(
             SKCanvas outputCanvas,
-            int width, int height,
+            int width,
+            int height,
             M.Bounds tileBounds,
             IList<GeoTiff.TileCoordinates> sourceTileCoordinates,
             uint backgroundColor,

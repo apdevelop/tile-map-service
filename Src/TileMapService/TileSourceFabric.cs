@@ -50,7 +50,8 @@ namespace TileMapService
         {
             foreach (var tileSource in this.tileSources)
             {
-                // TODO: execute in parallel ?
+                // TODO: ? execute in parallel
+                // TODO: ? exclude or set flag if initialization error
                 try
                 {
                     await tileSource.Value.InitAsync();
