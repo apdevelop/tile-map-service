@@ -108,13 +108,7 @@ namespace TileMapService.TileSources
             }
         }
 
-        SourceConfiguration ITileSource.Configuration
-        {
-            get
-            {
-                return this.configuration;
-            }
-        }
+        SourceConfiguration ITileSource.Configuration => this.configuration;
 
         #endregion
 

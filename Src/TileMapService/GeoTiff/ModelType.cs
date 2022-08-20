@@ -1,22 +1,22 @@
 ﻿namespace TileMapService.GeoTiff
 {
     /// <summary>
-    /// Model Type.
+    /// Model type.
     /// </summary>
     enum ModelType
     {
         /// <summary>
-        /// Projection Coordinate System.
+        /// Projected coordinate system.
         /// </summary>
         Projected = 1,
 
         /// <summary>
-        /// Geographic latitude-longitude System.
+        /// Geographic (latitude-longitude) coordinate system.
         /// </summary>
         Geographic = 2,
 
         /// <summary>
-        /// Geocentric (X,Y,Z) Coordinate System.
+        /// Geocentric (X,Y,Z) coordinate system.
         /// </summary>
         Geocentric = 3,
     }

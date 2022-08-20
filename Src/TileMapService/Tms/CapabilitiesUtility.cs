@@ -205,7 +205,7 @@ namespace TileMapService.Tms
                     }
                 default:
                     {
-                        throw new NotImplementedException($"Unknown SRS '{layer.Srs}'");
+                        throw new NotImplementedException($"Unknown SRS '{layer.Srs}'.");
                     }
             }
 
@@ -293,12 +293,12 @@ namespace TileMapService.Tms
 
             switch (srs)
             {
-                case Utils.SrsCodes.EPSG3857:
+                case SrsCodes.EPSG3857:
                     {
                         srsAttribute.Value = Utils.SrsCodes.OSGEO41001;
                         break;
                     }
-                case Utils.SrsCodes.EPSG4326:
+                case SrsCodes.EPSG4326:
                     {
                         srsAttribute.Value = Utils.SrsCodes.EPSG4326;
                         break;
@@ -306,7 +306,7 @@ namespace TileMapService.Tms
                 default:
                     {
                         // TODO: local/none ?
-                        throw new NotImplementedException($"Unknown SRS '{srs}'");
+                        throw new NotImplementedException($"Unknown SRS '{srs}'.");
                     }
             }
 

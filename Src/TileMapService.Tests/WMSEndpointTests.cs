@@ -74,7 +74,7 @@ namespace TileMapService.Tests
                     Service = new { keywords = "wms,service,tile" }
                 });
 
-            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.portNumber);
+            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.PortNumber);
 
             // TODO: proxy source for WMS
         }

@@ -247,10 +247,7 @@ namespace TileMapService.MBTiles
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string TileIdFromCoordinates(int tileColumn, int tileRow, int zoomLevel)
-        {
-            return String.Format(CultureInfo.InvariantCulture, "{0}-{1}-{2}", tileColumn, tileRow, zoomLevel);
-        }
+        private static string TileIdFromCoordinates(int tileColumn, int tileRow, int zoomLevel) => String.Format(CultureInfo.InvariantCulture, "{0}-{1}-{2}", tileColumn, tileRow, zoomLevel);
 
         #endregion
     }

@@ -157,12 +157,6 @@ namespace TileMapService.Controllers
             };
         }
 
-        private string BaseUrl
-        {
-            get
-            {
-                return $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
-            }
-        }
+        private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
     }
 }

@@ -17,9 +17,6 @@
             this.Y = y;
         }
 
-        public override string ToString()
-        {
-            return $"X = {this.X}  Y = {this.Y}";
-        }
+        public override string ToString() => $"X = {this.X}  Y = {this.Y}";
     }
 }

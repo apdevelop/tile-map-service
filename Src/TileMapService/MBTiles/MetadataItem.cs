@@ -11,12 +11,12 @@
         /// <summary>
         /// Name of item (key).
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; private set; }
 
         /// <summary>
         /// String value of item.
         /// </summary>
-        public string? Value { get; set; }
+        public string? Value { get; private set; }
 
         /// <summary>
         /// Creates new metadata item instance with given name and value.
@@ -31,10 +31,7 @@
         /// Converts instance to its string representation.
         /// </summary>
         /// <returns>The string representation of the instance.</returns>
-        public override string ToString()
-        {
-            return $"\"{this.Name}\": \"{this.Value}\"";
-        }
+        public override string ToString() => $"\"{this.Name}\": \"{this.Value}\"";
 
         #region Names of standard items.
 

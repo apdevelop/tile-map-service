@@ -1,7 +1,7 @@
 ﻿namespace TileMapService.GeoTiff
 {
     /// <summary>
-    /// Raster Types.
+    /// Raster type.
     /// </summary>
     enum RasterType
     {

@@ -6,20 +6,20 @@ using System.Linq;
 namespace TileMapService.MBTiles
 {
     /// <summary>
-    /// Represents metadata set from MBTiles database 'metadata' table.
+    /// Represents metadata set from 'metadata' table of MBTiles database.
     /// </summary>
     class Metadata
     {
-        private readonly List<MetadataItem> metadataItems;
+        private readonly List<MetadataItem> metadata;
 
         public Metadata(IEnumerable<MetadataItem> metadata)
         {
-            this.metadataItems = metadata.ToList();
+            this.metadata = metadata.ToList();
 
-            this.Name = GetItem(MetadataItem.KeyName)?.Value;
-            this.Format = GetItem(MetadataItem.KeyFormat)?.Value;
+            this.Name = this.GetItem(MetadataItem.KeyName)?.Value;
+            this.Format = this.GetItem(MetadataItem.KeyFormat)?.Value;
 
-            var bounds = GetItem(MetadataItem.KeyBounds);
+            var bounds = this.GetItem(MetadataItem.KeyBounds);
             if (bounds != null)
             {
                 if (!String.IsNullOrEmpty(bounds.Value))
@@ -28,7 +28,7 @@ namespace TileMapService.MBTiles
                 }
             }
 
-            var center = GetItem(MetadataItem.KeyCenter);
+            var center = this.GetItem(MetadataItem.KeyCenter);
             if (center != null)
             {
                 if (!String.IsNullOrEmpty(center.Value))
@@ -37,7 +37,7 @@ namespace TileMapService.MBTiles
                 }
             }
 
-            var minzoom = GetItem(MetadataItem.KeyMinZoom);
+            var minzoom = this.GetItem(MetadataItem.KeyMinZoom);
             if (minzoom != null)
             {
                 if (Int32.TryParse(minzoom.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int minZoomValue))
@@ -46,7 +46,7 @@ namespace TileMapService.MBTiles
                 }
             }
 
-            var maxzoom = GetItem(MetadataItem.KeyMaxZoom);
+            var maxzoom = this.GetItem(MetadataItem.KeyMaxZoom);
             if (maxzoom != null)
             {
                 if (Int32.TryParse(maxzoom.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int maxZoomValue))
@@ -55,11 +55,11 @@ namespace TileMapService.MBTiles
                 }
             }
 
-            this.Attribution = GetItem(MetadataItem.KeyAttribution)?.Value;
-            this.Description = GetItem(MetadataItem.KeyDescription)?.Value;
-            this.Type = GetItem(MetadataItem.KeyType)?.Value;
-            this.Version = GetItem(MetadataItem.KeyVersion)?.Value;
-            this.Json = GetItem(MetadataItem.KeyJson)?.Value;
+            this.Attribution = this.GetItem(MetadataItem.KeyAttribution)?.Value;
+            this.Description = this.GetItem(MetadataItem.KeyDescription)?.Value;
+            this.Type = this.GetItem(MetadataItem.KeyType)?.Value;
+            this.Version = this.GetItem(MetadataItem.KeyVersion)?.Value;
+            this.Json = this.GetItem(MetadataItem.KeyJson)?.Value;
         }
 
         /// <summary>
@@ -123,9 +123,6 @@ namespace TileMapService.MBTiles
         /// </remarks>
         public string? Json { get; private set; }
 
-        private MetadataItem? GetItem(string name)
-        {
-            return this.metadataItems.FirstOrDefault(i => i.Name == name);
-        }
+        private MetadataItem? GetItem(string name) => this.metadata.FirstOrDefault(i => i.Name == name);
     }
 }

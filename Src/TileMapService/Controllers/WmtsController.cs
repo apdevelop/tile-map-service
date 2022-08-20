@@ -271,12 +271,6 @@ namespace TileMapService.Controllers
             return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
         }
 
-        private string BaseUrl
-        {
-            get
-            {
-                return $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
-            }
-        }
+        private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
     }
 }

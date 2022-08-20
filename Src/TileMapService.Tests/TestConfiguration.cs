@@ -7,9 +7,9 @@ namespace TileMapService.Tests
     /// </summary>
     internal static class TestConfiguration
     {
-        public static readonly int portNumber = 5000;
+        public static int PortNumber => 5000;
 
-        public static string BaseUrl => $"http://localhost:{portNumber}";
+        public static string BaseUrl => $"http://localhost:{PortNumber}";
 
         public static string DataPath => Path.Join(Path.GetTempPath(), "TileMapServiceTestData");
     }

@@ -73,7 +73,7 @@ namespace TileMapService.Tests
             };
 
             var json = JsonSerializer.Serialize(new { Sources = tileSources });
-            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.portNumber);
+            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.PortNumber);
 
             var tileSources2 = new[]
             {
@@ -89,7 +89,7 @@ namespace TileMapService.Tests
             };
 
             var json2 = JsonSerializer.Serialize(new { Sources = tileSources2 });
-            this.serviceHost2 = await TestsUtility.CreateAndRunServiceHostAsync(json2, TestConfiguration.portNumber + 1);
+            this.serviceHost2 = await TestsUtility.CreateAndRunServiceHostAsync(json2, TestConfiguration.PortNumber + 1);
         }
 
         [OneTimeTearDown]
@@ -179,7 +179,7 @@ namespace TileMapService.Tests
         [Test]
         public async Task GetTmsCapabilities2Async()
         {
-            var url = $"http://localhost:{TestConfiguration.portNumber + 1}/tms/1.0.0/tms-proxy";
+            var url = $"http://localhost:{TestConfiguration.PortNumber + 1}/tms/1.0.0/tms-proxy";
             var r = await client.GetAsync(url);
             Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
             var tmsXml = await r.Content.ReadAsStringAsync();

@@ -146,7 +146,7 @@ namespace TileMapService.TileSources
         {
             if (this.rasterProperties == null)
             {
-                throw new InvalidOperationException("rasterProperties property is null.");
+                throw new InvalidOperationException($"Property {nameof(this.rasterProperties)} is null.");
             }
 
             var sourceTileCoordinates = this.BuildTileCoordinatesList(boundingBox);

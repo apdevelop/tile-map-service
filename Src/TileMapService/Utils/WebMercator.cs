@@ -23,9 +23,9 @@ namespace TileMapService.Utils
         /// </summary>
         public const int DefaultTileHeight = 256;
 
-        private static readonly double EarthRadius = 6378137.0;
+        private const double EarthRadius = 6378137.0;
 
-        private static readonly double MaxLatitude = 85.0511287798;
+        private const double MaxLatitude = 85.0511287798;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsInsideBBox(int x, int y, int z, string? srs)
@@ -57,10 +57,7 @@ namespace TileMapService.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double X(double longitude)
-        {
-            return EarthRadius * MathHelper.DegreesToRadians(longitude);
-        }
+        public static double X(double longitude) => EarthRadius * MathHelper.DegreesToRadians(longitude);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Y(double latitude)
@@ -119,10 +116,7 @@ namespace TileMapService.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int TileCount(int zoomLevel)
-        {
-            return 1 << zoomLevel;
-        }
+        public static int TileCount(int zoomLevel) => 1 << zoomLevel;
 
         /// <summary>
         /// Returns entire world map image size in pixels at given zoom level.
@@ -131,10 +125,7 @@ namespace TileMapService.Utils
         /// <param name="tileSize">Tile size (width and height) in pixels.</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int MapSize(int zoomLevel, int tileSize)
-        {
-            return tileSize << zoomLevel;
-        }
+        public static int MapSize(int zoomLevel, int tileSize) => tileSize << zoomLevel;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double MapSize(double width, double longitudeMin, double longitudeMax)
@@ -161,10 +152,7 @@ namespace TileMapService.Utils
         /// <param name="zoomLevel">Tile zoom level.</param>
         /// <returns>Flipped tile Y coordinate.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int FlipYCoordinate(int y, int zoomLevel)
-        {
-            return (1 << zoomLevel) - y - 1;
-        }
+        public static int FlipYCoordinate(int y, int zoomLevel) => (1 << zoomLevel) - y - 1;
 
         public static double TileCoordinateXAtZoom(double longitude, int zoomLevel)
         {
@@ -177,16 +165,10 @@ namespace TileMapService.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double LongitudeToPixelXAtZoom(double longitude, int zoomLevel)
-        {
-            return LongitudeToPixelX(longitude, (double)MapSize(zoomLevel, DefaultTileSize));
-        }
+        public static double LongitudeToPixelXAtZoom(double longitude, int zoomLevel) => LongitudeToPixelX(longitude, (double)MapSize(zoomLevel, DefaultTileSize));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double LatitudeToPixelYAtZoom(double latitude, int zoomLevel)
-        {
-            return LatitudeToPixelY(latitude, (double)MapSize(zoomLevel, DefaultTileSize));
-        }
+        public static double LatitudeToPixelYAtZoom(double latitude, int zoomLevel) => LatitudeToPixelY(latitude, (double)MapSize(zoomLevel, DefaultTileSize));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LongitudeToPixelX(double longitude, double mapSize)

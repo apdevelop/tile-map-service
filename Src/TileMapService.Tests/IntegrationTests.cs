@@ -107,7 +107,7 @@ namespace TileMapService.Tests
                 Service = new ServiceProperties { Title = "WMTS Service", Abstract = String.Empty },
             });
 
-            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.portNumber);
+            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.PortNumber);
         }
 
         [OneTimeTearDown]
@@ -131,7 +131,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_Services.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
             TestsUtility.CompareXml(expectedXml, actualXml);
         }
@@ -144,7 +144,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMapService.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
             TestsUtility.CompareXml(expectedXml, actualXml);
         }
@@ -157,7 +157,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap1.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
             TestsUtility.CompareXml(expectedXml, actualXml);
         }
@@ -170,7 +170,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap2.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
             TestsUtility.CompareXml(expectedXml, actualXml);
         }
@@ -183,7 +183,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap3.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
             TestsUtility.CompareXml(expectedXml, actualXml);
         }
@@ -196,7 +196,7 @@ namespace TileMapService.Tests
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.wmts_GetCapabilities.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
-            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.portNumber);
+            expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
             TestsUtility.CompareXml(expectedXml, actualXml);
         }

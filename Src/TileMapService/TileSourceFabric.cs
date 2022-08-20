@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
@@ -48,6 +50,8 @@ namespace TileMapService
 
         async Task ITileSourceFabric.InitAsync()
         {
+            this.logger.LogInformation("System info: " + Environment.NewLine + String.Join(Environment.NewLine, GetEnvironmentInfo()));
+
             foreach (var tileSource in this.tileSources)
             {
                 // TODO: ? execute in parallel
@@ -73,23 +77,11 @@ namespace TileMapService
             return this.tileSources[id];
         }
 
-        List<SourceConfiguration> ITileSourceFabric.Sources
-        {
-            get
-            {
-                return this.tileSources
+        List<SourceConfiguration> ITileSourceFabric.Sources => this.tileSources
                         .Select(s => s.Value.Configuration)
                         .ToList();
-            }
-        }
 
-        ServiceProperties ITileSourceFabric.ServiceProperties
-        {
-            get
-            {
-                return this.serviceProperties;
-            }
-        }
+        ServiceProperties ITileSourceFabric.ServiceProperties => this.serviceProperties;
 
         #endregion
 
@@ -118,5 +110,14 @@ namespace TileMapService
                 _ => throw new InvalidOperationException($"Unknown tile source type '{config.Type}'"),
             };
         }
+
+        private static string[] GetEnvironmentInfo() => new[]
+            {
+                $"MachineName='{Environment.MachineName}'  User='{Environment.UserDomainName}\\{Environment.UserName}'  CPU={Environment.ProcessorCount}  OS='{Environment.OSVersion}'",
+                $"OS x64={Environment.Is64BitOperatingSystem}  Process x64={Environment.Is64BitProcess}  .NET='{Environment.Version}'  Culture='{Thread.CurrentThread.CurrentCulture.DisplayName}'",
+                $"UtcOffset={TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)}  TZ='{TimeZoneInfo.Local.StandardName}'",
+                $"UtcNow={DateTime.UtcNow}  Uptime={TimeSpan.FromMilliseconds(Environment.TickCount)}",
+                $"Process='{Process.GetCurrentProcess()?.MainModule?.FileName}'  PID={Environment.ProcessId}"
+            };
     }
 }

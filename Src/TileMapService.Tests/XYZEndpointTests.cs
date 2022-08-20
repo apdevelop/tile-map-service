@@ -79,7 +79,7 @@ namespace TileMapService.Tests
                     }
                 });
 
-            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.portNumber);
+            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.PortNumber);
 
             // TODO: proxy source
         }

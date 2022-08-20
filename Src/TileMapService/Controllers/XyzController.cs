@@ -66,7 +66,7 @@ namespace TileMapService.Controllers
 
             if (!this.tileSourceFabric.Contains(id))
             {
-                return NotFound($"Specified tileset '{id}' not found");
+                return NotFound($"Specified tileset '{id}' not found.");
             }
 
             return await this.GetTileAsync(id, x, y, z, Utils.EntitiesConverter.ExtensionToMediaType(extension), this.tileSourceFabric.ServiceProperties.JpegQuality);
@@ -91,7 +91,7 @@ namespace TileMapService.Controllers
 
             if (!this.tileSourceFabric.Contains(id))
             {
-                return NotFound($"Specified tileset '{id}' not found");
+                return NotFound($"Specified tileset '{id}' not found.");
             }
 
             var tileSource = this.tileSourceFabric.Get(id);
