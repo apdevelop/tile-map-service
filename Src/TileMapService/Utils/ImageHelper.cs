@@ -80,7 +80,7 @@ namespace TileMapService.Utils
 
             var pixelsize = sizeof(uint);
             var span = bitmap.GetPixelSpan();
-            var zero = BitConverter.ToUInt32(span.Slice(0, pixelsize));
+            var zero = BitConverter.ToUInt32(span[..pixelsize]);
 
             for (var i = pixelsize; i < span.Length; i += pixelsize)
             {

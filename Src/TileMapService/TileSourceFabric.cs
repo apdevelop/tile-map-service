@@ -50,7 +50,7 @@ namespace TileMapService
 
         async Task ITileSourceFabric.InitAsync()
         {
-            this.logger.LogInformation("System info: " + Environment.NewLine + String.Join(Environment.NewLine, GetEnvironmentInfo()));
+            this.logger.LogInformation($"System info: {Environment.NewLine}{String.Join(Environment.NewLine, GetEnvironmentInfo())}");
 
             foreach (var tileSource in this.tileSources)
             {
@@ -67,15 +67,9 @@ namespace TileMapService
             }
         }
 
-        bool ITileSourceFabric.Contains(string id)
-        {
-            return this.tileSources.ContainsKey(id);
-        }
+        bool ITileSourceFabric.Contains(string id) => this.tileSources.ContainsKey(id);
 
-        ITileSource ITileSourceFabric.Get(string id)
-        {
-            return this.tileSources[id];
-        }
+        ITileSource ITileSourceFabric.Get(string id) => this.tileSources[id];
 
         List<SourceConfiguration> ITileSourceFabric.Sources => this.tileSources
                         .Select(s => s.Value.Configuration)

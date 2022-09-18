@@ -56,7 +56,7 @@ namespace TileMapService.TileSources
             var zIndex = this.configuration.Location.IndexOf("{z}", StringComparison.OrdinalIgnoreCase);
             if ((zIndex < yIndex) && (zIndex < xIndex))
             {
-                var baseFolder = new Uri(this.configuration.Location.Substring(0, zIndex)).LocalPath;
+                var baseFolder = new Uri(this.configuration.Location[..zIndex]).LocalPath;
                 foreach (var directory in Directory.GetDirectories(baseFolder))
                 {
                     if (Int32.TryParse(Path.GetFileName(directory), out int zoomLevel)) // Directory name is integer number

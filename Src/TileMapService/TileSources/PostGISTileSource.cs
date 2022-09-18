@@ -6,7 +6,7 @@ using Npgsql;
 namespace TileMapService.TileSources
 {
     /// <summary>
-    /// Represents tile source with vector tiles (MVT) from PostGIS database.
+    /// Represents tile source with vector tiles (MVT) from PostgreSQL database with PostGIS extension.
     /// </summary>
     class PostGISTileSource : ITileSource
     {
@@ -18,12 +18,12 @@ namespace TileMapService.TileSources
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
-                throw new ArgumentException("Source identifier is null or empty string");
+                throw new ArgumentException("Source identifier is null or empty string.");
             }
 
             if (String.IsNullOrEmpty(configuration.Location))
             {
-                throw new ArgumentException("Source location is null or empty string");
+                throw new ArgumentException("Source location is null or empty string.");
             }
 
             this.connectionString = configuration.Location;
@@ -139,14 +139,8 @@ namespace TileMapService.TileSources
             await connection.OpenAsync();
             using var command = new NpgsqlCommand(commandText, connection);
             using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                return reader[0] as byte[];
-            }
-            else
-            {
-                return null;
-            }
+
+            return (await reader.ReadAsync()) ? reader[0] as byte[] : null;
         }
     }
 }
