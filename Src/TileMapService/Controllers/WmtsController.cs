@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using TileMapService.Utils;
 using TileMapService.Wmts;
 
+using EC = TileMapService.Utils.EntitiesConverter;
+
 namespace TileMapService.Controllers
 {
     /// <summary>
@@ -89,7 +91,7 @@ namespace TileMapService.Controllers
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
                 }
 
-                return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EntitiesConverter.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality);
+                return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality);
             }
             else
             {
@@ -172,12 +174,12 @@ namespace TileMapService.Controllers
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
             }
 
-            return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EntitiesConverter.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality);
+            return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality);
         }
 
         private IActionResult ProcessGetCapabilitiesRequest()
         {
-            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources)
+            var layers = EC.SourcesToLayers(this.tileSourceFabric.Sources)
                 .Where(l => l.Format == ImageFormats.Png || l.Format == ImageFormats.Jpeg) // Only raster formats
                 .ToList();
 
@@ -192,14 +194,14 @@ namespace TileMapService.Controllers
                 layers)
                 .GetCapabilities(); // TODO: fix base URL
 
-            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
         private async Task<IActionResult> GetTileAsync(
-            string tileset, 
-            int tileCol, 
-            int tileRow, 
-            int tileMatrix, 
+            string tileset,
+            int tileCol,
+            int tileRow,
+            int tileMatrix,
             string mediaType,
             int quality)
         {
@@ -219,7 +221,7 @@ namespace TileMapService.Controllers
                 }
                 else
                 {
-                    var isFormatSupported = EntitiesConverter.IsFormatInList(
+                    var isFormatSupported = EC.IsFormatInList(
                     new[]
                     {
                         MediaTypeNames.Image.Png,
@@ -253,24 +255,24 @@ namespace TileMapService.Controllers
             }
         }
 
+        private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
+
         private IActionResult ResponseWithBadRequestError(string exceptionCode, string message)
         {
             var xmlDoc = new ExceptionReport(exceptionCode, message).ToXml();
-            Response.ContentType = MediaTypeNames.Text.Xml + "; charset=utf-8"; // TODO: better way?
+            Response.ContentType = MediaTypeNames.Text.XmlUtf8;
             Response.StatusCode = (int)HttpStatusCode.BadRequest;
             // TODO: content-disposition: filename="message.xml"
-            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), Response.ContentType);
         }
 
         private IActionResult ResponseWithNotFoundError(string exceptionCode, string message)
         {
             var xmlDoc = new ExceptionReport(exceptionCode, message).ToXml();
-            Response.ContentType = MediaTypeNames.Text.Xml + "; charset=utf-8"; // TODO: better way?
+            Response.ContentType = MediaTypeNames.Text.XmlUtf8;
             Response.StatusCode = (int)HttpStatusCode.NotFound;
             // TODO: content-disposition: filename="message.xml"
-            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), Response.ContentType);
         }
-
-        private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
     }
 }

@@ -79,7 +79,7 @@ namespace TileMapService.Utils
         /// </summary>
         /// <param name="xml">XML Document.</param>
         /// <returns>Contents of XML document.</returns>
-        public static byte[] ToUTF8ByteArray(this XmlDocument xml)
+        public static byte[] XmlDocumentToUTF8ByteArray(XmlDocument xml)
         {
             using var ms = new MemoryStream();
             using (var xw = XmlWriter.Create(new StreamWriter(ms, Encoding.UTF8)))
@@ -90,7 +90,7 @@ namespace TileMapService.Utils
             return ms.ToArray();
         }
 
-        public static uint GetArgbColorFromString(string rgbHexColor, bool isTransparent)
+        public static uint ArgbColorFromString(string rgbHexColor, bool isTransparent)
         {
             if (rgbHexColor.StartsWith("0x"))
             {

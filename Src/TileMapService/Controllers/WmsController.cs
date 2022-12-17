@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SkiaSharp;
 
-using TileMapService.Wms;
 using TileMapService.Utils;
-using U = TileMapService.Utils;
+using TileMapService.Wms;
+
+using EC = TileMapService.Utils.EntitiesConverter;
 
 namespace TileMapService.Controllers
 {
@@ -65,21 +66,21 @@ namespace TileMapService.Controllers
             if (String.Compare(service, Identifiers.Wms, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 var message = $"Unknown service: '{service}' (should be '{Identifiers.Wms}')";
-                return ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "service");
+                return this.ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "service");
             }
 
             if ((String.Compare(version, Identifiers.Version111, StringComparison.Ordinal) != 0) &&
                 (String.Compare(version, Identifiers.Version130, StringComparison.Ordinal) != 0))
             {
                 var message = $"Unsupported {nameof(version)}: {version} (should be one of: {Identifiers.Version111}, {Identifiers.Version130})";
-                return ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "version");
+                return this.ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "version");
             }
 
             if ((String.Compare(exceptions, MediaTypeNames.Application.OgcServiceExceptionXml, StringComparison.Ordinal) != 0) &&
                 (String.Compare(exceptions, "XML", StringComparison.Ordinal) != 0))
             {
                 var message = $"Unsupported {nameof(exceptions)}: {exceptions} (should be {MediaTypeNames.Application.OgcServiceExceptionXml})";
-                return ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "exceptions");
+                return this.ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "exceptions");
             }
 
             if (String.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
@@ -111,14 +112,14 @@ namespace TileMapService.Controllers
             else
             {
                 var message = $"Unsupported request: '{request}' ({Identifiers.GetCapabilities}, {Identifiers.GetMap}, {Identifiers.GetFeatureInfo})";
-                return ResponseWithServiceExceptionReport(Identifiers.OperationNotSupported, message, version);
+                return this.ResponseWithServiceExceptionReport(Identifiers.OperationNotSupported, message, version);
             }
         }
 
         private IActionResult ProcessGetCapabilitiesRequest(Wms.Version version)
         {
-            var layers = U.EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources)
-                .Where(l => l.Srs == U.SrsCodes.EPSG3857) // TODO: EPSG:4326 support
+            var layers = EC.SourcesToLayers(this.tileSourceFabric.Sources)
+                .Where(l => l.Srs == SrsCodes.EPSG3857) // TODO: EPSG:4326 support
                 .Where(l => l.Format == ImageFormats.Png || l.Format == ImageFormats.Jpeg) // Only raster formats
                 .Select(l => new Layer
                 {
@@ -146,7 +147,7 @@ namespace TileMapService.Controllers
                     MediaTypeNames.Image.Tiff,
                 });
 
-            return File(U.EntitiesConverter.ToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
         private async Task<IActionResult> ProcessGetMapRequestAsync(
@@ -167,11 +168,11 @@ namespace TileMapService.Controllers
             if (String.IsNullOrEmpty(format))
             {
                 var message = "No map output format was specified";
-                return ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
+                return this.ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
             }
 
             // TODO: more output formats
-            var isFormatSupported = EntitiesConverter.IsFormatInList(
+            var isFormatSupported = EC.IsFormatInList(
                         new[]
                         {
                             MediaTypeNames.Image.Png,
@@ -183,13 +184,13 @@ namespace TileMapService.Controllers
             if (!isFormatSupported)
             {
                 var message = $"Image output format '{format}' is not supported";
-                return ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
+                return this.ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
             }
 
             if (String.IsNullOrEmpty(layers))
             {
                 var message = "GetMap request must include a valid LAYERS parameter.";
-                return ResponseWithServiceExceptionReport(Identifiers.LayerNotDefined, message, version);
+                return this.ResponseWithServiceExceptionReport(Identifiers.LayerNotDefined, message, version);
             }
 
             if ((width < MinSize) ||
@@ -198,45 +199,45 @@ namespace TileMapService.Controllers
                 (height > MaxSize))
             {
                 var message = $"Missing or invalid requested map size. Parameters WIDTH and HEIGHT must present and be positive integers (got WIDTH={width}, HEIGHT={height}).";
-                return ResponseWithServiceExceptionReport(Identifiers.MissingOrInvalidParameter, message, version);
+                return this.ResponseWithServiceExceptionReport(Identifiers.MissingOrInvalidParameter, message, version);
             }
 
             if (String.IsNullOrEmpty(srs))
             {
                 var message = $"GetMap request must include a valid {(WmsHelper.GetWmsVersion(version) == Wms.Version.Version130 ? "CRS" : "SRS")} parameter.";
-                return ResponseWithServiceExceptionReport(Identifiers.MissingBBox, message, version);
+                return this.ResponseWithServiceExceptionReport(Identifiers.MissingBBox, message, version);
             }
 
             // TODO: EPSG:4326 output support
             if (String.Compare(srs, Identifiers.EPSG3857, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 var message = $"SRS '{srs}' is not supported, only {Identifiers.EPSG3857} is currently supported.";
-                return ResponseWithServiceExceptionReport(Identifiers.InvalidSRS, message, version);
+                return this.ResponseWithServiceExceptionReport(Identifiers.InvalidSRS, message, version);
             }
 
             if (bbox == null)
             {
                 var message = "GetMap request must include a valid BBOX parameter.";
-                return ResponseWithServiceExceptionReport(Identifiers.MissingBBox, message, version);
+                return this.ResponseWithServiceExceptionReport(Identifiers.MissingBBox, message, version);
             }
 
             var boundingBox = Models.Bounds.FromCommaSeparatedString(bbox);
             if (boundingBox == null)
             {
                 var message = $"GetMap request must include a valid BBOX parameter with 4 coordinates (got '{bbox}').";
-                return ResponseWithServiceExceptionReport(null, message, version);
+                return this.ResponseWithServiceExceptionReport(null, message, version);
             }
 
             if (boundingBox.Right <= boundingBox.Left || boundingBox.Top <= boundingBox.Bottom)
             {
                 var message = $"GetMap request must include a valid BBOX parameter with minX < maxX and minY < maxY coordinates (got '{bbox}').";
-                return ResponseWithServiceExceptionReport(null, message, version);
+                return this.ResponseWithServiceExceptionReport(null, message, version);
             }
 
             var layersList = layers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
             var isTransparent = transparent ?? false;
-            var backgroundColor = EntitiesConverter.GetArgbColorFromString(bgcolor, isTransparent);
+            var backgroundColor = EC.ArgbColorFromString(bgcolor, isTransparent);
             var imageData = await this.CreateMapImageAsync(width, height, boundingBox, format, this.tileSourceFabric.ServiceProperties.JpegQuality, isTransparent, backgroundColor, layersList);
 
             return File(imageData, format);
@@ -302,15 +303,15 @@ namespace TileMapService.Controllers
             var xmlDoc = new ExceptionReport(exceptionCode, message, locator).ToXml();
             Response.ContentType = MediaTypeNames.Application.Xml;
             Response.StatusCode = (int)HttpStatusCode.OK;
-            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), Response.ContentType);
         }
 
         private IActionResult ResponseWithServiceExceptionReport(string? code, string message, string version)
         {
             var xmlDoc = new ServiceExceptionReport(code, message, version).ToXml();
-            Response.ContentType = MediaTypeNames.Text.Xml + ";charset=UTF-8";
+            Response.ContentType = MediaTypeNames.Text.XmlUtf8;
             Response.StatusCode = (int)HttpStatusCode.OK;
-            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), Response.ContentType);
         }
     }
 }

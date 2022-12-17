@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 using TileMapService.Utils;
-using U = TileMapService.Utils;
+
+using EC = TileMapService.Utils.EntitiesConverter;
 
 namespace TileMapService.Controllers
 {
@@ -30,7 +31,7 @@ namespace TileMapService.Controllers
             var capabilities = this.GetCapabilities();
             var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetRootResource();
 
-            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0")]
@@ -40,7 +41,7 @@ namespace TileMapService.Controllers
             var capabilities = this.GetCapabilities();
             var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetTileMapService();
 
-            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
         [HttpGet("1.0.0/{tileset}")]
@@ -56,7 +57,7 @@ namespace TileMapService.Controllers
 
             var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetTileMap(layer);
 
-            return File(xmlDoc.ToUTF8ByteArray(), MediaTypeNames.Text.Xml);
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
         /// <summary>
@@ -90,15 +91,14 @@ namespace TileMapService.Controllers
                 var data = await tileSource.GetTileAsync(x, y, z);
                 if (data != null && data.Length > 0)
                 {
-                    var mediaType = EntitiesConverter.ExtensionToMediaType(extension);
-
+                    var mediaType = EC.ExtensionToMediaType(extension);
                     if (String.Compare(mediaType, tileSource.Configuration.ContentType, StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         return File(data, mediaType); // Return original source image
                     }
                     else
                     {
-                        var isFormatSupported = U.EntitiesConverter.IsFormatInList(
+                        var isFormatSupported = EC.IsFormatInList(
                             new[]
                             {
                                 MediaTypeNames.Image.Png,
@@ -137,17 +137,9 @@ namespace TileMapService.Controllers
             }
         }
 
-        private IActionResult ResponseWithNotFoundError(string message)
-        {
-            var xmlDoc = new Tms.TileMapServerError(message).ToXml();
-            Response.ContentType = MediaTypeNames.Text.Xml + "; charset=utf-8"; // TODO: better way?
-            Response.StatusCode = (int)HttpStatusCode.NotFound;
-            return File(xmlDoc.ToUTF8ByteArray(), Response.ContentType);
-        }
-
         private Tms.Capabilities GetCapabilities()
         {
-            var layers = EntitiesConverter.SourcesToLayers(this.tileSourceFabric.Sources);
+            var layers = EC.SourcesToLayers(this.tileSourceFabric.Sources);
             return new Tms.Capabilities
             {
                 ServiceTitle = this.tileSourceFabric.ServiceProperties.Title,
@@ -158,5 +150,13 @@ namespace TileMapService.Controllers
         }
 
         private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
+
+        private IActionResult ResponseWithNotFoundError(string message)
+        {
+            var xmlDoc = new Tms.TileMapServerError(message).ToXml();
+            Response.ContentType = MediaTypeNames.Text.XmlUtf8;
+            Response.StatusCode = (int)HttpStatusCode.NotFound;
+            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), Response.ContentType);
+        }
     }
 }

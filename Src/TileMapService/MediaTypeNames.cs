@@ -22,6 +22,8 @@
         public static class Text
         {
             public const string Xml = "text/xml";
+            
+            public const string XmlUtf8 = "text/xml; charset=utf-8"; // TODO: better way?
 
             public const string Plain = "text/plain";
         }
