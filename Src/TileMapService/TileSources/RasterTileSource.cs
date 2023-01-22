@@ -479,48 +479,47 @@ namespace TileMapService.TileSources
             return result;
         }
 
-        private static byte[] ReadTiffTile(string path, int tileWidth, int tileHeight, int tileSize, int pixelX, int pixelY)
+        private static byte[] ReadTiffTile(string path, int tileWidth, int tileHeight, int pixelX, int pixelY)
         {
-            var tileBuffer = new byte[tileSize];
+            if (!File.Exists(path))
+            {
+                throw new InvalidOperationException($"Error reading Tiff image: file '{path}' not found.");
+            }
 
-            // TODO: check if file exists
-
-            using var tiff = Tiff.Open(path, ModeOpenReadTiff);
             // https://bitmiracle.github.io/libtiff.net/help/articles/KB/grayscale-color.html#reading-a-color-image
 
-            var compression = (Compression)tiff.GetField(TiffTag.COMPRESSION)[0].ToInt();
-            var samplesPerPixel = tiff.GetField(TiffTag.SAMPLESPERPIXEL)[0].ToInt();
-            var bitsPerSample = tiff.GetField(TiffTag.BITSPERSAMPLE)[0].ToInt();
-            var sampleFormat = (SampleFormat)tiff.GetField(TiffTag.SAMPLEFORMAT)[0].ToInt();
+            using var tiff = Tiff.Open(path, ModeOpenReadTiff);
+            ////var compression = (Compression)tiff.GetField(TiffTag.COMPRESSION)[0].ToInt();
+            ////var samplesPerPixel = tiff.GetField(TiffTag.SAMPLESPERPIXEL)[0].ToInt();
             ////var d = tiff.NumberOfDirectories();
             ////var s = tiff.NumberOfStrips();
             ////var t = tiff.NumberOfTiles();
 
-            // TODO: ? check bitsPerSample, sampleFormat
+            var bitsPerSample = tiff.GetField(TiffTag.BITSPERSAMPLE)[0].ToInt();
+            var sampleFormat = (SampleFormat)tiff.GetField(TiffTag.SAMPLEFORMAT)[0].ToInt();
 
-            var l = tiff.ReadTile(tileBuffer, 0, pixelX, pixelY, 0, 0);
-
-            const int ARGBPixelDataSize = 4;
-            var size = tileWidth * tileHeight * ARGBPixelDataSize;
-            var imageBuffer = new byte[size];
-            // TODO: improve performance of pixels processing, maybe using unsafe/pointers
-            // Flip vertically
-            for (var row = tileHeight - 1; row != -1; row--)
+            if (bitsPerSample != 8)
             {
-                for (var col = 0; col < tileWidth; col++)
-                {
-                    var pixelNumber = row * tileWidth + col;
-                    var srcOffset = pixelNumber * samplesPerPixel;
-                    var destOffset = pixelNumber * ARGBPixelDataSize;
-
-                    imageBuffer[destOffset + 0] = tileBuffer[srcOffset + 0];
-                    imageBuffer[destOffset + 1] = tileBuffer[srcOffset + 1];
-                    imageBuffer[destOffset + 2] = tileBuffer[srcOffset + 2];
-                    imageBuffer[destOffset + 3] = 255;
-                }
+                throw new FormatException($"Tiff image with {bitsPerSample} bits per sample is not supported.");
             }
 
-            return imageBuffer;
+            if (sampleFormat != SampleFormat.UINT)
+            {
+                throw new FormatException($"Tiff image with {sampleFormat} sample format is not supported.");
+            }
+
+            var tileBuffer = new int[tileWidth * tileHeight];
+            if (tiff.ReadRGBATile(pixelX, pixelY, tileBuffer))
+            {
+                const int ARGBPixelDataSize = 4;
+                var outputBuffer = new byte[tileWidth * tileHeight * ARGBPixelDataSize];
+                Buffer.BlockCopy(tileBuffer, 0, outputBuffer, 0, outputBuffer.Length);
+                return outputBuffer;
+            }
+            else
+            {
+                throw new InvalidOperationException("Error reading Tiff image.");
+            }
         }
 
         #endregion
@@ -596,8 +595,8 @@ namespace TileMapService.TileSources
 
         private void DrawGeoTiffTilesToRasterCanvas(
             SKCanvas outputCanvas,
-            int width,
-            int height,
+            int outputWidth,
+            int outputHeight,
             M.Bounds tileBounds,
             IList<GeoTiff.TileCoordinates> sourceTileCoordinates,
             uint backgroundColor,
@@ -616,6 +615,7 @@ namespace TileMapService.TileSources
 
             var tileMinX = sourceTileCoordinates.Min(t => t.X);
             var tileMinY = sourceTileCoordinates.Min(t => t.Y);
+            var tileMaxY = sourceTileCoordinates.Max(t => t.Y);
             var tilesCountX = sourceTileCoordinates.Max(t => t.X) - tileMinX + 1;
             var tilesCountY = sourceTileCoordinates.Max(t => t.Y) - tileMinY + 1;
             var canvasWidth = tilesCountX * sourceTileWidth;
@@ -623,16 +623,17 @@ namespace TileMapService.TileSources
 
             // TODO: ? scale before draw to reduce memory allocation
             // TODO: check max canvas size
-
-            var imageInfo = new SKImageInfo(
+            using var surface = SKSurface.Create(new SKImageInfo(
                 width: canvasWidth,
                 height: canvasHeight,
                 colorType: SKColorType.Rgba8888,
-                alphaType: SKAlphaType.Premul);
+                alphaType: SKAlphaType.Premul));
 
-            using var surface = SKSurface.Create(imageInfo);
             using var canvas = surface.Canvas;
             canvas.Clear(new SKColor(backgroundColor));
+
+            // Flip input tiff tile vertically
+            canvas.Scale(1, -1, 0, canvasHeight / 2.0f);
 
             // Draw all source tiles without scaling
             foreach (var sourceTile in sourceTileCoordinates)
@@ -645,57 +646,54 @@ namespace TileMapService.TileSources
                     continue;
                 }
 
-                var imageBuffer = ReadTiffTile(
+                var tiffTileBuffer = ReadTiffTile(
                     this.configuration.Location,
                     this.rasterProperties.TileWidth,
                     this.rasterProperties.TileHeight,
-                    this.rasterProperties.TileSize,
                     pixelX,
                     pixelY);
 
-                const int PixelDataSize = 4;
-                var stride = this.rasterProperties.TileWidth * PixelDataSize;
-                var handle = GCHandle.Alloc(imageBuffer, GCHandleType.Pinned);
+                var tiffTileHandle = GCHandle.Alloc(tiffTileBuffer, GCHandleType.Pinned);
 
                 try
                 {
                     var offsetX = (sourceTile.X - tileMinX) * sourceTileWidth;
-                    var offsetY = (sourceTile.Y - tileMinY) * sourceTileHeight;
+                    var offsetY = (tileMaxY - sourceTile.Y) * sourceTileHeight;
 
-                    var sourceImageInfo = new SKImageInfo(
+                    var tiffTileImageInfo = new SKImageInfo(
                         width: this.rasterProperties.TileWidth,
                         height: this.rasterProperties.TileHeight,
                         colorType: SKColorType.Rgba8888,
                         alphaType: SKAlphaType.Premul);
 
-                    using var sourceImage = SKImage.FromPixels(sourceImageInfo, handle.AddrOfPinnedObject());
+                    using var tiffTileImage = SKImage.FromPixels(tiffTileImageInfo, tiffTileHandle.AddrOfPinnedObject());
 
-                    canvas.DrawImage(sourceImage, SKRect.Create(offsetX, offsetY, sourceImage.Width, sourceImage.Height));
+                    canvas.DrawImage(tiffTileImage, SKRect.Create(offsetX, offsetY, tiffTileImage.Width, tiffTileImage.Height));
 
                     // For debug
-                    ////using var borderPen = new SKPaint { Color = SKColors.Magenta, StrokeWidth = 5.0f, IsStroke = true, };
-                    ////canvas.DrawRect(new SKRect(offsetX, offsetY, offsetX + sourceImage.Width, offsetY + sourceImage.Height), borderPen);
-                    ////canvas.DrawText($"R = {sourceTile.Y * this.rasterProperties.TileHeight}", offsetX, offsetY, new SKFont(SKTypeface.FromFamilyName("Arial"), 36.0f), new SKPaint { Color = SKColors.Magenta });
+                    ////using var borderPen = new SKPaint { Color = SKColors.Magenta, StrokeWidth = 3.0f, IsStroke = true, };
+                    ////canvas.DrawRect(new SKRect(offsetX, offsetY, offsetX + tiffTileImage.Width, offsetY + tiffTileImage.Height), borderPen);
+                    ////canvas.DrawText($"X = {sourceTile.X}  Y = {sourceTile.Y}", offsetX, offsetY, new SKFont(SKTypeface.FromFamilyName("Arial"), 72.0f), new SKPaint { Color = SKColors.Magenta });
                 }
                 finally
                 {
-                    handle.Free();
+                    tiffTileHandle.Free();
                 }
             }
 
             // TODO: ! better image transformation / reprojection between coordinate systems
-
             // Clip and scale to requested size of output image
-            var pixelOffsetX = XToGeoTiffPixelX(this.rasterProperties, tileBounds.Left) - sourceTileWidth * tileMinX;
-            var pixelOffsetY = YToGeoTiffPixelY(this.rasterProperties, tileBounds.Top) - sourceTileHeight * tileMinY;
-            var pixelWidth = XToGeoTiffPixelX(this.rasterProperties, tileBounds.Right) - XToGeoTiffPixelX(this.rasterProperties, tileBounds.Left);
-            var pixelHeight = YToGeoTiffPixelY(this.rasterProperties, tileBounds.Bottom) - YToGeoTiffPixelY(this.rasterProperties, tileBounds.Top);
-            //var sourceRectangle = SKRect.Create((int)Math.Round(pixelOffsetX), (int)Math.Round(pixelOffsetY), (int)Math.Round(pixelWidth), (int)Math.Round(pixelHeight));
-            var sourceRectangle = SKRect.Create((float)pixelOffsetX, (float)pixelOffsetY, (float)pixelWidth, (float)pixelHeight);
-            var destRectangle = SKRect.Create(0, 0, width, height);
+            var sourceOffsetX = XToGeoTiffPixelX(this.rasterProperties, tileBounds.Left) - sourceTileWidth * tileMinX;
+            var sourceOffsetY = YToGeoTiffPixelY(this.rasterProperties, tileBounds.Top) - sourceTileHeight * tileMinY;
+            var sourceWidth = XToGeoTiffPixelX(this.rasterProperties, tileBounds.Right) - XToGeoTiffPixelX(this.rasterProperties, tileBounds.Left);
+            var sourceHeight = YToGeoTiffPixelY(this.rasterProperties, tileBounds.Bottom) - YToGeoTiffPixelY(this.rasterProperties, tileBounds.Top);
 
             using SKImage canvasImage = surface.Snapshot();
-            outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKPaint { FilterQuality = SKFilterQuality.High, });
+            outputCanvas.DrawImage(
+                canvasImage,
+                SKRect.Create((float)sourceOffsetX, (float)sourceOffsetY, (float)sourceWidth, (float)sourceHeight),
+                SKRect.Create(0, 0, outputWidth, outputHeight),
+                new SKPaint { FilterQuality = SKFilterQuality.High, });
         }
 
         class DisableErrorHandler : TiffErrorHandler
