@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{BA9C4EF9-3
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TileMapService.Tests", "TileMapService.Tests\TileMapService.Tests.csproj", "{78DCE473-5B36-46F1-BE59-DDCC2F9A41F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TileMapService.Tests", "TileMapService.Tests\TileMapService.Tests.csproj", "{78DCE473-5B36-46F1-BE59-DDCC2F9A41F7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
