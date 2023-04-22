@@ -31,6 +31,7 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 * Tile image formats: raster (`PNG`, `JPEG`, `WEBP`) 256&#215;256 pixels tiles, basic support of `TIFF` output and `PBF` / `MVT` (vector tiles).
 * Local cache for tiles from external tile services sources (modified `mbtiles` format database file, `EPSG:3857` only), with blank tiles detection support.
 * Configuration in JSON file.
+* Reading sources configuration using `/api` endpoint (local requests only).
 
 ### Technologies
 Developed using MS Visual Studio 2019 with .NET 5 SDK.

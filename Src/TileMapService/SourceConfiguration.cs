@@ -94,6 +94,12 @@ namespace TileMapService
         public string Abstract { get; set; } = String.Empty;
 
         /// <summary>
+        /// An attribution (HTML) string, which explains the sources of data and/or style for the map.
+        /// </summary>
+        [JsonPropertyName("attribution")]
+        public string? Attribution { get; set; }
+
+        /// <summary>
         /// Location of tiles (path template for "file", full path for "mbtiles", url template for "http").
         /// </summary>
         [JsonPropertyName("location")]
@@ -154,7 +160,7 @@ namespace TileMapService
         public WmsSourceConfiguration? Wms { get; set; }
 
         /// <summary>
-        /// PostGIS  source type configuration.
+        /// PostGIS source type configuration.
         /// </summary>
         [JsonPropertyName("postgis")]
         public PostGisSourceTableConfiguration? PostGis { get; set; }

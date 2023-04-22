@@ -97,6 +97,7 @@ namespace TileMapService.TileSources
                 Format = format,
                 Title = title,
                 Abstract = this.configuration.Abstract,
+                Attribution = String.IsNullOrEmpty(this.configuration.Attribution) ? metadata.Attribution : null,
                 Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
                 Srs = Utils.SrsCodes.EPSG3857, // MBTiles supports only Spherical Mercator tile grid
                 Location = this.configuration.Location,

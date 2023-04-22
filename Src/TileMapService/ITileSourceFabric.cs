@@ -17,12 +17,18 @@ namespace TileMapService
         /// <summary>
         /// Gets the tile source by given identifier <paramref name="id"/>.
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">Identifier of tile source.</param>
         /// <returns></returns>
         ITileSource Get(string id);
 
+        /// <summary>
+        /// Returns list of sources configuration and properties.
+        /// </summary>
         List<SourceConfiguration> Sources { get; }
 
+        /// <summary>
+        /// Returns entire service properties.
+        /// </summary>
         ServiceProperties ServiceProperties { get; }
     }
 }
