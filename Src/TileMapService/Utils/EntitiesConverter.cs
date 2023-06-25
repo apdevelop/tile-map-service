@@ -43,12 +43,6 @@ namespace TileMapService.Utils
             };
         }
 
-        public static bool IsFormatInList(IList<string> mediaTypes, string mediaType)
-        {
-            return mediaTypes.Any(mt =>
-                String.Compare(mediaType, mt, StringComparison.OrdinalIgnoreCase) == 0);
-        }
-
         public static List<Layer> SourcesToLayers(IEnumerable<SourceConfiguration> sources)
         {
             return sources

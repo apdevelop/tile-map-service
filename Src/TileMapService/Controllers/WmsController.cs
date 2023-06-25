@@ -172,7 +172,7 @@ namespace TileMapService.Controllers
             }
 
             // TODO: more output formats
-            var isFormatSupported = EC.IsFormatInList(
+            var isFormatSupported = ResponseHelper.IsFormatInList(
                         new[]
                         {
                             MediaTypeNames.Image.Png,

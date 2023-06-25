@@ -89,47 +89,15 @@ namespace TileMapService.Controllers
                 }
 
                 var data = await tileSource.GetTileAsync(x, y, z);
-                if (data != null && data.Length > 0)
-                {
-                    var mediaType = EC.ExtensionToMediaType(extension);
-                    if (String.Compare(mediaType, tileSource.Configuration.ContentType, StringComparison.OrdinalIgnoreCase) == 0)
-                    {
-                        return File(data, mediaType); // Return original source image
-                    }
-                    else
-                    {
-                        var isFormatSupported = EC.IsFormatInList(
-                            new[]
-                            {
-                                MediaTypeNames.Image.Png,
-                                MediaTypeNames.Image.Jpeg,
-                                MediaTypeNames.Image.Webp,
-                            },
-                            mediaType);
+                var result = ResponseHelper.CreateFileResponse(
+                    data,
+                    EC.ExtensionToMediaType(extension),
+                    tileSource.Configuration.ContentType,
+                    this.tileSourceFabric.ServiceProperties.JpegQuality);
 
-                        // Convert source image to requested output format, if possible
-                        if (isFormatSupported)
-                        {
-                            var outputImage = ImageHelper.ConvertImageToFormat(data, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality);
-                            if (outputImage != null)
-                            {
-                                return File(outputImage, mediaType);
-                            }
-                            else
-                            {
-                                return NotFound();
-                            }
-                        }
-                        else
-                        {
-                            return File(data, mediaType); // Conversion not possible
-                        }
-                    }
-                }
-                else
-                {
-                    return NotFound();
-                }
+                return result != null
+                    ? File(result.FileContents, result.ContentType)
+                    : NotFound();
             }
             else
             {

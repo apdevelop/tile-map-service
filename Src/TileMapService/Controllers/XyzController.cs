@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 
+using TileMapService.Utils;
+
 namespace TileMapService.Controllers
 {
     /// <summary>
@@ -104,57 +106,26 @@ namespace TileMapService.Controllers
         {
             var tileSource = this.tileSourceFabric.Get(id);
 
-            if (!Utils.WebMercator.IsInsideBBox(x, y, z, tileSource.Configuration.Srs))
+            if (!WebMercator.IsInsideBBox(x, y, z, tileSource.Configuration.Srs))
             {
                 return NotFound();
             }
 
-            var data = await tileSource.GetTileAsync(x, Utils.WebMercator.FlipYCoordinate(y, z), z);
-            if (data != null && data.Length > 0)
+            if (String.IsNullOrEmpty(mediaType))
             {
-                if (String.IsNullOrEmpty(mediaType))
-                {
-                    mediaType = MediaTypeNames.Image.Png;
-                }
-
-                if (String.Compare(mediaType, tileSource.Configuration.ContentType, StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    return File(data, mediaType); // Return original source image
-                }
-                else
-                {
-                    var isFormatSupported = Utils.EntitiesConverter.IsFormatInList(
-                        new[]
-                        {
-                            MediaTypeNames.Image.Png,
-                            MediaTypeNames.Image.Jpeg,
-                            MediaTypeNames.Image.Webp,
-                        },
-                        mediaType);
-
-                    // Convert source image to requested output format, if possible
-                    if (isFormatSupported)
-                    {
-                        var outputImage = Utils.ImageHelper.ConvertImageToFormat(data, mediaType, quality);
-                        if (outputImage != null)
-                        {
-                            return File(outputImage, mediaType);
-                        }
-                        else
-                        {
-                            return NotFound();
-                        }
-                    }
-                    else
-                    {
-                        return File(data, mediaType); // Conversion not possible
-                    }
-                }
+                mediaType = MediaTypeNames.Image.Png;
             }
-            else
-            {
-                return NotFound();
-            }
+
+            var data = await tileSource.GetTileAsync(x, WebMercator.FlipYCoordinate(y, z), z);
+            var result = ResponseHelper.CreateFileResponse(
+                data,
+                mediaType,
+                tileSource.Configuration.ContentType,
+                quality);
+
+            return result != null
+                ? File(result.FileContents, result.ContentType)
+                : NotFound();
         }
     }
 }

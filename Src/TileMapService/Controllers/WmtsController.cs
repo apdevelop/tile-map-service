@@ -213,46 +213,15 @@ namespace TileMapService.Controllers
             }
 
             var data = await tileSource.GetTileAsync(tileCol, WebMercator.FlipYCoordinate(tileRow, tileMatrix), tileMatrix); // In WMTS Y axis goes down from the top
-            if (data != null && data.Length > 0)
-            {
-                if (String.Compare(mediaType, tileSource.Configuration.ContentType, StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    return File(data, mediaType); // Return original source image
-                }
-                else
-                {
-                    var isFormatSupported = EC.IsFormatInList(
-                    new[]
-                    {
-                        MediaTypeNames.Image.Png,
-                        MediaTypeNames.Image.Jpeg,
-                        MediaTypeNames.Image.Webp,
-                    },
-                    mediaType);
+            var result = ResponseHelper.CreateFileResponse(
+                data,
+                mediaType,
+                tileSource.Configuration.ContentType,
+                quality);
 
-                    // Convert source image to requested output format, if possible
-                    if (isFormatSupported)
-                    {
-                        var outputImage = ImageHelper.ConvertImageToFormat(data, mediaType, quality);
-                        if (outputImage != null)
-                        {
-                            return File(outputImage, mediaType);
-                        }
-                        else
-                        {
-                            return ResponseWithNotFoundError(Identifiers.NotFound, "Specified tile was not found");
-                        }
-                    }
-                    else
-                    {
-                        return File(data, mediaType); // Conversion not possible
-                    }
-                }
-            }
-            else
-            {
-                return ResponseWithNotFoundError(Identifiers.NotFound, "Specified tile was not found");
-            }
+            return result != null
+                ? File(result.FileContents, result.ContentType)
+                : ResponseWithNotFoundError(Identifiers.NotFound, "Specified tile was not found");
         }
 
         private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
