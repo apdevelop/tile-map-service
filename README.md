@@ -1,5 +1,5 @@
-# Tile Map Service for .NET 5 / /.NET 7
-Simple and lightweight implementation of tile server basic features for .NET 5 / .NET 7 platform. Provides access to tiles stored in several source types and serving them using various protocols.
+# Tile Map Service for .NET 5 /.NET 7
+Simple and lightweight implementation of tile server basic features for .NET 5 / .NET 7 platforms. Provides access to tiles stored in several source types and serving them using various protocols.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
