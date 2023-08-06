@@ -16,7 +16,7 @@ namespace TileMapService.Controllers
     /// Serving tiles using Web Map Tile Service (WMTS) protocol.
     /// </summary>
     [Route("wmts")]
-    public class WmtsController : Controller
+    public class WmtsController : ControllerBase
     {
         private readonly ITileSourceFabric tileSourceFabric;
 

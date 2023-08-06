@@ -15,7 +15,7 @@ namespace TileMapService.Controllers
     /// TMS endpoint - serving tiles using Tile Map Service protocol (<see href="https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification">Tile Map Service Specification</see>).
     /// </summary>
     [Route("tms")]
-    public class TmsController : Controller
+    public class TmsController : ControllerBase
     {
         private readonly ITileSourceFabric tileSourceFabric;
 

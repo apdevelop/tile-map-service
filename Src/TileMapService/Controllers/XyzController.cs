@@ -11,7 +11,7 @@ namespace TileMapService.Controllers
     /// XYZ endpoint - serving tiles using minimalistic REST API, similar to OSM, Google Maps.
     /// </summary>
     [Route("xyz")]
-    public class XyzController : Controller
+    public class XyzController : ControllerBase
     {
         private readonly ITileSourceFabric tileSourceFabric;
 

@@ -95,7 +95,7 @@ namespace TileMapService.TileSources
                 GeographicalBounds = sourceCapabilities?.GeographicalBounds,
                 TileWidth = sourceCapabilities != null ? sourceCapabilities.TileWidth : Utils.WebMercator.DefaultTileWidth,
                 TileHeight = sourceCapabilities != null ? sourceCapabilities.TileHeight : Utils.WebMercator.DefaultTileHeight,
-                Cache = (srs == Utils.SrsCodes.EPSG3857) ? this.configuration.Cache : null, // Only Web Mercator is supported in MBTiles specification
+                Cache = srs == Utils.SrsCodes.EPSG3857 ? this.configuration.Cache : null, // Only Web Mercator is supported in MBTiles specification
                 Wmts = this.configuration.Wmts,
                 Wms = this.configuration.Wms,
                 PostGis = null,
@@ -291,11 +291,7 @@ namespace TileMapService.TileSources
                     // TODO: more checks of Content-Type, response size, etc.
 
                     var data = await response.Content.ReadAsByteArrayAsync();
-
-                    if (this.cache != null)
-                    {
-                        this.cache.AddTile(x, y, z, data);
-                    }
+                    this.cache?.AddTile(x, y, z, data);
 
                     return data;
                 }

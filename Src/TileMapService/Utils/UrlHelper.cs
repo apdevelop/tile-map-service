@@ -19,11 +19,10 @@ namespace TileMapService.Utils
         public static List<KeyValuePair<string, string>> GetQueryParameters(string url)
         {
             var uri = new Uri(url);
-            var queryDictionary = QueryHelpers.ParseQuery(uri.Query);
-            var items = queryDictionary
+            var items = QueryHelpers.ParseQuery(uri.Query)
                 .SelectMany(
                     kvp => kvp.Value,
-                    (kvp, value) => new KeyValuePair<string, string>(kvp.Key.ToLower(), value))
+                    (kvp, value) => new KeyValuePair<string, string>(kvp.Key.ToLower(), value ?? String.Empty))
                 .ToList();
 
             return items;

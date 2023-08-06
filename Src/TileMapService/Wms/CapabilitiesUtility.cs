@@ -207,17 +207,8 @@ namespace TileMapService.Wms
 
         private static Version GetVersion(XmlDocument xmlDoc)
         {
-            var rootElement = xmlDoc.DocumentElement;
-            if (rootElement == null)
-            {
-                throw new FormatException("Root Element was not found");
-            }
-
-            var versionAttribute = rootElement.Attributes["version"];
-            if (versionAttribute == null)
-            {
-                throw new FormatException("Version attribute was not found");
-            }
+            var rootElement = xmlDoc.DocumentElement ?? throw new FormatException("Root Element was not found.");
+            var versionAttribute = rootElement.Attributes["version"] ?? throw new FormatException("Version attribute was not found.");
 
             switch (versionAttribute.Value)
             {

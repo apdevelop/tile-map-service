@@ -21,7 +21,7 @@ namespace TileMapService.Controllers
     /// Supports currently only EPSG:3857; WMS versions 1.1.1 and 1.3.0.
     /// </remarks>
     [Route("wms")]
-    public class WmsController : Controller
+    public class WmsController : ControllerBase
     {
         private readonly ITileSourceFabric tileSourceFabric;
 

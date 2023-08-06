@@ -28,10 +28,7 @@ namespace TileMapService
         public static IHostBuilder CreateHostBuilder()
         {
             return Host.CreateDefaultBuilder()
-                    .ConfigureWebHostDefaults(webBuilder =>
-                    {
-                        webBuilder.UseStartup<Startup>();
-                    });
+                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
         }
     }
 }

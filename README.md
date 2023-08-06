@@ -1,5 +1,5 @@
-# Tile Map Service for .NET 5
-Basic implementation of tile server for .NET 5 platform. Provides access to tiles stored in several source types and serving them using various protocols.
+# Tile Map Service for .NET 5 / /.NET 7
+Simple and lightweight implementation of tile server basic features for .NET 5 / .NET 7 platform. Provides access to tiles stored in several source types and serving them using various protocols.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
@@ -20,12 +20,12 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 
 * Supported protocols (service endpoints) for serving tiles: 
 
-| Type                                                                              | EPSG:3857 | EPSG:4326 | Endpoint | Formats   | Notes                                     |
-| --------------------------------------------------------------------------------- |:---------:|:---------:|----------|-----------|--------------------------------------------------------------------------------------------|
-| XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map))                | &#10003;  | &#10003;  | /xyz     | png, jpeg, webp, mvt | Can be REST style url (/{z}/{x}/{y}.ext) or url with parameters (&x={x}&y={y}&z={z}) |
-| TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service))          | &#10003;  | &#10003;  | /tms     | png, jpeg, webp, mvt |                               |
-| WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)) | &#10003;  | &mdash;   | /wmts    | png, jpeg, webp, mvt | Support both `RESTful` and `KVP` `GetTile` url syntax   |
-| WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))            | &#10003;  | &mdash;   | /wms     | png, jpeg, tiff      |WMS versions `1.1.1` and `1.3.0` |
+| Endpoint                                                                          | EPSG:3857 | EPSG:4326 | Endpoint&nbsp;Url | Formats   | Notes                                     |
+| --------------------------------------------------------------------------------- |:---------:|:---------:|--------------|-----------|--------------------------------------------------------------------------------------------|
+| XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map))                | &#10003;  | &#10003;  | `/xyz`       | png, jpeg, webp, mvt | Can be REST style url (/{z}/{x}/{y}.ext) or url with parameters (&x={x}&y={y}&z={z}) |
+| TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service))          | &#10003;  | &#10003;  | `/tms`       | png, jpeg, webp, mvt |                               |
+| WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)) | &#10003;  | &mdash;   | `/wmts`      | png, jpeg, webp, mvt | Support both `RESTful` and `KVP` `GetTile` url syntax   |
+| WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))            | &#10003;  | &mdash;   | `/wms`       | png, jpeg, tiff      |WMS versions `1.1.1` and `1.3.0` |
 
 * Coordinate system / tile grid support: [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection), basic support for geodetic `EPSG:4326`.
 * Tile image formats: raster (`PNG`, `JPEG`, `WEBP`) 256&#215;256 pixels tiles, basic support of `TIFF` output and `PBF` / `MVT` (vector tiles).
@@ -34,7 +34,14 @@ Basic implementation of tile server for .NET 5 platform. Provides access to tile
 * Reading sources configuration using `/api` endpoint (local requests only).
 
 ### Technologies
-Developed using MS Visual Studio 2019 with .NET 5 SDK.
+There are two separate solutions and corresponding projects, sharing the same source code files:
+
+| Property           | NET5      | NET7      |
+| ------------------ |:---------:|:---------:|
+| SDK                | .NET 5.0  | .NET 7.0  |
+| MS Visual Studio   | 2019      | 2022      |
+| Status             | Legacy    | Active    |
+
 Using
 * [Microsoft.Data.Sqlite](https://docs.microsoft.com/ru-ru/dotnet/standard/data/sqlite/) for working with SQLite database.
 * [SkiaSharp](https://github.com/mono/SkiaSharp) for raster images processing.
@@ -49,27 +56,29 @@ Tile sources are defined in [appsettings.json](https://github.com/apdevelop/tile
 
 ### Running framework-dependent deployment
 
-Check presence of .NET 5 runtime on target system using command:
+Check if .NET 5 or .NET 7 runtime is installed on target system:
 
 `dotnet --info`
 
-The `Microsoft.AspNetCore.App 5.0.3` (or later version) should present in list.
+The `Microsoft.AspNetCore.App 5.0.3` / `7.0.5` (or later versions) should present in list.
+
+*There is known issue for .NET 5 and libssl 3.x compatibility on Linux systems, use .NET 7 in this case.*
 
 Run the application using command:
 
-`dotnet TileMapService.dll`
+`dotnet tms.dll`
 
 After start, it will listen on default TCP port 5000 (using in-process `Kestrel` web server) 
-and tile service with demo page will be available on http://localhost:5000/ address; to enable remote calls allow connections to this port in firewall settings.
+and tile service with demo page will be available on `http://localhost:5000/` address; to enable remote calls allow connections to this port in firewall settings.
 
 ### TODOs
 * Support for more formats (image formats, vector tiles) and coordinate systems (tile grids).
-* Include test dataset(s) created from free data.
-* WMS and Vector Tiles (mvt) client in Web UI.
 * Flexible settings of tile sources.
-* Compare with reference implementations.
+* Configuration Web API / Web UI with authentication.
+* WMS and Vector Tiles (mvt) client in Web UI.
+* Compare with reference implementations (servers and clients).
 * Using metatiles for better tiles quality.
-* Configuration Web UI.
+* Include test dataset(s) created from free data.
 * Extended diagnostics, error handling and logging.
 * Performance tests.
 * Live demo.

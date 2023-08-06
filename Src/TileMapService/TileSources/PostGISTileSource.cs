@@ -67,22 +67,18 @@ namespace TileMapService.TileSources
 
         async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
         {
-            if ((z < this.configuration.MinZoom) ||
-                (z > this.configuration.MaxZoom) ||
-                (x < 0) ||
-                (y < 0) ||
-                (x > Utils.WebMercator.TileCount(z)) ||
-                (y > Utils.WebMercator.TileCount(z)))
+            if (z < this.configuration.MinZoom ||
+                z > this.configuration.MaxZoom ||
+                x < 0 ||
+                y < 0 ||
+                x > Utils.WebMercator.TileCount(z) ||
+                y > Utils.WebMercator.TileCount(z))
             {
                 return null;
             }
             else
             {
-                var postgis = this.configuration.PostGis;
-                if (postgis == null)
-                {
-                    throw new InvalidOperationException("Table must be defined.");
-                }
+                var postgis = this.configuration.PostGis ?? throw new InvalidOperationException("PostGIS connection options must be defined.");
 
                 if (String.IsNullOrWhiteSpace(postgis.Table))
                 {
@@ -127,7 +123,7 @@ namespace TileMapService.TileSources
                     WITH mvtgeom AS
                     (
                         SELECT ST_AsMVTGeom({geometry}, ST_TileEnvelope({z},{x},{y})) AS geom 
-                            {((fields != null && fields.Length > 0) ? ", " + String.Join(',', fields) : String.Empty)}
+                            {(fields != null && fields.Length > 0 ? ", " + String.Join(',', fields) : String.Empty)}
                         FROM ""{tableName}""
                         WHERE ST_Intersects({geometry}, ST_TileEnvelope({z},{x},{y}))
                     )
@@ -140,7 +136,7 @@ namespace TileMapService.TileSources
             using var command = new NpgsqlCommand(commandText, connection);
             using var reader = await command.ExecuteReaderAsync();
 
-            return (await reader.ReadAsync()) ? reader[0] as byte[] : null;
+            return await reader.ReadAsync() ? reader[0] as byte[] : null;
         }
     }
 }

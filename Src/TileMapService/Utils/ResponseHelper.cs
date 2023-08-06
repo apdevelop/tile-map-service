@@ -66,8 +66,10 @@ namespace TileMapService.Utils
 
     class FileResponse
     {
-        public byte[]? FileContents { get; set; }
+#pragma warning disable CS8618
+        public byte[] FileContents { get; set; }
 
-        public string? ContentType { get; set; }
+        public string ContentType { get; set; }
+#pragma warning restore CS8618
     }
 }

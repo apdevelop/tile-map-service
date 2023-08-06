@@ -25,25 +25,28 @@ namespace TileMapService
         public TileSourceFabric(IConfiguration configuration, ILogger<TileSourceFabric> logger)
         {
             this.logger = logger;
-            this.loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.AddConsole();
-            });
+            this.loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-            this.tileSources = configuration
+            var sources = configuration
                     .GetSection("Sources")
-                    .Get<IList<SourceConfiguration>>()
-                    .Where(c => !String.IsNullOrEmpty(c.Id)) // Skip disabled sources
-                    .ToDictionary(c => c.Id, c => CreateTileSource(c));
+                    .Get<IList<SourceConfiguration>>();
 
-            this.serviceProperties = configuration
+            if (sources == null)
+            {
+                throw new InvalidOperationException($"Sources section is not defined in configuration file.");
+            }
+            else
+            {
+                this.tileSources = sources
+                        .Where(c => !String.IsNullOrEmpty(c.Id)) // Skip disabled sources
+                        .ToDictionary(c => c.Id, c => CreateTileSource(c));
+            }
+
+            var serviceProps = configuration
                     .GetSection("Service")
                     .Get<ServiceProperties>();
 
-            if (this.serviceProperties == null)
-            {
-                this.serviceProperties = new ServiceProperties();
-            }
+            this.serviceProperties = serviceProps ?? new ServiceProperties();
         }
 
         #region ITileSourceFabric implementation

@@ -30,9 +30,9 @@ namespace TileMapService
         {
             get
             {
-                return String.IsNullOrWhiteSpace(this.Keywords) ?
-                        null :
-                        this.Keywords.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                return String.IsNullOrWhiteSpace(this.Keywords)
+                    ? null
+                    : this.Keywords.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
         }
 

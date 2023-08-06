@@ -1,8 +1,4 @@
-﻿using System.Net;
-
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TileMapService
@@ -11,6 +7,13 @@ namespace TileMapService
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = "ForbidScheme";
+                    options.DefaultForbidScheme = "ForbidScheme";
+                    options.AddScheme<SimpleAuthenticationHandler>("ForbidScheme", "Handle Forbidden");
+                });
+
             services.AddCors();
             services.AddControllers();
             services.AddSingleton<ITileSourceFabric, TileSourceFabric>();
@@ -18,6 +21,7 @@ namespace TileMapService
 
         public void Configure(IApplicationBuilder app)
         {
+            app.UseAuthentication();
             app.UseMiddleware<ErrorLoggingMiddleware>();
             app.UseDefaultFiles();
             app.UseStaticFiles();
@@ -37,11 +41,9 @@ namespace TileMapService
             ////        }
             ////    });
             ////});
+
             app.UseCors(builder => builder.AllowAnyOrigin());
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => endpoints.MapControllers());
         }
     }
 }
