@@ -1,4 +1,4 @@
-# Tile Map Service for .NET 5 /.NET 7
+# Tile Map Service for .NET 5 / .NET 7
 Simple and lightweight implementation of tile server basic features for .NET 5 / .NET 7 platforms. Provides access to tiles stored in several source types and serving them using various protocols.
 
 ### Demo page
@@ -91,10 +91,10 @@ and tile service with demo page will be available on `http://localhost:5000/` ad
 All external tile sources (services) in the provided `appsettings.json` file are only for development / testing, not for production use.
 
 ### References
-* [MBTiles 1.3 Specification](https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md)
+* [MBTiles Specification](https://github.com/mapbox/mbtiles-spec/)
 * [Tile Map Service Specification](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification)
-* [OpenGIS Web Map Tile Service Implementation Standard](https://www.ogc.org/standards/wmts)
+* [OpenGIS Web Map Tile Service Implementation Standard](https://www.ogc.org/standard/wmts/)
 * [Serving Dynamic Vector Tiles from PostGIS](https://blog.crunchydata.com/blog/dynamic-vector-tiles-from-postgis)
 * [GeoTIFF Format Specification](http://geotiff.maptools.org/spec/geotiffhome.html)
-* [Using TMS in Leaflet](https://leafletjs.com/examples/wms/wms.html)
-* [QGIS as OGC Data Client](https://docs.qgis.org/2.18/en/docs/user_manual/working_with_ogc/ogc_client_support.html)
+* [Using WMS and TMS in Leaflet](https://leafletjs.com/examples/wms/wms.html)
+* [QGIS User Guide: Working with OGC / ISO protocols](https://docs.qgis.org/3.28/en/docs/user_manual/working_with_ogc/ogc_client_support.html)
