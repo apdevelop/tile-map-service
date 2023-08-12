@@ -94,7 +94,7 @@ namespace TileMapService
                 throw new InvalidOperationException("config.Type is null or empty");
             }
 
-            return (config.Type.ToLowerInvariant()) switch
+            return config.Type.ToLowerInvariant() switch
             {
                 SourceConfiguration.TypeLocalFiles => new LocalFilesTileSource(config),
                 SourceConfiguration.TypeMBTiles => new MBTilesTileSource(config),
@@ -108,7 +108,8 @@ namespace TileMapService
             };
         }
 
-        private static string[] GetEnvironmentInfo() => new[]
+        private static string[] GetEnvironmentInfo() =>
+            new[]
             {
                 $"MachineName='{Environment.MachineName}'  User='{Environment.UserDomainName}\\{Environment.UserName}'  CPU={Environment.ProcessorCount}  OS='{Environment.OSVersion}'",
                 $"OS x64={Environment.Is64BitOperatingSystem}  Process x64={Environment.Is64BitProcess}  .NET='{Environment.Version}'  Culture='{Thread.CurrentThread.CurrentCulture.DisplayName}'",

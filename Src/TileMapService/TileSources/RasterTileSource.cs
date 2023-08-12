@@ -35,12 +35,12 @@ namespace TileMapService.TileSources
 
             if (String.IsNullOrEmpty(configuration.Id))
             {
-                throw new ArgumentException("Source identifier is null or empty string");
+                throw new ArgumentException("Source identifier is null or empty string.");
             }
 
             if (String.IsNullOrEmpty(configuration.Location))
             {
-                throw new ArgumentException("Source location is null or empty string");
+                throw new ArgumentException("Source location is null or empty string.");
             }
 
             this.configuration = configuration; // Will be changed later in InitAsync
@@ -52,7 +52,7 @@ namespace TileMapService.TileSources
         {
             if (String.IsNullOrEmpty(this.configuration.Location))
             {
-                throw new InvalidOperationException("configuration.Location is null or empty");
+                throw new InvalidOperationException("configuration.Location is null or empty.");
             }
 
             Tiff.SetErrorHandler(new DisableErrorHandler()); // TODO: ? redirect output?
@@ -186,12 +186,12 @@ namespace TileMapService.TileSources
             var planarConfig = (PlanarConfig)tiff.GetField(TiffTag.PLANARCONFIG)[0].ToInt();
             if (planarConfig != PlanarConfig.CONTIG)
             {
-                throw new FormatException($"Only single image plane storage organization ({PlanarConfig.CONTIG}) is supported");
+                throw new FormatException($"Only single image plane storage organization ({PlanarConfig.CONTIG}) is supported.");
             }
 
             if (!tiff.IsTiled())
             {
-                throw new FormatException($"Only tiled storage scheme is supported");
+                throw new FormatException($"Only tiled storage scheme is supported.");
             }
 
             var imageWidth = tiff.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
@@ -212,13 +212,13 @@ namespace TileMapService.TileSources
 
             if ((tiePoints.Length != 6) || (tiePoints[0] != 0) || (tiePoints[1] != 0) || (tiePoints[2] != 0) || (tiePoints[5] != 0))
             {
-                throw new FormatException($"Only single tie point is supported"); // TODO: Only simple tie points scheme is supported
+                throw new FormatException($"Only single tie point is supported."); // TODO: Only simple tie points scheme is supported
             }
 
             var modelTransformation = tiff.GetField(TiffTag.GEOTIFF_MODELTRANSFORMATIONTAG);
             if (modelTransformation != null)
             {
-                throw new FormatException($"Only simple projection without transformation is supported");
+                throw new FormatException($"Only simple projection without transformation is supported.");
             }
 
             var srId = 0;
@@ -254,7 +254,7 @@ namespace TileMapService.TileSources
                                     var modelType = (GeoTiff.ModelType)keys[keyIndex + 3];
                                     if (!((modelType == GeoTiff.ModelType.Projected) || (modelType == GeoTiff.ModelType.Geographic)))
                                     {
-                                        throw new FormatException("Only coordinate systems ModelTypeProjected (1) or ModelTypeGeographic (2) are supported");
+                                        throw new FormatException("Only coordinate systems ModelTypeProjected (1) or ModelTypeGeographic (2) are supported.");
                                     }
 
                                     keyIndex += 4;
@@ -275,9 +275,9 @@ namespace TileMapService.TileSources
                             case (ushort)GeoTiff.Key.GeographicTypeGeoKey:
                                 {
                                     var geographicType = keys[keyIndex + 3];
-                                    if (geographicType != 4326)
+                                    if (geographicType != U.SrsCodes._4326)
                                     {
-                                        throw new FormatException("Only EPSG:4326 geodetic coordinate system is supported");
+                                        throw new FormatException($"Only {U.SrsCodes.EPSG4326} geodetic coordinate system is supported.");
                                     }
 
                                     srId = geographicType;
@@ -309,7 +309,7 @@ namespace TileMapService.TileSources
                                     var geogAngularUnit = (GeoTiff.AngularUnits)keys[keyIndex + 3];
                                     if (geogAngularUnit != GeoTiff.AngularUnits.Degree)
                                     {
-                                        throw new FormatException("Only degree angular unit is supported");
+                                        throw new FormatException("Only degree angular unit is supported.");
                                     }
 
                                     keyIndex += 4;
@@ -331,7 +331,7 @@ namespace TileMapService.TileSources
                                 {
                                     if (doubleParams == null)
                                     {
-                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag");
+                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag.");
                                     }
 
                                     var geogSemiMajorAxis = doubleParams[keys[keyIndex + 3]];
@@ -342,7 +342,7 @@ namespace TileMapService.TileSources
                                 {
                                     if (doubleParams == null)
                                     {
-                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag");
+                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag.");
                                     }
 
                                     var geogSemiMinorAxis = doubleParams[keys[keyIndex + 3]];
@@ -353,7 +353,7 @@ namespace TileMapService.TileSources
                                 {
                                     if (doubleParams == null)
                                     {
-                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag");
+                                        throw new FormatException($"Double values were not found in '{TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}' tag.");
                                     }
 
                                     var geogInvFlattening = doubleParams[keys[keyIndex + 3]];
@@ -376,9 +376,9 @@ namespace TileMapService.TileSources
                             case (ushort)GeoTiff.Key.ProjectedCSTypeGeoKey:
                                 {
                                     var projectedCSType = keys[keyIndex + 3];
-                                    if (projectedCSType != 3857)
+                                    if (projectedCSType != U.SrsCodes._3857)
                                     {
-                                        throw new FormatException($"Only EPSG:3857 projected coordinate system is supported (input was: {projectedCSType})");
+                                        throw new FormatException($"Only {U.SrsCodes.EPSG3857} projected coordinate system is supported (input was: {projectedCSType}).");
                                     }
 
                                     // TODO: UTM (EPSG:32636 and others) support
@@ -396,7 +396,7 @@ namespace TileMapService.TileSources
                                     var linearUnit = (GeoTiff.LinearUnits)keys[keyIndex + 3];
                                     if (linearUnit != GeoTiff.LinearUnits.Meter)
                                     {
-                                        throw new FormatException("Only meter linear unit is supported");
+                                        throw new FormatException("Only meter linear unit is supported.");
                                     }
 
                                     keyIndex += 4;
@@ -418,7 +418,7 @@ namespace TileMapService.TileSources
 
             switch (srId)
             {
-                case 4326: // TODO: const
+                case U.SrsCodes._4326:
                     {
                         geographicalBounds = new M.GeographicalBounds(
                             tiePoints[3],
@@ -437,7 +437,7 @@ namespace TileMapService.TileSources
 
                         break;
                     }
-                case 3857: // TODO: const
+                case U.SrsCodes._3857:
                     {
                         projectedBounds = new M.Bounds(
                             tiePoints[3],
@@ -458,7 +458,7 @@ namespace TileMapService.TileSources
                     }
                 default:
                     {
-                        throw new InvalidOperationException($"SRID '{srId}' is not supported");
+                        throw new InvalidOperationException($"SRID '{srId}' is not supported.");
                     }
             }
 
@@ -610,7 +610,7 @@ namespace TileMapService.TileSources
 
             if (String.IsNullOrEmpty(this.configuration.Location))
             {
-                throw new InvalidOperationException("configuration.Location is null or empty");
+                throw new InvalidOperationException("configuration.Location is null or empty.");
             }
 
             var tileMinX = sourceTileCoordinates.Min(t => t.X);

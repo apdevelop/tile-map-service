@@ -108,27 +108,23 @@ namespace TileMapService.Utils
                 null;
         }
 
-        public static SKEncodedImageFormat SKEncodedImageFormatFromMediaType(string mediaType)
-        {
-            return mediaType switch
+        public static SKEncodedImageFormat SKEncodedImageFormatFromMediaType(string mediaType) =>
+            mediaType switch
             {
                 MediaTypeNames.Image.Png => SKEncodedImageFormat.Png,
                 MediaTypeNames.Image.Jpeg => SKEncodedImageFormat.Jpeg,
                 MediaTypeNames.Image.Webp => SKEncodedImageFormat.Webp,
                 _ => throw new ArgumentOutOfRangeException(nameof(mediaType), $"Media type '{mediaType}' is not supported."),
             };
-        }
 
-        public static string MediaTypeFromSKEncodedImageFormat(SKEncodedImageFormat format)
-        {
-            return format switch
+        public static string MediaTypeFromSKEncodedImageFormat(SKEncodedImageFormat format) =>
+            format switch
             {
                 SKEncodedImageFormat.Png => MediaTypeNames.Image.Png,
                 SKEncodedImageFormat.Jpeg => MediaTypeNames.Image.Jpeg,
                 SKEncodedImageFormat.Webp => MediaTypeNames.Image.Webp,
                 _ => throw new ArgumentOutOfRangeException(nameof(format), $"Format '{format}' is not supported."),
             };
-        }
 
         public static byte[]? ConvertImageToFormat(byte[] originalImage, string mediaType, int quality)
         {

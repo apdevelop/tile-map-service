@@ -367,7 +367,8 @@ namespace TileMapService.TileSources
             }
 
             y = this.configuration.Tms != null && this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
-            return (this.configuration.Type.ToLowerInvariant()) switch
+
+            return this.configuration.Type.ToLowerInvariant() switch
             {
                 SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, y, z),
                 SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, y, z),

@@ -163,7 +163,7 @@ namespace TileMapService.Wmts
                         }
                     default:
                         {
-                            throw new NotImplementedException($"Unknown SRS '{layer.Srs}'");
+                            throw new NotImplementedException($"Unknown SRS '{layer.Srs}'.");
                         }
                 }
             }

@@ -35,8 +35,8 @@ namespace TileMapService.Utils
             int ymax = (1 << z) - 1;
             switch (srs)
             {
-                case SrsCodes.EPSG3857: { xmin = 0; xmax =  (1 << z) - 1; break; }
-                case SrsCodes.EPSG4326: { xmin = 0; xmax =  2 * (1 << z) - 1; break; }
+                case SrsCodes.EPSG3857: { xmin = 0; xmax = (1 << z) - 1; break; }
+                case SrsCodes.EPSG4326: { xmin = 0; xmax = 2 * (1 << z) - 1; break; }
                 default: throw new ArgumentOutOfRangeException(nameof(srs));
             }
 
@@ -44,27 +44,20 @@ namespace TileMapService.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Longitude(double x)
-        {
-            return (x / (EarthRadius * Math.PI / 180.0));
-        }
+        public static double Longitude(double x) =>
+            x / (EarthRadius * Math.PI / 180.0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Latitude(double y)
-        {
-            var fi = 2.0 * Math.Atan(Math.Exp(y / EarthRadius)) - Math.PI / 2.0;
-            return MathHelper.RadiansToDegrees(fi);
-        }
+        public static double Latitude(double y) =>
+            MathHelper.RadiansToDegrees(2.0 * Math.Atan(Math.Exp(y / EarthRadius)) - Math.PI / 2.0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double X(double longitude) => EarthRadius * MathHelper.DegreesToRadians(longitude);
+        public static double X(double longitude) =>
+            EarthRadius * MathHelper.DegreesToRadians(longitude);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Y(double latitude)
-        {
-            var lat = Math.Max(Math.Min(MaxLatitude, latitude), -MaxLatitude);
-            return EarthRadius * MathHelper.Artanh(Math.Sin(MathHelper.DegreesToRadians(lat)));
-        }
+        public static double Y(double latitude) =>
+            EarthRadius * MathHelper.Artanh(Math.Sin(MathHelper.DegreesToRadians(Math.Max(Math.Min(MaxLatitude, latitude), -MaxLatitude))));
 
         /// <summary>
         /// Computes tile bounds for given coordinates (x, y, z).
@@ -116,7 +109,8 @@ namespace TileMapService.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int TileCount(int zoomLevel) => 1 << zoomLevel;
+        public static int TileCount(int zoomLevel) =>
+            1 << zoomLevel;
 
         /// <summary>
         /// Returns entire world map image size in pixels at given zoom level.
@@ -125,7 +119,8 @@ namespace TileMapService.Utils
         /// <param name="tileSize">Tile size (width and height) in pixels.</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int MapSize(int zoomLevel, int tileSize) => tileSize << zoomLevel;
+        public static int MapSize(int zoomLevel, int tileSize) =>
+            tileSize << zoomLevel;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double MapSize(double width, double longitudeMin, double longitudeMax)
@@ -154,27 +149,23 @@ namespace TileMapService.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FlipYCoordinate(int y, int zoomLevel) => (1 << zoomLevel) - y - 1;
 
-        public static double TileCoordinateXAtZoom(double longitude, int zoomLevel)
-        {
-            return LongitudeToPixelXAtZoom(longitude, zoomLevel) / (double)TileSize;
-        }
+        public static double TileCoordinateXAtZoom(double longitude, int zoomLevel) =>
+            LongitudeToPixelXAtZoom(longitude, zoomLevel) / (double)TileSize;
 
-        public static double TileCoordinateYAtZoom(double latitude, int zoomLevel)
-        {
-            return LatitudeToPixelYAtZoom(latitude, zoomLevel) / (double)TileSize;
-        }
+        public static double TileCoordinateYAtZoom(double latitude, int zoomLevel) =>
+            LatitudeToPixelYAtZoom(latitude, zoomLevel) / (double)TileSize;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double LongitudeToPixelXAtZoom(double longitude, int zoomLevel) => LongitudeToPixelX(longitude, (double)MapSize(zoomLevel, DefaultTileSize));
+        public static double LongitudeToPixelXAtZoom(double longitude, int zoomLevel) =>
+            LongitudeToPixelX(longitude, (double)MapSize(zoomLevel, DefaultTileSize));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double LatitudeToPixelYAtZoom(double latitude, int zoomLevel) => LatitudeToPixelY(latitude, (double)MapSize(zoomLevel, DefaultTileSize));
+        public static double LatitudeToPixelYAtZoom(double latitude, int zoomLevel) =>
+            LatitudeToPixelY(latitude, (double)MapSize(zoomLevel, DefaultTileSize));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double LongitudeToPixelX(double longitude, double mapSize)
-        {
-            return ((longitude + 180.0) / 360.0) * mapSize;
-        }
+        public static double LongitudeToPixelX(double longitude, double mapSize) =>
+            ((longitude + 180.0) / 360.0) * mapSize;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LatitudeToPixelY(double latitude, double mapSize)

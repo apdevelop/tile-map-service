@@ -11,6 +11,8 @@
         /// </remarks>
         public const string EPSG3857 = "EPSG:3857";
 
+        internal const int _3857 = 3857;
+
         /// <summary>
         /// EPSG:4326
         /// </summary>
@@ -19,6 +21,8 @@
         /// https://epsg.io/4326
         /// </remarks>
         public const string EPSG4326 = "EPSG:4326";
+
+        internal const int _4326 = 4326;
 
         /// <summary>
         /// EPSG:900913
