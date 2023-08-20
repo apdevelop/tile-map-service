@@ -2,7 +2,7 @@
 Simple and lightweight implementation of tile server basic features for .NET 5 / .NET 7 platforms. Provides access to tiles stored in several source types and serving them using various protocols.
 
 ### Demo page
-![Demo page](https://github.com/apdevelop/tile-map-service-net5/blob/master/Docs/demo-page.png)
+![Demo page](https://github.com/apdevelop/tile-map-service/blob/master/Docs/demo-page.png)
 
 ### Features
 * Supported tile sources:
@@ -15,7 +15,7 @@ Simple and lightweight implementation of tile server basic features for .NET 5 /
 | XYZ tile service          | &#10003;   | &#10003;  | [XYZ](https://en.wikipedia.org/wiki/Tiled_web_map) with local cache for `EPSG:3857` SRS                |
 | TMS tile service          | &#10003;   | &#10003;  | [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification) with local cache for `EPSG:3857` SRS |
 | WMTS tile service         | &#10003;   | &#10003;  | [WMTS](https://www.ogc.org/standards/wmts) with local cache for `EPSG:3857` SRS                        |
-| WMS service               | &#10003;   | &mdash;   | [WMS](https://en.wikipedia.org/wiki/Web_Map_Service), WMS versions 1.1.1 and 1.3.0, cache for `EPSG:3857` SRS  |
+| WMS service               | &#10003;   | &mdash;   | [WMS](https://en.wikipedia.org/wiki/Web_Map_Service), versions 1.1.1 and 1.3.0, cache for `EPSG:3857` SRS  |
 | PostGIS database          | &#10003;   | &mdash;   | [Mapbox Vector Tiles](https://github.com/mapbox/vector-tile-spec) from `geometry` column with `EPSG:3857` SRS only |
 
 * Supported protocols (service endpoints) for serving tiles: 
@@ -25,7 +25,7 @@ Simple and lightweight implementation of tile server basic features for .NET 5 /
 | XYZ ([Tiled web map](https://en.wikipedia.org/wiki/Tiled_web_map))                | &#10003;  | &#10003;  | `/xyz`       | png, jpeg, webp, mvt | Can be REST style url (/{z}/{x}/{y}.ext) or url with parameters (&x={x}&y={y}&z={z}) |
 | TMS ([Tile Map Service](https://en.wikipedia.org/wiki/Tile_Map_Service))          | &#10003;  | &#10003;  | `/tms`       | png, jpeg, webp, mvt |                               |
 | WMTS ([Web Map Tile Service](https://en.wikipedia.org/wiki/Web_Map_Tile_Service)) | &#10003;  | &mdash;   | `/wmts`      | png, jpeg, webp, mvt | Support both `RESTful` and `KVP` `GetTile` url syntax   |
-| WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))            | &#10003;  | &mdash;   | `/wms`       | png, jpeg, tiff      |WMS versions `1.1.1` and `1.3.0` |
+| WMS ([Web Map Service](https://en.wikipedia.org/wiki/Web_Map_Service))            | &#10003;  | &mdash;   | `/wms`       | png, jpeg, tiff (geotiff) |WMS versions `1.1.1` and `1.3.0` |
 
 * Coordinate system / tile grid support: [Web Mercator / Spherical Mercator / EPSG:3857](https://en.wikipedia.org/wiki/Web_Mercator_projection), basic support for geodetic `EPSG:4326`.
 * Tile image formats: raster (`PNG`, `JPEG`, `WEBP`) 256&#215;256 pixels tiles, basic support of `TIFF` output and `PBF` / `MVT` (vector tiles).
@@ -36,7 +36,7 @@ Simple and lightweight implementation of tile server basic features for .NET 5 /
 ### Technologies
 There are two separate solutions and corresponding projects, sharing the same source code files:
 
-| Property           | NET5      | NET7      |
+| Property           | .NET 5    | .NET 7    |
 | ------------------ |:---------:|:---------:|
 | SDK                | .NET 5.0  | .NET 7.0  |
 | MS Visual Studio   | 2019      | 2022      |
@@ -76,6 +76,7 @@ and tile service with demo page will be available on `http://localhost:5000/` ad
 * Flexible settings of tile sources.
 * Configuration Web API / Web UI with authentication.
 * WMS and Vector Tiles (mvt) client in Web UI.
+* .NET 8 project and solution.
 * Compare with reference implementations (servers and clients).
 * Using metatiles for better tiles quality.
 * Include test dataset(s) created from free data.

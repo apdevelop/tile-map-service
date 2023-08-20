@@ -1,6 +1,6 @@
 ﻿namespace TileMapService.Models
 {
-    class RasterProperties // TODO: store source parameters as-is
+    public class RasterProperties // TODO: store source parameters as-is
     {
         public int Srid { get; set; }
 

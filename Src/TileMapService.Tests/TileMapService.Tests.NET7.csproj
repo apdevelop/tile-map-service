@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>TileMapService.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,8 @@
     <None Remove="Expected\tms_capabilities_TileMap3.xml" />
     <None Remove="Expected\tms_capabilities_TileMapService.xml" />
     <None Remove="Expected\wmts_GetCapabilities.xml" />
+    <None Remove="GeoTiff\sample1-epsg-3857.tiff" />
+    <None Remove="GeoTiff\sample1-epsg-4326.tiff" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +24,8 @@
     <EmbeddedResource Include="Expected\tms_capabilities_TileMapService.xml" />
     <EmbeddedResource Include="Expected\tms_capabilities_Services.xml" />
     <EmbeddedResource Include="Expected\wmts_GetCapabilities.xml" />
+    <EmbeddedResource Include="GeoTiff\sample1-epsg-3857.tiff" />
+    <EmbeddedResource Include="GeoTiff\sample1-epsg-4326.tiff" />
   </ItemGroup>
 
   <ItemGroup>

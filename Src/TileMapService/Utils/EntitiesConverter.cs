@@ -14,9 +14,8 @@ namespace TileMapService.Utils
     /// </summary>
     static class EntitiesConverter
     {
-        public static string TileFormatToContentType(string format)
-        {
-            return format switch
+        public static string TileFormatToContentType(string format) =>
+            format switch
             {
                 ImageFormats.Png => MediaTypeNames.Image.Png,
                 ImageFormats.Jpeg => MediaTypeNames.Image.Jpeg,
@@ -25,11 +24,9 @@ namespace TileMapService.Utils
                 // TODO: other possible types
                 _ => format,
             };
-        }
 
-        public static string ExtensionToMediaType(string extension)
-        {
-            return extension switch
+        public static string ExtensionToMediaType(string extension) =>
+            extension switch
             {
                 "png" => MediaTypeNames.Image.Png,
                 "jpg" => MediaTypeNames.Image.Jpeg,
@@ -41,18 +38,14 @@ namespace TileMapService.Utils
                 // TODO: other possible types
                 _ => extension,
             };
-        }
 
-        public static List<Layer> SourcesToLayers(IEnumerable<SourceConfiguration> sources)
-        {
-            return sources
+        public static List<Layer> SourcesToLayers(IEnumerable<SourceConfiguration> sources) =>
+            sources
                .Select(c => SourceConfigurationToLayer(c))
                .ToList();
-        }
 
-        private static Layer SourceConfigurationToLayer(SourceConfiguration c)
-        {
-            return new Layer
+        private static Layer SourceConfigurationToLayer(SourceConfiguration c) =>
+            new Layer
             {
                 Identifier = c.Id,
                 Title = c.Title,
@@ -66,7 +59,6 @@ namespace TileMapService.Utils
                 TileWidth = c.TileWidth,
                 TileHeight = c.TileHeight,
             };
-        }
 
         /// <summary>
         /// Saves <paramref name="xml"/> document with header to byte array using UTF-8 encoding.
@@ -102,11 +94,9 @@ namespace TileMapService.Utils
             0);
         }
 
-        public static GeographicalBounds MapRectangleToGeographicalBounds(Bounds rectangle)
-        {
-            return new GeographicalBounds(
+        public static GeographicalBounds MapRectangleToGeographicalBounds(Bounds rectangle) =>
+            new GeographicalBounds(
                 new GeographicalPoint(WebMercator.Longitude(rectangle.Left), WebMercator.Latitude(rectangle.Bottom)),
                 new GeographicalPoint(WebMercator.Longitude(rectangle.Right), WebMercator.Latitude(rectangle.Top)));
-        }
     }
 }

@@ -18,7 +18,7 @@ namespace TileMapService.Controllers
     /// Serving tiles using Web Map Service (WMS) protocol.
     /// </summary>
     /// <remarks>
-    /// Supports currently only EPSG:3857; WMS versions 1.1.1 and 1.3.0.
+    /// Supports currently only EPSG:3857 output CRS; WMS versions 1.1.1 and 1.3.0.
     /// </remarks>
     [Route("wms")]
     public class WmsController : ControllerBase
@@ -99,7 +99,7 @@ namespace TileMapService.Controllers
                     format,
                     transparent,
                     bgcolor);
-            }
+            } // TODO: GetFeatureInfo request
             ////else if (String.Compare(request, Identifiers.GetFeatureInfo, StringComparison.Ordinal) == 0)
             ////{
             ////return await this.ProcessGetFeatureInfoRequestAsync(
@@ -119,7 +119,7 @@ namespace TileMapService.Controllers
         private IActionResult ProcessGetCapabilitiesRequest(Wms.Version version)
         {
             var layers = EC.SourcesToLayers(this.tileSourceFabric.Sources)
-                .Where(l => l.Srs == SrsCodes.EPSG3857) // TODO: EPSG:4326 support
+                .Where(l => l.Srs == SrsCodes.EPSG3857) // TODO: sources with EPSG:4326 support
                 .Where(l => l.Format == ImageFormats.Png || l.Format == ImageFormats.Jpeg) // Only raster formats
                 .Select(l => new Layer
                 {
@@ -140,26 +140,21 @@ namespace TileMapService.Controllers
                     Keywords = this.tileSourceFabric.ServiceProperties.KeywordsList,
                 },
                 layers,
-                new[]
-                {
-                    MediaTypeNames.Image.Png,
-                    MediaTypeNames.Image.Jpeg,
-                    MediaTypeNames.Image.Tiff,
-                });
+                SupportedOutputFormats);
 
             return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
         private async Task<IActionResult> ProcessGetMapRequestAsync(
-            string version,
-            string? layers,
-            string? srs,
-            string? bbox,
-            int width,
-            int height,
-            string? format,
-            bool? transparent,
-            string bgcolor)
+                string version,
+                string? layers,
+                string? srs,
+                string? bbox,
+                int width,
+                int height,
+                string? format,
+                bool? transparent,
+                string bgcolor)
         {
             // TODO: config ?
             const int MinSize = 1;
@@ -171,15 +166,7 @@ namespace TileMapService.Controllers
                 return this.ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
             }
 
-            // TODO: more output formats
-            var isFormatSupported = ResponseHelper.IsFormatInList(
-                        new[]
-                        {
-                            MediaTypeNames.Image.Png,
-                            MediaTypeNames.Image.Jpeg,
-                            MediaTypeNames.Image.Tiff,
-                        },
-                        format);
+            var isFormatSupported = ResponseHelper.IsFormatInList(SupportedOutputFormats, format);
 
             if (!isFormatSupported)
             {
@@ -285,7 +272,7 @@ namespace TileMapService.Controllers
                 using var bitmap = SKBitmap.FromImage(image);
                 // TODO: improve performance of pixels processing, maybe using unsafe/pointers
                 var pixels = bitmap.Pixels.SelectMany(p => new byte[] { p.Red, p.Green, p.Blue, p.Alpha }).ToArray();
-                var tiff = ImageHelper.CreateTiffImage(pixels, image.Width, image.Height);
+                var tiff = ImageHelper.CreateTiffImage(pixels, image.Width, image.Height, boundingBox, true);
                 return tiff;
             }
             else
@@ -295,6 +282,14 @@ namespace TileMapService.Controllers
                 return data.ToArray();
             }
         }
+
+        // TODO: more output formats
+        private static readonly string[] SupportedOutputFormats = new[]
+        {
+            MediaTypeNames.Image.Png,
+            MediaTypeNames.Image.Jpeg,
+            MediaTypeNames.Image.Tiff,
+        };
 
         private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
 

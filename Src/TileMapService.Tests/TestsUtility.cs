@@ -75,8 +75,8 @@ namespace TileMapService.Tests
 
         public static byte[] ReadResource(string id)
         {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var resourceName = assembly.GetName().Name + "." + id;
+            var assembly = typeof(TestsUtility).Assembly;
+            var resourceName = typeof(TestsUtility).Namespace + "." + id;
 
             byte[] data = null;
             using (var stream = assembly.GetManifestResourceStream(resourceName))
