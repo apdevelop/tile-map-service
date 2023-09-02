@@ -115,7 +115,8 @@ namespace TileMapService
                 $"OS x64={Environment.Is64BitOperatingSystem}  Process x64={Environment.Is64BitProcess}  .NET='{Environment.Version}'  Culture='{Thread.CurrentThread.CurrentCulture.DisplayName}'",
                 $"UtcOffset={TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)}  TZ='{TimeZoneInfo.Local.StandardName}'",
                 $"UtcNow={DateTime.UtcNow}  Uptime={TimeSpan.FromMilliseconds(Environment.TickCount)}",
-                $"Process='{Process.GetCurrentProcess()?.MainModule?.FileName}'  PID={Environment.ProcessId}"
+                $"Process='{Process.GetCurrentProcess()?.MainModule?.FileName}'  PID={Environment.ProcessId}",
+                $"Assembly='{typeof(Program).Assembly.Location}'",
             };
     }
 }
