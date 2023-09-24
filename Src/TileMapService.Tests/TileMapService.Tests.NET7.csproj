@@ -1,42 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
-    <RootNamespace>TileMapService.Tests</RootNamespace>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<RootNamespace>TileMapService.Tests</RootNamespace>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Expected\tms_capabilities_Services.xml" />
-    <None Remove="Expected\tms_capabilities_TileMap1.xml" />
-    <None Remove="Expected\tms_capabilities_TileMap2.xml" />
-    <None Remove="Expected\tms_capabilities_TileMap3.xml" />
-    <None Remove="Expected\tms_capabilities_TileMapService.xml" />
-    <None Remove="Expected\wmts_GetCapabilities.xml" />
-    <None Remove="GeoTiff\sample1-epsg-3857.tiff" />
-    <None Remove="GeoTiff\sample1-epsg-4326.tiff" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Expected\tms_capabilities_Services.xml" />
+		<None Remove="Expected\tms_capabilities_TileMap1.xml" />
+		<None Remove="Expected\tms_capabilities_TileMap2.xml" />
+		<None Remove="Expected\tms_capabilities_TileMap3.xml" />
+		<None Remove="Expected\tms_capabilities_TileMapService.xml" />
+		<None Remove="Expected\wmts_GetCapabilities.xml" />
+		<None Remove="GeoTiff\sample1-epsg-3857.tiff" />
+		<None Remove="GeoTiff\sample1-epsg-4326.tiff" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Expected\tms_capabilities_TileMap3.xml" />
-    <EmbeddedResource Include="Expected\tms_capabilities_TileMap2.xml" />
-    <EmbeddedResource Include="Expected\tms_capabilities_TileMap1.xml" />
-    <EmbeddedResource Include="Expected\tms_capabilities_TileMapService.xml" />
-    <EmbeddedResource Include="Expected\tms_capabilities_Services.xml" />
-    <EmbeddedResource Include="Expected\wmts_GetCapabilities.xml" />
-    <EmbeddedResource Include="GeoTiff\sample1-epsg-3857.tiff" />
-    <EmbeddedResource Include="GeoTiff\sample1-epsg-4326.tiff" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Expected\tms_capabilities_TileMap3.xml" />
+		<EmbeddedResource Include="Expected\tms_capabilities_TileMap2.xml" />
+		<EmbeddedResource Include="Expected\tms_capabilities_TileMap1.xml" />
+		<EmbeddedResource Include="Expected\tms_capabilities_TileMapService.xml" />
+		<EmbeddedResource Include="Expected\tms_capabilities_Services.xml" />
+		<EmbeddedResource Include="Expected\wmts_GetCapabilities.xml" />
+		<EmbeddedResource Include="GeoTiff\sample1-epsg-3857.tiff" />
+		<EmbeddedResource Include="GeoTiff\sample1-epsg-4326.tiff" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
-    <PackageReference Include="NetBike.XmlUnit" Version="0.3.0" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+		<PackageReference Include="NetBike.XmlUnit" Version="0.3.0" />
+		<PackageReference Include="NUnit" Version="3.13.3" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\TileMapService\TileMapService.NET7.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\TileMapService\TileMapService.NET7.csproj" />
+	</ItemGroup>
 
 </Project>

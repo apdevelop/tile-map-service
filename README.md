@@ -71,6 +71,12 @@ Run the application using command:
 After start, it will listen on default TCP port 5000 (using in-process `Kestrel` web server) 
 and tile service with demo page will be available on `http://localhost:5000/` address; to enable remote calls allow connections to this port in firewall settings.
 
+### Further improvements on Linux
+
+Some improvements can be made for better using this application in real environment:
+* Install `nginx` and configure it as reverse proxy server for Kestrel server.
+* Configure application to run as a service, using `systemd` service manager.
+
 ### TODOs
 * Support for more formats (image formats, vector tiles) and coordinate systems (tile grids).
 * Flexible settings of tile sources.
@@ -99,3 +105,4 @@ All external tile sources (services) in the provided `appsettings.json` file are
 * [GeoTIFF Format Specification](http://geotiff.maptools.org/spec/geotiffhome.html)
 * [Using WMS and TMS in Leaflet](https://leafletjs.com/examples/wms/wms.html)
 * [QGIS User Guide: Working with OGC / ISO protocols](https://docs.qgis.org/3.28/en/docs/user_manual/working_with_ogc/ogc_client_support.html)
+* [Deploy ASP.NET Core on Linux with Nginx](https://code-maze.com/deploy-aspnetcore-linux-nginx/)
