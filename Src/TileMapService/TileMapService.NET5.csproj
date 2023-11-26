@@ -15,7 +15,7 @@
 		<PackageReference Include="Npgsql" Version="6.0.7" />
 		<PackageReference Include="SkiaSharp" Version="2.88.6" />
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.6" />
-		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.6" />
+		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.7" />
 	</ItemGroup>
 
 </Project>
