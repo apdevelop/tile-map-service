@@ -127,7 +127,7 @@ namespace TileMapService.Tests
         public async Task GetTmsServicesAsync()
         {
             var r = await client.GetAsync("/tms");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_Services.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
@@ -140,7 +140,7 @@ namespace TileMapService.Tests
         public async Task GetTmsTileMapServiceAsync()
         {
             var r = await client.GetAsync("/tms/1.0.0");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMapService.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
@@ -153,7 +153,7 @@ namespace TileMapService.Tests
         public async Task GetTmsTileMap1Async()
         {
             var r = await client.GetAsync("/tms/1.0.0/world-countries");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap1.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
@@ -166,7 +166,7 @@ namespace TileMapService.Tests
         public async Task GetTmsTileMap2Async()
         {
             var r = await client.GetAsync("/tms/1.0.0/world-satellite-imagery");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap2.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
@@ -179,7 +179,7 @@ namespace TileMapService.Tests
         public async Task GetTmsTileMap3Async()
         {
             var r = await client.GetAsync("/tms/1.0.0/source3");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.tms_capabilities_TileMap3.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
@@ -192,7 +192,7 @@ namespace TileMapService.Tests
         public async Task GetWmtsCapabilitiesAsync()
         {
             var r = await client.GetAsync("/wmts?service=WMTS&request=GetCapabilities");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var expectedXml = Encoding.UTF8.GetString(TestsUtility.ReadResource("Expected.wmts_GetCapabilities.xml"));
             var actualXml = await r.Content.ReadAsStringAsync();
@@ -207,25 +207,25 @@ namespace TileMapService.Tests
             var expected000 = new TileDataStub(0, 0, 0);
 
             var r1 = await client.GetAsync("/xyz/world-countries?x=0&y=0&z=0");
-            Assert.AreEqual(HttpStatusCode.OK, r1.StatusCode);
+            Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual1 = new TileDataStub(await r1.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual1);
+            Assert.That(actual1, Is.EqualTo(expected000));
 
             var r2 = await client.GetAsync("/xyz/world-satellite-imagery/0/0/0.jpg");
-            Assert.AreEqual(HttpStatusCode.OK, r2.StatusCode);
+            Assert.That(r2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual2 = new TileDataStub(await r2.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual2);
+            Assert.That(actual2, Is.EqualTo(expected000));
 
             var expected312 = new TileDataStub(3, 1, 2);
             var r3 = await client.GetAsync("/xyz/source3/2/3/1.png");
-            Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
+            Assert.That(r3.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected312, actual3);
+            Assert.That(actual3, Is.EqualTo(expected312));
 
             var r4 = await client.GetAsync("/xyz/httpproxy/?x=0&y=0&z=0");
-            Assert.AreEqual(HttpStatusCode.OK, r4.StatusCode);
+            Assert.That(r4.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual4 = new TileDataStub(await r4.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual4);
+            Assert.That(actual4, Is.EqualTo(expected000));
         }
 
         [Test]
@@ -234,25 +234,25 @@ namespace TileMapService.Tests
             var expected000 = new TileDataStub(0, 0, 0);
 
             var r1 = await client.GetAsync("/tms/1.0.0/world-countries/0/0/0.png");
-            Assert.AreEqual(HttpStatusCode.OK, r1.StatusCode);
+            Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual1 = new TileDataStub(await r1.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual1);
+            Assert.That(actual1, Is.EqualTo(expected000));
 
             var r2 = await client.GetAsync("/tms/1.0.0/world-satellite-imagery/0/0/0.jpg");
-            Assert.AreEqual(HttpStatusCode.OK, r2.StatusCode);
+            Assert.That(r2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual2 = new TileDataStub(await r2.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual2);
+            Assert.That(actual2, Is.EqualTo(expected000));
 
             var expected312 = new TileDataStub(3, 1, 2);
             var r3 = await client.GetAsync("/tms/1.0.0/source3/2/3/2.png"); // TMS inverts Y axis
-            Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
+            Assert.That(r3.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected312, actual3);
+            Assert.That(actual3, Is.EqualTo(expected312));
 
             var r4 = await client.GetAsync("/tms/1.0.0/httpproxy/0/0/0.png");
-            Assert.AreEqual(HttpStatusCode.OK, r4.StatusCode);
+            Assert.That(r4.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual4 = new TileDataStub(await r4.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual4);
+            Assert.That(actual4, Is.EqualTo(expected000));
         }
 
         [Test]
@@ -261,25 +261,25 @@ namespace TileMapService.Tests
             var expected000 = new TileDataStub(0, 0, 0);
 
             var r1 = await client.GetAsync("/wmts?layer=world-countries&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=0&TileCol=0&TileRow=0");
-            Assert.AreEqual(HttpStatusCode.OK, r1.StatusCode);
+            Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual1 = new TileDataStub(await r1.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual1);
+            Assert.That(actual1, Is.EqualTo(expected000));
 
             var r2 = await client.GetAsync("/wmts?layer=world-satellite-imagery&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=0&TileCol=0&TileRow=0&Format=image/jpeg");
-            Assert.AreEqual(HttpStatusCode.OK, r2.StatusCode);
+            Assert.That(r2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual2 = new TileDataStub(await r2.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual2);
+            Assert.That(actual2, Is.EqualTo(expected000));
 
             var expected312 = new TileDataStub(3, 1, 2);
             var r3 = await client.GetAsync("/wmts?layer=source3&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=2&TileCol=3&TileRow=1");
-            Assert.AreEqual(HttpStatusCode.OK, r3.StatusCode);
+            Assert.That(r3.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual3 = new TileDataStub(await r3.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected312, actual3);
+            Assert.That(actual3, Is.EqualTo(expected312));
 
             var r4 = await client.GetAsync("/wmts?layer=httpproxy&tilematrixset=EPSG%3A3857&Service=WMTS&Request=GetTile&Version=1.0.0&TileMatrix=0&TileCol=0&TileRow=0");
-            Assert.AreEqual(HttpStatusCode.OK, r4.StatusCode);
+            Assert.That(r4.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual4 = new TileDataStub(await r4.Content.ReadAsByteArrayAsync());
-            Assert.AreEqual(expected000, actual4);
+            Assert.That(actual4, Is.EqualTo(expected000));
         }
 
         // TODO: Test for use of metadata bounds from mbtiles in WMTS source capabilities
@@ -344,6 +344,8 @@ namespace TileMapService.Tests
         {
             if (Directory.Exists(TestConfiguration.DataPath))
             {
+                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
                 // TODO:  delete by one file
                 var dir = new DirectoryInfo(TestConfiguration.DataPath);
                 dir.Delete(true);

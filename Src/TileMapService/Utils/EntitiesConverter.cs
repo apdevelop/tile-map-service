@@ -45,7 +45,7 @@ namespace TileMapService.Utils
                .ToList();
 
         private static Layer SourceConfigurationToLayer(SourceConfiguration c) =>
-            new Layer
+            new()
             {
                 Identifier = c.Id,
                 Title = c.Title,
@@ -95,7 +95,7 @@ namespace TileMapService.Utils
         }
 
         public static GeographicalBounds MapRectangleToGeographicalBounds(Bounds rectangle) =>
-            new GeographicalBounds(
+            new(
                 new GeographicalPoint(WebMercator.Longitude(rectangle.Left), WebMercator.Latitude(rectangle.Bottom)),
                 new GeographicalPoint(WebMercator.Longitude(rectangle.Right), WebMercator.Latitude(rectangle.Top)));
     }

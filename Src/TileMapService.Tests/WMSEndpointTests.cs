@@ -97,28 +97,28 @@ namespace TileMapService.Tests
         {
             // 1. Service
             var r = await client.GetAsync("/wms" + "?service=WMS&request=GetCapabilities");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var wmtsXml = await r.Content.ReadAsStringAsync();
             var xml = new XmlDocument();
             xml.LoadXml(wmtsXml);
 
             var attributes = xml.SelectSingleNode("/WMT_MS_Capabilities").Attributes;
-            Assert.AreEqual("1.1.1", attributes["version"].Value);
+            Assert.That(attributes["version"].Value, Is.EqualTo("1.1.1"));
 
             // 2. Service properties
             var keywords = xml.SelectNodes("/WMT_MS_Capabilities/Service/KeywordList/Keyword");
-            Assert.AreEqual(3, keywords.Count);
+            Assert.That(keywords, Has.Count.EqualTo(3));
 
             // 3. Layers (Sources)
             var layers = xml.SelectNodes("/WMT_MS_Capabilities/Capability/Layer");
-            Assert.AreEqual(2, layers.Count);
+            Assert.That(layers, Has.Count.EqualTo(2));
         }
 
         [Test]
         public async Task GetWmsCapabilitiesInvalidParameterValueErrorAsync()
         {
             var r = await client.GetAsync("/wms" + "?service=QWERTY&request=GetCapabilities");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var wmsXml = await r.Content.ReadAsStringAsync();
 
             var xml = new XmlDocument();
@@ -127,16 +127,19 @@ namespace TileMapService.Tests
             nsManager.AddNamespace("ows", "http://www.opengis.net/ows");
 
             var messageNode = xml.SelectSingleNode("/ows:ExceptionReport/ows:Exception", nsManager);
-            Assert.IsNotNull(messageNode);
-            Assert.IsTrue(messageNode.InnerText.Length > 10);
-            Assert.AreEqual("InvalidParameterValue", messageNode.Attributes["exceptionCode"].Value);
+            Assert.That(messageNode, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
+                Assert.That(messageNode.Attributes["exceptionCode"].Value, Is.EqualTo("InvalidParameterValue"));
+            });
         }
 
         [Test]
         public async Task GetWmsCapabilitiesOperationNotSupportedErrorAsync()
         {
             var r = await client.GetAsync("/wms" + "?service=WMS&request=QUERTY");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var wmsXml = await r.Content.ReadAsStringAsync();
 
             var xml = new XmlDocument();
@@ -145,27 +148,37 @@ namespace TileMapService.Tests
             nsManager.AddNamespace("ogc", "http://www.opengis.net/ogc");
 
             var messageNode = xml.SelectSingleNode("/ogc:ServiceExceptionReport/ogc:ServiceException", nsManager);
-            Assert.IsNotNull(messageNode);
-            Assert.IsTrue(messageNode.InnerText.Length > 10);
-            Assert.AreEqual("OperationNotSupported", messageNode.Attributes["code"].Value);
+            Assert.That(messageNode, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
+                Assert.That(messageNode.Attributes["code"].Value, Is.EqualTo("OperationNotSupported"));
+            });
         }
 
         [Test]
         public async Task GetMapWebMercatorEntireWorldAsync()
         {
             var r = await client.GetAsync("/wms/?SERVICE=WMS&REQUEST=GetMap&LAYERS=world-mercator-hd&FORMAT=image/png&SRS=EPSG:3857&WIDTH=1024&HEIGHT=1024&BBOX=-20026376.39,-20048966.10,20026376.39,20048966.10");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
-            Assert.AreEqual("image/png", r.Content.Headers.ContentType.MediaType);
+            Assert.Multiple(() =>
+            {
+                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo("image/png"));
+            });
+
             var actual = await r.Content.ReadAsByteArrayAsync();
-            Assert.IsTrue(actual.Length > 1000);
+            Assert.That(actual, Has.Length.GreaterThan(1000));
 
             var size = Utils.ImageHelper.GetImageSize(actual);
-            Assert.AreEqual(1024, size.Value.Width);
-            Assert.AreEqual(1024, size.Value.Height);
+            Assert.Multiple(() =>
+            {
+                Assert.That(size.Value.Width, Is.EqualTo(1024));
+                Assert.That(size.Value.Height, Is.EqualTo(1024));
+            });
 
             var color = Utils.ImageHelper.CheckIfImageIsBlank(actual);
-            Assert.IsNotNull(color);
-            Assert.AreEqual(0xFF0000FF, color.Value); // TODO: check choosen Z=2 for rendering entire world map
+            Assert.That(color, Is.Not.Null);
+            Assert.That(color.Value, Is.EqualTo(0xFF0000FF)); // TODO: check choosen Z=2 for rendering entire world map
         }
 
         private static Task PrepareTestDataAsync()
@@ -205,6 +218,8 @@ namespace TileMapService.Tests
         {
             if (Directory.Exists(TestConfiguration.DataPath))
             {
+                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
                 if (File.Exists(MbtilesFilePath1))
                 {
                     File.Delete(MbtilesFilePath1);

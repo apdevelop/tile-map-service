@@ -606,10 +606,10 @@ namespace TileMapService.Utils
 
             TiffFieldInfo[] tiffFieldInfo =
             {
-                new TiffFieldInfo(TiffTag.GEOTIFF_GEOKEYDIRECTORYTAG, 2, 2, TiffType.SHORT, FieldBit.Custom, false, true, "GeoKeyDirectoryTag"),
-                new TiffFieldInfo(TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "GeoDoubleParamsTag"),
-                new TiffFieldInfo(TiffTag.GEOTIFF_MODELPIXELSCALETAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "ModelPixelScaleTag"),
-                new TiffFieldInfo(TiffTag.GEOTIFF_MODELTIEPOINTTAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "ModelTiepointTag"),
+                new(TiffTag.GEOTIFF_GEOKEYDIRECTORYTAG, 2, 2, TiffType.SHORT, FieldBit.Custom, false, true, "GeoKeyDirectoryTag"),
+                new(TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "GeoDoubleParamsTag"),
+                new(TiffTag.GEOTIFF_MODELPIXELSCALETAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "ModelPixelScaleTag"),
+                new(TiffTag.GEOTIFF_MODELTIEPOINTTAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "ModelTiepointTag"),
             };
 
             tiff.MergeFieldInfo(tiffFieldInfo, tiffFieldInfo.Length);

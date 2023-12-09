@@ -113,67 +113,83 @@ namespace TileMapService.Tests
         {
             // 1. Service
             var r = await client.GetAsync("/tms");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var tmsXml = await r.Content.ReadAsStringAsync();
             var xml = new XmlDocument();
             xml.LoadXml(tmsXml);
             var attributes = xml.SelectSingleNode("/Services/TileMapService").Attributes;
-            Assert.AreEqual("1.0.0", attributes["version"].Value);
+            Assert.That(attributes["version"].Value, Is.EqualTo("1.0.0"));
             var href = attributes["href"].Value;
 
             // 2. Sources
             r = await client.GetAsync(href);
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
             var sources = xml.SelectNodes("/TileMapService/TileMaps/TileMap");
-            Assert.AreEqual(3, sources.Count);
+            Assert.That(sources, Has.Count.EqualTo(3));
             var hrefSource1 = sources[0].Attributes["href"].Value;
             var hrefSource2 = sources[1].Attributes["href"].Value;
             var hrefSource3 = sources[2].Attributes["href"].Value;
 
             // 3 TileSets
             r = await client.GetAsync(hrefSource1);
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
-            Assert.AreEqual("World map", xml.SelectSingleNode("/TileMap/Abstract").InnerText);
+            Assert.That(xml.SelectSingleNode("/TileMap/Abstract").InnerText, Is.EqualTo("World map"));
             var tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
-            Assert.AreEqual(512, Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture));
-            Assert.AreEqual(512, Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture));
-            Assert.AreEqual("png", tileFormat.Attributes["extension"].Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("png"));
+            });
+
             var tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
-            Assert.AreEqual(6, tileSets.Count); // Z=0..5 from tiles zoomLevel range in table
-            Assert.AreEqual("78271.51696401954", tileSets[0].Attributes["units-per-pixel"].Value);
+            Assert.That(tileSets, Has.Count.EqualTo(6)); // Z=0..5 from tiles zoomLevel range in table
+            Assert.That(tileSets[0].Attributes["units-per-pixel"].Value, Is.EqualTo("78271.51696401954"));
 
             r = await client.GetAsync(hrefSource2);
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
-            Assert.AreEqual("Small area map", xml.SelectSingleNode("/TileMap/Abstract").InnerText);
+            Assert.That(xml.SelectSingleNode("/TileMap/Abstract").InnerText, Is.EqualTo("Small area map"));
             tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
-            Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture));
-            Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture));
-            Assert.AreEqual("jpg", tileFormat.Attributes["extension"].Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
+                Assert.That(Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
+                Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("jpg"));
+            });
+
             tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
-            Assert.AreEqual(3, tileSets.Count); // Z=8..10 from tiles zoomLevel range in table
-            Assert.AreEqual("611.4962262814026", tileSets[0].Attributes["units-per-pixel"].Value);
+            Assert.That(tileSets, Has.Count.EqualTo(3)); // Z=8..10 from tiles zoomLevel range in table
+            Assert.That(tileSets[0].Attributes["units-per-pixel"].Value, Is.EqualTo("611.4962262814026"));
 
             r = await client.GetAsync(hrefSource3);
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
-            Assert.AreEqual(String.Empty, xml.SelectSingleNode("/TileMap/Abstract").InnerText);
+            Assert.That(xml.SelectSingleNode("/TileMap/Abstract").InnerText, Is.EqualTo(String.Empty));
+            
             tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
-            Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture));
-            Assert.AreEqual(256, Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture));
-            Assert.AreEqual("jpg", tileFormat.Attributes["extension"].Value); // TODO: or "jpeg" ?
+            Assert.Multiple(() =>
+            {
+                Assert.That(Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
+                Assert.That(Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
+                Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("jpg")); // TODO: or "jpeg" ?
+            });
+
             tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
-            Assert.AreEqual(4, tileSets.Count);
-            Assert.AreEqual("0.703125", tileSets[0].Attributes["units-per-pixel"].Value); // = 360 degrees / (2 * 256 pixels)
-            Assert.AreEqual("0.3515625", tileSets[1].Attributes["units-per-pixel"].Value); // = 360 degrees / (4 * 256 pixels)
-            Assert.AreEqual("0.17578125", tileSets[2].Attributes["units-per-pixel"].Value); // = 360 degrees / (8 * 256 pixels)
-            Assert.AreEqual("0.087890625", tileSets[3].Attributes["units-per-pixel"].Value); // = 360 degrees / (16 * 256 pixels)
+            Assert.That(tileSets, Has.Count.EqualTo(4));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tileSets[0].Attributes["units-per-pixel"].Value, Is.EqualTo("0.703125")); // = 360 degrees / (2 * 256 pixels)
+                Assert.That(tileSets[1].Attributes["units-per-pixel"].Value, Is.EqualTo("0.3515625")); // = 360 degrees / (4 * 256 pixels)
+                Assert.That(tileSets[2].Attributes["units-per-pixel"].Value, Is.EqualTo("0.17578125")); // = 360 degrees / (8 * 256 pixels)
+                Assert.That(tileSets[3].Attributes["units-per-pixel"].Value, Is.EqualTo("0.087890625")); // = 360 degrees / (16 * 256 pixels)
+            });
         }
 
         [Test]
@@ -181,16 +197,21 @@ namespace TileMapService.Tests
         {
             var url = $"http://localhost:{TestConfiguration.PortNumber + 1}/tms/1.0.0/tms-proxy";
             var r = await client.GetAsync(url);
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var tmsXml = await r.Content.ReadAsStringAsync();
             var xml = new XmlDocument();
             xml.LoadXml(tmsXml);
+            
             var tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
-            Assert.AreEqual(512, Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture));
-            Assert.AreEqual(512, Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture));
-            Assert.AreEqual("png", tileFormat.Attributes["extension"].Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("png"));
+            });
+
             ////var tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
-            ////Assert.AreEqual(6, tileSets.Count); // Z=0..5 from tiles zoomLevel range in table
+            ////Assert.That(tileSets, Has.Count.EqualTo(6)); // Z=0..5 from tiles zoomLevel range in table
         }
 
         [Test]
@@ -200,10 +221,10 @@ namespace TileMapService.Tests
             var expected = db.ReadTile(0, 0, 0);
 
             var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.png");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual = await r.Content.ReadAsByteArrayAsync();
 
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -214,28 +235,37 @@ namespace TileMapService.Tests
 
             {
                 var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.png");
-                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.AreEqual(MediaTypeNames.Image.Png, r.Content.Headers.ContentType.MediaType);
-                Assert.AreEqual(original, actual);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
+                    Assert.That(actual, Is.EqualTo(original));
+                });
             }
 
             {
                 var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
                 var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.jpeg");
-                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.AreEqual(MediaTypeNames.Image.Jpeg, r.Content.Headers.ContentType.MediaType);
-                Assert.AreEqual(expected, actual);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
+                    Assert.That(actual, Is.EqualTo(expected));
+                });
             }
 
             {
                 var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
                 var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.webp");
-                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.AreEqual(MediaTypeNames.Image.Webp, r.Content.Headers.ContentType.MediaType);
-                Assert.AreEqual(expected, actual);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Webp));
+                    Assert.That(actual, Is.EqualTo(expected));
+                });
             }
         }
 
@@ -246,10 +276,10 @@ namespace TileMapService.Tests
             var expected = db.ReadTile(0, 0, 8);
 
             var r = await client.GetAsync("/tms/1.0.0/small-area/8/0/0.jpg");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual = await r.Content.ReadAsByteArrayAsync();
 
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -259,29 +289,32 @@ namespace TileMapService.Tests
             var expected1 = await File.ReadAllBytesAsync(Path.Join(LocalFilesPath, "0", "1", "0.jpg"));
 
             var r0 = await client.GetAsync("/tms/1.0.0/world-geodetic/0/0/0.jpg");
-            Assert.AreEqual(HttpStatusCode.OK, r0.StatusCode);
+            Assert.That(r0.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var r1 = await client.GetAsync("/tms/1.0.0/world-geodetic/0/1/0.jpg");
-            Assert.AreEqual(HttpStatusCode.OK, r1.StatusCode);
+            Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var actual0 = await r0.Content.ReadAsByteArrayAsync();
             var actual1 = await r1.Content.ReadAsByteArrayAsync();
 
-            Assert.AreEqual(expected0, actual0);
-            Assert.AreEqual(expected1, actual1);
+            Assert.Multiple(() =>
+            {
+                Assert.That(actual0, Is.EqualTo(expected0));
+                Assert.That(actual1, Is.EqualTo(expected1));
+            });
         }
 
         [Test]
         public async Task GetTmsTileOutOfBBoxErrorAsync()
         {
             var r = await client.GetAsync("/tms/1.0.0/world-geodetic/0/4/0.jpg");
-            Assert.AreEqual(HttpStatusCode.NotFound, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
             var tmsXml = await r.Content.ReadAsStringAsync();
 
             var xml = new XmlDocument();
             xml.LoadXml(tmsXml);
             var messageNode = xml.SelectSingleNode("/TileMapServerError/Message");
-            Assert.IsNotNull(messageNode);
-            Assert.IsTrue(messageNode.InnerText.Length > 10);
+            Assert.That(messageNode, Is.Not.Null);
+            Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
         }
 
         private static async Task PrepareTestDataAsync()
@@ -330,6 +363,8 @@ namespace TileMapService.Tests
         {
             if (Directory.Exists(TestConfiguration.DataPath))
             {
+                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
                 if (File.Exists(MbtilesFilePath1))
                 {
                     File.Delete(MbtilesFilePath1);

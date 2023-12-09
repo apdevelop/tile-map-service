@@ -55,13 +55,16 @@ namespace TileMapService.Tests
         {
             var props = U.ImageHelper.ReadGeoTiffProperties(Path.Combine(TestConfiguration.DataPath, Sample1_3857));
 
-            Assert.AreEqual(80, props.ImageWidth);
-            Assert.AreEqual(60, props.ImageHeight);
-            Assert.AreEqual(3857, props.Srid);
-            Assert.AreEqual(616131.764, props.ProjectedBounds.Left, 0.001);
-            Assert.AreEqual(637857.616, props.ProjectedBounds.Right, 0.001);
-            Assert.AreEqual(-166644.204, props.ProjectedBounds.Bottom, 0.001);
-            Assert.AreEqual(-150349.815, props.ProjectedBounds.Top, 0.001);
+            Assert.Multiple(() =>
+            {
+                Assert.That(props.ImageWidth, Is.EqualTo(80));
+                Assert.That(props.ImageHeight, Is.EqualTo(60));
+                Assert.That(props.Srid, Is.EqualTo(3857));
+                Assert.That(props.ProjectedBounds.Left, Is.EqualTo(616131.764).Within(0.001));
+                Assert.That(props.ProjectedBounds.Right, Is.EqualTo(637857.616).Within(0.001));
+                Assert.That(props.ProjectedBounds.Bottom, Is.EqualTo(-166644.204).Within(0.001));
+                Assert.That(props.ProjectedBounds.Top, Is.EqualTo(-150349.815).Within(0.001));
+            });
         }
 
         [Test]
@@ -69,13 +72,16 @@ namespace TileMapService.Tests
         {
             var props = U.ImageHelper.ReadGeoTiffProperties(Path.Combine(TestConfiguration.DataPath, Sample1_4326));
 
-            Assert.AreEqual(80, props.ImageWidth);
-            Assert.AreEqual(60, props.ImageHeight);
-            Assert.AreEqual(4326, props.Srid);
-            Assert.AreEqual(5.534806, props.GeographicalBounds.MinLongitude, 0.001);
-            Assert.AreEqual(5.729972, props.GeographicalBounds.MaxLongitude, 0.001);
-            Assert.AreEqual(-1.496728, props.GeographicalBounds.MinLatitude, 0.001);
-            Assert.AreEqual(-1.350353, props.GeographicalBounds.MaxLatitude, 0.001);
+            Assert.Multiple(() =>
+            {
+                Assert.That(props.ImageWidth, Is.EqualTo(80));
+                Assert.That(props.ImageHeight, Is.EqualTo(60));
+                Assert.That(props.Srid, Is.EqualTo(4326));
+                Assert.That(props.GeographicalBounds.MinLongitude, Is.EqualTo(5.534806).Within(0.001));
+                Assert.That(props.GeographicalBounds.MaxLongitude, Is.EqualTo(5.729972).Within(0.001));
+                Assert.That(props.GeographicalBounds.MinLatitude, Is.EqualTo(-1.496728).Within(0.001));
+                Assert.That(props.GeographicalBounds.MaxLatitude, Is.EqualTo(-1.350353).Within(0.001));
+            });
         }
 
         [Test]
@@ -88,10 +94,12 @@ namespace TileMapService.Tests
             File.WriteAllBytes(path, image);
 
             var props = U.ImageHelper.ReadGeoTiffProperties(path);
-
-            Assert.AreEqual(64, props.ImageWidth);
-            Assert.AreEqual(32, props.ImageHeight);
-            Assert.AreEqual(3857, props.Srid);
+            Assert.Multiple(() =>
+            {
+                Assert.That(props.ImageWidth, Is.EqualTo(64));
+                Assert.That(props.ImageHeight, Is.EqualTo(32));
+                Assert.That(props.Srid, Is.EqualTo(3857));
+            });
         }
     }
 }

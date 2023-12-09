@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
-
 using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
 
@@ -101,59 +100,64 @@ namespace TileMapService.Tests
         {
             // 1. Service
             var r = await client.GetAsync("/wmts" + "?service=WMTS&request=GetCapabilities");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            
             var wmtsXml = await r.Content.ReadAsStringAsync();
             var xml = new XmlDocument();
             xml.LoadXml(wmtsXml);
-
             var nsManager = new XmlNamespaceManager(xml.NameTable);
             nsManager.AddNamespace("ns", "http://www.opengis.net/wmts/1.0");
             nsManager.AddNamespace("ows", "http://www.opengis.net/ows/1.1");
 
             var attributes = xml.SelectSingleNode("/ns:Capabilities", nsManager).Attributes;
-            Assert.AreEqual("1.0.0", attributes["version"].Value);
+            Assert.That(attributes["version"].Value, Is.EqualTo("1.0.0"));
 
             // 2. Service properties
             var keywords = xml.SelectNodes("/ns:Capabilities/ows:ServiceIdentification/ows:Keywords/ows:Keyword", nsManager);
-            Assert.AreEqual(3, keywords.Count);
+            Assert.That(keywords, Has.Count.EqualTo(3));
 
             // 3. Layers (Sources)
             var layers = xml.SelectNodes("/ns:Capabilities/ns:Contents/ns:Layer", nsManager);
-            Assert.AreEqual(3, layers.Count);
+            Assert.That(layers, Has.Count.EqualTo(3));
 
             var tileMatrixSet = xml.SelectSingleNode("/ns:Capabilities/ns:Contents/ns:Layer/ns:TileMatrixSetLink/ns:TileMatrixSet", nsManager).InnerText;
-            Assert.IsNotEmpty(tileMatrixSet);
+            Assert.That(tileMatrixSet, Is.Not.Empty);
 
             var tileMatrix = xml.SelectSingleNode("/ns:Capabilities/ns:Contents/ns:TileMatrixSet[ows:Identifier='" + tileMatrixSet + "']/ns:TileMatrix[ows:Identifier='0']", nsManager);
-            Assert.IsNotNull(tileMatrix);
-
-            Assert.AreEqual(512, Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileWidth", nsManager).InnerText, CultureInfo.InvariantCulture));
-            Assert.AreEqual(512, Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileHeight", nsManager).InnerText, CultureInfo.InvariantCulture));
+            Assert.Multiple(() =>
+            {
+                Assert.That(tileMatrix, Is.Not.Null);
+                Assert.That(Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileWidth", nsManager).InnerText, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileHeight", nsManager).InnerText, CultureInfo.InvariantCulture), Is.EqualTo(512));
+            });
         }
 
         [Test]
         public async Task GetWmtsCapabilitiesMissingParameterValueErrorAsync()
         {
             var r = await client.GetAsync("/wmts" + "?request=GetCapabilities");
-            Assert.AreEqual(HttpStatusCode.BadRequest, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            
             var wmtsXml = await r.Content.ReadAsStringAsync();
-
             var xml = new XmlDocument();
             xml.LoadXml(wmtsXml);
             var nsManager = new XmlNamespaceManager(xml.NameTable);
             nsManager.AddNamespace("ows", "http://www.opengis.net/ows/1.1");
 
             var messageNode = xml.SelectSingleNode("/ows:ExceptionReport/ows:Exception", nsManager);
-            Assert.IsNotNull(messageNode);
-            Assert.IsTrue(messageNode.InnerText.Length > 10);
-            Assert.AreEqual("MissingParameterValue", messageNode.Attributes["exceptionCode"].Value);
+            Assert.That(messageNode, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
+                Assert.That(messageNode.Attributes["exceptionCode"].Value, Is.EqualTo("MissingParameterValue"));
+            });
         }
 
         [Test]
         public async Task GetWmtsCapabilitiesInvalidParameterValueErrorAsync()
         {
             var r = await client.GetAsync("/wmts" + "?service=WMTS&request=GetCapabilities&version=1.1.0");
-            Assert.AreEqual(HttpStatusCode.BadRequest, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
             var wmtsXml = await r.Content.ReadAsStringAsync();
 
             var xml = new XmlDocument();
@@ -162,9 +166,12 @@ namespace TileMapService.Tests
             nsManager.AddNamespace("ows", "http://www.opengis.net/ows/1.1");
 
             var messageNode = xml.SelectSingleNode("/ows:ExceptionReport/ows:Exception", nsManager);
-            Assert.IsNotNull(messageNode);
-            Assert.IsTrue(messageNode.InnerText.Length > 10);
-            Assert.AreEqual("InvalidParameterValue", messageNode.Attributes["exceptionCode"].Value);
+            Assert.That(messageNode, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
+                Assert.That(messageNode.Attributes["exceptionCode"].Value, Is.EqualTo("InvalidParameterValue"));
+            });
         }
 
         [Test]
@@ -174,10 +181,10 @@ namespace TileMapService.Tests
             var expected = db.ReadTile(0, 0, 0);
 
             var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             var actual = await r.Content.ReadAsByteArrayAsync();
 
-            Assert.AreEqual(expected, actual);
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
@@ -189,21 +196,27 @@ namespace TileMapService.Tests
             {
                 var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
                 var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
-                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.AreEqual(MediaTypeNames.Image.Jpeg, r.Content.Headers.ContentType.MediaType);
-                Assert.AreEqual(MediaTypeNames.Image.Jpeg, Utils.ImageHelper.GetImageMediaType(actual));
-                Assert.AreEqual(expected, actual);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
+                    Assert.That(Utils.ImageHelper.GetImageMediaType(actual), Is.EqualTo(MediaTypeNames.Image.Jpeg));
+                    Assert.That(actual, Is.EqualTo(expected));
+                });
             }
 
             {
                 var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
                 var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/webp&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
-                Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
+                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.AreEqual(MediaTypeNames.Image.Webp, r.Content.Headers.ContentType.MediaType);
-                Assert.AreEqual(MediaTypeNames.Image.Webp, Utils.ImageHelper.GetImageMediaType(actual));
-                Assert.AreEqual(expected, actual);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Webp));
+                    Assert.That(Utils.ImageHelper.GetImageMediaType(actual), Is.EqualTo(MediaTypeNames.Image.Webp));
+                    Assert.That(actual, Is.EqualTo(expected));
+                });
             }
         }
 
@@ -214,18 +227,21 @@ namespace TileMapService.Tests
             var expected = db.ReadTile(0, 0, 0);
 
             var r = await client.GetAsync("/wmts/tile/1.0.0/world-mercator-hd/normal/EPSG:3857/0/0/0.png");
-            Assert.AreEqual(HttpStatusCode.OK, r.StatusCode);
-            Assert.AreEqual(MediaTypeNames.Image.Png, r.Content.Headers.ContentType.MediaType);
-            var actual = await r.Content.ReadAsByteArrayAsync();
+            Assert.Multiple(() =>
+            {
+                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
+            });
 
-            Assert.AreEqual(expected, actual);
+            var actual = await r.Content.ReadAsByteArrayAsync();
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
         public async Task GetTileOutOfBBoxErrorAsync()
         {
             var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=1");
-            Assert.AreEqual(HttpStatusCode.NotFound, r.StatusCode);
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
             var wmtsXml = await r.Content.ReadAsStringAsync();
 
             var xml = new XmlDocument();
@@ -234,9 +250,12 @@ namespace TileMapService.Tests
             nsManager.AddNamespace("ows", "http://www.opengis.net/ows/1.1");
 
             var messageNode = xml.SelectSingleNode("/ows:ExceptionReport/ows:Exception", nsManager);
-            Assert.IsNotNull(messageNode);
-            Assert.IsTrue(messageNode.InnerText.Length > 10);
-            Assert.AreEqual("Not Found", messageNode.Attributes["exceptionCode"].Value);
+            Assert.That(messageNode, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
+                Assert.That(messageNode.Attributes["exceptionCode"].Value, Is.EqualTo("Not Found"));
+            });
         }
 
         #region Utility methods
@@ -287,6 +306,8 @@ namespace TileMapService.Tests
         {
             if (Directory.Exists(TestConfiguration.DataPath))
             {
+                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
                 if (File.Exists(MbtilesFilePath1))
                 {
                     File.Delete(MbtilesFilePath1);
