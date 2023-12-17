@@ -221,7 +221,7 @@ namespace TileMapService.Controllers
                 return this.ResponseWithServiceExceptionReport(null, message, version);
             }
 
-            var layersList = layers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            var layersList = layers.Split(LayersSeparator, StringSplitOptions.RemoveEmptyEntries);
 
             var isTransparent = transparent ?? false;
             var backgroundColor = EC.ArgbColorFromString(bgcolor, isTransparent);
@@ -292,6 +292,8 @@ namespace TileMapService.Controllers
         };
 
         private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
+
+        private static readonly char[] LayersSeparator = new[] { ',' };
 
         private IActionResult ResponseWithExceptionReport(string exceptionCode, string message, string locator)
         {

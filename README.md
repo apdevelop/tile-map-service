@@ -1,5 +1,5 @@
-# Tile Map Service for .NET 5 / .NET 7
-Simple and lightweight implementation of tile server basic features for .NET 5 / .NET 7 platforms. Provides access to tiles stored in several source types and serving them using various protocols.
+# Tile Map Service for .NET 5 / .NET 8
+Simple and lightweight implementation of tile server basic features for .NET 5 / .NET 8 platforms. Provides access to tiles stored in several source types and serving them using various protocols.
 
 ### Demo page
 ![Demo page](https://github.com/apdevelop/tile-map-service/blob/master/Docs/demo-page.png)
@@ -36,11 +36,11 @@ Simple and lightweight implementation of tile server basic features for .NET 5 /
 ### Technologies
 There are two separate solutions and corresponding projects, sharing the same source code files:
 
-| Property           | .NET 5    | .NET 7    |
-| ------------------ |:---------:|:---------:|
-| SDK                | .NET 5.0  | .NET 7.0  |
-| MS Visual Studio   | 2019      | 2022      |
-| Status             | Legacy    | Active    |
+| Property           | .NET 5    | .NET 8         |
+| ------------------ |:---------:|:--------------:|
+| SDK                | .NET 5.0  | .NET 8.0       |
+| MS Visual Studio   | 2019      | 2022 (17.8.3)  |
+| Status             | Legacy    | Active         |
 
 Using
 * [Microsoft.Data.Sqlite](https://docs.microsoft.com/ru-ru/dotnet/standard/data/sqlite/) for working with SQLite database.
@@ -56,13 +56,13 @@ Tile sources are defined in [appsettings.json](https://github.com/apdevelop/tile
 
 ### Running framework-dependent deployment
 
-Check if .NET 5 or .NET 7 runtime is installed on target system:
+Check if .NET 5 or .NET 8 runtime is installed on target system:
 
 `dotnet --info`
 
-The `Microsoft.AspNetCore.App 5.0.3` / `7.0.5` (or later versions) should present in list.
+The `Microsoft.AspNetCore.App 5.0.3` / `8.0.0` (or later versions) should present in list.
 
-*There is known issue for .NET 5 and libssl 3.x compatibility on Linux systems, use .NET 7 in this case.*
+*There is known issue for .NET 5 and libssl 3.x compatibility on Linux systems, use .NET 8 in this case.*
 
 Run the application using command:
 

@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<RootNamespace>TileMapService.Tests</RootNamespace>
 	</PropertyGroup>
 
@@ -40,7 +40,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\TileMapService\TileMapService.NET7.csproj" />
+		<ProjectReference Include="..\TileMapService\TileMapService.NET8.csproj" />
 	</ItemGroup>
 
 </Project>

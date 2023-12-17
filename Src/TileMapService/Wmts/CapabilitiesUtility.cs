@@ -101,7 +101,7 @@ namespace TileMapService.Wmts
             var operationsMetadataElement = doc.CreateElement(OwsPrefix, Identifiers.OperationsMetadataElement, Identifiers.OwsNamespaceUri);
             operationsMetadataElement.AppendChild(CreateOperationElement(
                 doc,
-                new[] 
+                new[]
                 {
                     new OperationProperties { Href = this.baseUrl + $"/{Identifiers.Version100}/WMTSCapabilities.xml", Encoding = Identifiers.RESTful },
                     new OperationProperties { Href = this.baseUrl + "?", Encoding = Identifiers.KVP },
@@ -129,10 +129,8 @@ namespace TileMapService.Wmts
                         {
                             var identifier = String.Format(CultureInfo.InvariantCulture, "google3857_{0}-{1}", layer.MinZoom, layer.MaxZoom);
                             contentsElement.AppendChild(CreateLayerElement(doc, this.baseUrl, layer, identifier));
-
-                            if (!identifiers.Contains(identifier))
+                            if (identifiers.Add(identifier))
                             {
-                                identifiers.Add(identifier);
                                 contentsElement.AppendChild(CreateTileMatrixSetElement(
                                     doc,
                                     layer,
@@ -147,10 +145,8 @@ namespace TileMapService.Wmts
                         {
                             var identifier = String.Format(CultureInfo.InvariantCulture, "WGS84_{0}-{1}", layer.MinZoom, layer.MaxZoom);
                             contentsElement.AppendChild(CreateLayerElement(doc, this.baseUrl, layer, identifier));
-
-                            if (!identifiers.Contains(identifier))
+                            if (identifiers.Add(identifier))
                             {
-                                identifiers.Add(identifier);
                                 contentsElement.AppendChild(CreateTileMatrixSetElement(
                                     doc,
                                     layer,

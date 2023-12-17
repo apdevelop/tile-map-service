@@ -93,6 +93,8 @@ namespace TileMapService.Tests
             {
                 RemoveTestData();
             }
+
+            this.client.Dispose();
         }
 
         [Test]
@@ -101,7 +103,7 @@ namespace TileMapService.Tests
             // 1. Service
             var r = await client.GetAsync("/wmts" + "?service=WMTS&request=GetCapabilities");
             Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-            
+
             var wmtsXml = await r.Content.ReadAsStringAsync();
             var xml = new XmlDocument();
             xml.LoadXml(wmtsXml);
@@ -137,7 +139,7 @@ namespace TileMapService.Tests
         {
             var r = await client.GetAsync("/wmts" + "?request=GetCapabilities");
             Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
-            
+
             var wmtsXml = await r.Content.ReadAsStringAsync();
             var xml = new XmlDocument();
             xml.LoadXml(wmtsXml);

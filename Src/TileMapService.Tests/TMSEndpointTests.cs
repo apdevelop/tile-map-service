@@ -106,6 +106,8 @@ namespace TileMapService.Tests
             {
                 RemoveTestData();
             }
+
+            this.client.Dispose();
         }
 
         [Test]
