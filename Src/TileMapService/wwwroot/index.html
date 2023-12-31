@@ -3,7 +3,10 @@
 <head>
     <meta charset="utf-8" />
     <title>Tile Map Service</title>
-    <link rel="stylesheet" href="leaflet.css" />
+    <script src="ol.js"></script>
+    <script src="ol-layerswitcher.js"></script>
+    <link rel="stylesheet" href="ol.css">
+    <link rel="stylesheet" href="ol-layerswitcher.css" />
     <style>
         html, body {
             height: 100%;
@@ -12,14 +15,35 @@
             margin: 0;
             background-color: white;
         }
+
+        /* OpenLayers LayerSwitcher styling */
+        .layer-switcher {
+            top: 0.5em;
+        }
+
+            .layer-switcher ul {
+                margin: 0 0.2em;
+            }
+
+            .layer-switcher li input {
+                left: 0;
+            }
+
+            .layer-switcher li label {
+                padding-left: 1.6em;
+                padding-right: 0;
+                font-size: 12px;
+                font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+            }
+
+            .layer-switcher.shown.layer-switcher-activation-mode-click > button {
+                display: none;
+            }
     </style>
 </head>
 <body>
-    <script src="leaflet.js" type="text/javascript"></script>
-    <script src="leaflet.gridlayer.tilegrid.js" type="text/javascript"></script>
-
-    <div id="mapMercator" style="height: 50%; min-height: 50%;"></div>
-    <div id="mapGeodetic" style="height: 50%; min-height: 50%;"></div>
+    <div id="mapOL3857" style="height: 60%;"></div>
+    <div id="mapOL4326" style="height: 40%;"></div>
 
     <script src="index.js" type="text/javascript"></script>
 </body>

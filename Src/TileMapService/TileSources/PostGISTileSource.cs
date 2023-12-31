@@ -49,6 +49,7 @@ namespace TileMapService.TileSources
                 Format = ImageFormats.MapboxVectorTile,
                 Title = title,
                 Abstract = this.configuration.Abstract,
+                Attribution = this.configuration.Attribution,
                 Tms = this.configuration.Tms ?? true,
                 Srs = Utils.SrsCodes.EPSG3857,
                 Location = this.configuration.Location,

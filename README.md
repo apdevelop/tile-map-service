@@ -47,7 +47,7 @@ Using
 * [SkiaSharp](https://github.com/mono/SkiaSharp) for raster images processing.
 * [BitMiracle.LibTiff.NET](https://github.com/BitMiracle/libtiff.net) for reading source GeoTIFF files and creating output TIFF images.
 * [Npgsql](https://github.com/npgsql/npgsql) .NET data provider for PostgreSQL.
-* [Leaflet](https://github.com/Leaflet) for map demo page.
+* [OpenLayers](https://github.com/OpenLayers) with [OpenLayers LayerSwitcher](https://github.com/walkermatt/ol-layerswitcher) for displaying layers.
 * [NUnit](https://nunit.org/) for tests.
 
 ### Configuration file
@@ -82,7 +82,6 @@ Some improvements can be made for better using this application in real environm
 * Flexible settings of tile sources.
 * Configuration Web API / Web UI with authentication.
 * WMS and Vector Tiles (mvt) client in Web UI.
-* .NET 8 project and solution.
 * Compare with reference implementations (servers and clients).
 * Using metatiles for better tiles quality.
 * Include test dataset(s) created from free data.

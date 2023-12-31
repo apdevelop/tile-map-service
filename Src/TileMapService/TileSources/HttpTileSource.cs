@@ -86,6 +86,7 @@ namespace TileMapService.TileSources
                 Format = this.configuration.Format, // TODO: from source service/layer capabilities
                 Title = title,
                 Abstract = this.configuration.Abstract, // TODO: from source layer capabilities
+                Attribution = this.configuration.Attribution,
                 Tms = tms,
                 Srs = srs,
                 Location = this.configuration.Location,
