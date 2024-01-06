@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using TileMapService.Utils;
 
+using EC = TileMapService.Utils.EntitiesConverter;
+
 namespace TileMapService.Controllers
 {
     /// <summary>
@@ -71,7 +73,7 @@ namespace TileMapService.Controllers
                 return NotFound($"Specified tileset '{id}' not found.");
             }
 
-            return await this.GetTileAsync(id, x, y, z, Utils.EntitiesConverter.ExtensionToMediaType(extension), this.tileSourceFabric.ServiceProperties.JpegQuality);
+            return await this.GetTileAsync(id, x, y, z, EC.ExtensionToMediaType(extension), this.tileSourceFabric.ServiceProperties.JpegQuality);
         }
 
         /// <summary>

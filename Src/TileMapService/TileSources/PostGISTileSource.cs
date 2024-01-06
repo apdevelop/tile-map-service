@@ -118,7 +118,8 @@ namespace TileMapService.TileSources
             int z)
         {
             // https://blog.crunchydata.com/blog/dynamic-vector-tiles-from-postgis
-            // https://postgis.net/docs/manual-3.0/ST_AsMVT.html
+            // https://postgis.net/docs/ST_AsMVT.html
+            // https://postgis.net/docs/ST_AsMVTGeom.html
 
             var commandText = $@"
                     WITH mvtgeom AS
@@ -131,7 +132,7 @@ namespace TileMapService.TileSources
                     SELECT ST_AsMVT(mvtgeom.*, '{this.configuration.Id}')
                     FROM mvtgeom";
 
-            // TODO: ? other SRS using reprojection, if needed
+            // TODO: ? other SRS, using ST_Transform if needed
             using var connection = new NpgsqlConnection(this.connectionString);
             await connection.OpenAsync();
             using var command = new NpgsqlCommand(commandText, connection);

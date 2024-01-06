@@ -13,13 +13,6 @@
 
     function createOlMap3857(sources) {
 
-        var debugLayer = new ol.layer.Tile({
-            source: new ol.source.TileDebug({
-                template: 'z:{z} x:{x} y:{y}',
-                zDirection: 1
-            })
-        });
-
         var tileLayers = filterRasterSources(sources, 'EPSG:3857')
             .map(function (s) {
                 return new ol.layer.Tile({
@@ -33,6 +26,47 @@
                 })
             });
 
+        // https://openlayers.org/workshop/en/vectortile/map.html
+        var vectorTileLayers = filterVectorSources(sources, 'EPSG:3857')
+            .map(function (s) {
+                return new ol.layer.VectorTile({
+                    title: s.title,
+                    visible: false,
+                    type: 'overlay',
+                    source: new ol.source.VectorTile({
+                        attributions: s.attribution,
+                        format: new ol.format.MVT(),
+                        url: '/xyz/' + s.id + '/?x={x}&y={y}&z={z}'
+                    }),
+                    style:
+                        new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#319FD3',
+                                width: 2
+                            }),
+                            image: new ol.style.Circle({
+                                radius: 6,
+                                stroke: new ol.style.Stroke({
+                                    color: 'black',
+                                    width: 1
+                                }),
+                                fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, 0.5)' })
+                            })
+                        })
+                })
+            });
+
+        var debugLayer = new ol.layer.Tile({
+            source: new ol.source.TileDebug({
+                template: 'z:{z} x:{x} y:{y}',
+                zDirection: 1
+            })
+        });
+
+        tileLayers = tileLayers.concat(vectorTileLayers);
         tileLayers.push(debugLayer);
 
         createOlMap('mapOL3857', 'EPSG:3857', tileLayers);
@@ -115,6 +149,14 @@
         return list.filter(function (s) {
             return s.format !== 'mvt' &&
                 s.format !== 'pbf' &&
+                s.srs === srs;
+        });
+    }
+
+    function filterVectorSources(list, srs) {
+        return list.filter(function (s) {
+            return (s.format === 'mvt' ||
+                s.format === 'pbf') &&
                 s.srs === srs;
         });
     }

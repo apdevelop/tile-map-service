@@ -19,8 +19,8 @@ namespace TileMapService.Utils
             {
                 ImageFormats.Png => MediaTypeNames.Image.Png,
                 ImageFormats.Jpeg => MediaTypeNames.Image.Jpeg,
-                ImageFormats.Protobuf => MediaTypeNames.Application.XProtobuf,
                 ImageFormats.MapboxVectorTile => MediaTypeNames.Application.MapboxVectorTile,
+                ImageFormats.Protobuf => MediaTypeNames.Application.XProtobuf,
                 // TODO: other possible types
                 _ => format,
             };
@@ -35,6 +35,7 @@ namespace TileMapService.Utils
                 "tif" => MediaTypeNames.Image.Tiff,
                 "tiff" => MediaTypeNames.Image.Tiff,
                 "mvt" => MediaTypeNames.Application.MapboxVectorTile,
+                "pbf" => MediaTypeNames.Application.XProtobuf,
                 // TODO: other possible types
                 _ => extension,
             };

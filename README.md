@@ -81,7 +81,7 @@ Some improvements can be made for better using this application in real environm
 * Support for more formats (image formats, vector tiles) and coordinate systems (tile grids).
 * Flexible settings of tile sources.
 * Configuration Web API / Web UI with authentication.
-* WMS and Vector Tiles (mvt) client in Web UI.
+* WMS client in Web UI.
 * Compare with reference implementations (servers and clients).
 * Using metatiles for better tiles quality.
 * Include test dataset(s) created from free data.
