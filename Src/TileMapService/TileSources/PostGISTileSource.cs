@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Npgsql;
@@ -66,7 +67,7 @@ namespace TileMapService.TileSources
             return Task.CompletedTask;
         }
 
-        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
+        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
             if (z < this.configuration.MinZoom ||
                 z > this.configuration.MaxZoom ||
@@ -101,7 +102,10 @@ namespace TileMapService.TileSources
                     postgis.Table,
                     postgis.Geometry,
                     fields,
-                    x, Utils.WebMercator.FlipYCoordinate(y, z), z);
+                    x,
+                    Utils.WebMercator.FlipYCoordinate(y, z),
+                    z,
+                    cancellationToken);
             }
         }
 
@@ -115,7 +119,8 @@ namespace TileMapService.TileSources
             string[]? fields,
             int x,
             int y,
-            int z)
+            int z,
+            CancellationToken cancellationToken)
         {
             // https://blog.crunchydata.com/blog/dynamic-vector-tiles-from-postgis
             // https://postgis.net/docs/ST_AsMVT.html
@@ -134,11 +139,13 @@ namespace TileMapService.TileSources
 
             // TODO: ? other SRS, using ST_Transform if needed
             using var connection = new NpgsqlConnection(this.connectionString);
-            await connection.OpenAsync();
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
             using var command = new NpgsqlCommand(commandText, connection);
-            using var reader = await command.ExecuteReaderAsync();
+            using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
-            return await reader.ReadAsync() ? reader[0] as byte[] : null;
+            return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+                ? reader[0] as byte[]
+                : null;
         }
     }
 }

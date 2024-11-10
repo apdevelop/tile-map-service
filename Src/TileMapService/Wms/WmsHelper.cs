@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using SkiaSharp;
@@ -31,14 +32,15 @@ namespace TileMapService.Wms
             Models.Bounds boundingBox,
             SKCanvas outputCanvas,
             bool isTransparent,
-            uint backgroundColor)
+            uint backgroundColor,
+            CancellationToken cancellationToken)
         {
             // TODO: check SRS support in source
             if ((String.Compare(source.Configuration.Type, SourceConfiguration.TypeWms, StringComparison.OrdinalIgnoreCase) == 0) &&
                 (source.Configuration.Cache == null))
             {
                 // Cascading GetMap request to WMS source as single GetMap request
-                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor);
+                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor, cancellationToken);
                 if (imageData != null)
                 {
                     using var sourceImage = SKImage.FromEncodedData(imageData);
@@ -48,7 +50,7 @@ namespace TileMapService.Wms
             else if (String.Compare(source.Configuration.Type, SourceConfiguration.TypeGeoTiff, StringComparison.OrdinalIgnoreCase) == 0)
             {
                 // Get part of GeoTIFF source image in single request
-                using var image = await ((TileSources.RasterTileSource)source).GetImagePartAsync(width, height, boundingBox, backgroundColor);
+                using var image = await ((TileSources.RasterTileSource)source).GetImagePartAsync(width, height, boundingBox, backgroundColor, cancellationToken);
                 if (image != null)
                 {
                     outputCanvas.DrawImage(image, SKRect.Create(0, 0, image.Width, image.Height));
@@ -57,7 +59,7 @@ namespace TileMapService.Wms
             else
             {
                 var tileCoordinates = WmsHelper.BuildTileCoordinatesList(boundingBox, width);
-                var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates);
+                var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates, cancellationToken);
                 if (sourceTiles.Count > 0)
                 {
                     WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, WebMercator.TileSize);
@@ -67,16 +69,19 @@ namespace TileMapService.Wms
 
         private static async Task<List<Models.TileDataset>> GetSourceTilesAsync(
             ITileSource source,
-            IList<Models.TileCoordinates> tileCoordinates)
+            IList<Models.TileCoordinates> tileCoordinates,
+            CancellationToken cancellationToken)
         {
             var sourceTiles = new List<Models.TileDataset>(tileCoordinates.Count);
             foreach (var tc in tileCoordinates)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // 180 degrees
                 var tileCount = WebMercator.TileCount(tc.Z);
                 var x = tc.X % tileCount;
 
-                var tileData = await source.GetTileAsync(x, WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z);
+                var tileData = await source.GetTileAsync(x, WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z, cancellationToken);
                 if (tileData != null)
                 {
                     sourceTiles.Add(new Models.TileDataset(tc.X, tc.Y, tc.Z, tileData));

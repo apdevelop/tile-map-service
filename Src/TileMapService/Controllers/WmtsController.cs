@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -51,7 +52,8 @@ namespace TileMapService.Controllers
             ////string tileMatrixSet = null,
             string? tileMatrix = null,
             int tileRow = 0,
-            int tileCol = 0)
+            int tileCol = 0,
+            CancellationToken cancellationToken = default)
         {
             // TODO: check requirements of standard
             if ((String.Compare(service, Identifiers.WMTS, StringComparison.Ordinal) != 0) &&
@@ -91,7 +93,7 @@ namespace TileMapService.Controllers
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
                 }
 
-                return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality);
+                return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
             }
             else
             {
@@ -142,7 +144,8 @@ namespace TileMapService.Controllers
 #pragma warning disable IDE0060
             string style = "default", // Not used
 #pragma warning restore IDE0060
-             string format = "png")
+             string format = "png",
+             CancellationToken cancellationToken = default)
         {
             if (String.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
             {
@@ -174,7 +177,7 @@ namespace TileMapService.Controllers
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
             }
 
-            return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality);
+            return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
         private IActionResult ProcessGetCapabilitiesRequest()
@@ -203,7 +206,8 @@ namespace TileMapService.Controllers
             int tileRow,
             int tileMatrix,
             string mediaType,
-            int quality)
+            int quality,
+            CancellationToken cancellationToken)
         {
             var tileSource = this.tileSourceFabric.Get(tileset);
 
@@ -212,7 +216,7 @@ namespace TileMapService.Controllers
                 return ResponseWithNotFoundError(Identifiers.NotFound, "The requested tile is outside the bounding box of the tile map.");
             }
 
-            var data = await tileSource.GetTileAsync(tileCol, WebMercator.FlipYCoordinate(tileRow, tileMatrix), tileMatrix); // In WMTS Y axis goes down from the top
+            var data = await tileSource.GetTileAsync(tileCol, WebMercator.FlipYCoordinate(tileRow, tileMatrix), tileMatrix, cancellationToken); // In WMTS Y axis goes down from the top
             var result = ResponseHelper.CreateFileResponse(
                 data,
                 mediaType,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,7 @@ namespace TileMapService.Controllers
         /// <param name="z">Tile Z coordinate (zoom level).</param>
         /// <returns>Response with tile contents.</returns>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTileWithUrlQueryParametersAsync(string id, int x, int y, int z)
+        public async Task<IActionResult> GetTileWithUrlQueryParametersAsync(string id, int x, int y, int z, CancellationToken cancellationToken)
         {
             if (String.IsNullOrEmpty(id))
             {
@@ -47,7 +48,7 @@ namespace TileMapService.Controllers
             var tileSource = this.tileSourceFabric.Get(id);
             var mediaType = tileSource.Configuration.ContentType;
 
-            return await this.GetTileAsync(id, x, y, z, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality);
+            return await this.GetTileAsync(id, x, y, z, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
         /// <summary>
@@ -61,7 +62,7 @@ namespace TileMapService.Controllers
         /// <param name="extension">File extension.</param>
         /// <returns>Response with tile contents.</returns>
         [HttpGet("{id}/{z}/{x}/{y}.{extension}")]
-        public async Task<IActionResult> GetTileWithUrlPathAsync(string id, int x, int y, int z, string extension)
+        public async Task<IActionResult> GetTileWithUrlPathAsync(string id, int x, int y, int z, string extension, CancellationToken cancellationToken)
         {
             if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(extension))
             {
@@ -73,7 +74,7 @@ namespace TileMapService.Controllers
                 return NotFound($"Specified tileset '{id}' not found.");
             }
 
-            return await this.GetTileAsync(id, x, y, z, EC.ExtensionToMediaType(extension), this.tileSourceFabric.ServiceProperties.JpegQuality);
+            return await this.GetTileAsync(id, x, y, z, EC.ExtensionToMediaType(extension), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
         /// <summary>
@@ -86,7 +87,7 @@ namespace TileMapService.Controllers
         /// <param name="z">Tile Z coordinate (zoom level).</param>
         /// <returns>Response with tile contents.</returns>
         [HttpGet("{tileset}/{z}/{x}/{y}")]
-        public async Task<IActionResult> GetTileWithUrlPathAsync(string id, int x, int y, int z)
+        public async Task<IActionResult> GetTileWithUrlPathAsync(string id, int x, int y, int z, CancellationToken cancellationToken)
         {
             if (String.IsNullOrEmpty(id))
             {
@@ -101,10 +102,10 @@ namespace TileMapService.Controllers
             var tileSource = this.tileSourceFabric.Get(id);
             var mediaType = tileSource.Configuration.ContentType;
 
-            return await this.GetTileAsync(id, x, y, z, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality);
+            return await this.GetTileAsync(id, x, y, z, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
-        private async Task<IActionResult> GetTileAsync(string id, int x, int y, int z, string? mediaType, int quality)
+        private async Task<IActionResult> GetTileAsync(string id, int x, int y, int z, string? mediaType, int quality, CancellationToken cancellationToken)
         {
             var tileSource = this.tileSourceFabric.Get(id);
 
@@ -118,7 +119,7 @@ namespace TileMapService.Controllers
                 mediaType = MediaTypeNames.Image.Png;
             }
 
-            var data = await tileSource.GetTileAsync(x, WebMercator.FlipYCoordinate(y, z), z);
+            var data = await tileSource.GetTileAsync(x, WebMercator.FlipYCoordinate(y, z), z, cancellationToken);
             var result = ResponseHelper.CreateFileResponse(
                 data,
                 mediaType,

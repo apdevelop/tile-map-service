@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TileMapService.TileSources
@@ -113,7 +114,7 @@ namespace TileMapService.TileSources
             return Task.CompletedTask;
         }
 
-        Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
+        Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
             if (this.repository == null)
             {

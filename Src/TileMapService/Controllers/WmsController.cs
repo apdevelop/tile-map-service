@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +48,8 @@ namespace TileMapService.Controllers
               // Optional GetMap request parameters
               bool? transparent = false,
               string bgcolor = Identifiers.DefaultBackgroundColor,
-              string exceptions = MediaTypeNames.Application.OgcServiceExceptionXml
+              string exceptions = MediaTypeNames.Application.OgcServiceExceptionXml,
+              CancellationToken cancellationToken = default
             ////string time = null,
             ////string sld = null,
             ////string sld_body = null,
@@ -98,7 +100,8 @@ namespace TileMapService.Controllers
                     height,
                     format,
                     transparent,
-                    bgcolor);
+                    bgcolor,
+                    cancellationToken);
             } // TODO: GetFeatureInfo request
             ////else if (String.Compare(request, Identifiers.GetFeatureInfo, StringComparison.Ordinal) == 0)
             ////{
@@ -154,7 +157,8 @@ namespace TileMapService.Controllers
                 int height,
                 string? format,
                 bool? transparent,
-                string bgcolor)
+                string bgcolor,
+                CancellationToken cancellationToken)
         {
             // TODO: config ?
             const int MinSize = 1;
@@ -225,7 +229,7 @@ namespace TileMapService.Controllers
 
             var isTransparent = transparent ?? false;
             var backgroundColor = EC.ArgbColorFromString(bgcolor, isTransparent);
-            var imageData = await this.CreateMapImageAsync(width, height, boundingBox, format, this.tileSourceFabric.ServiceProperties.JpegQuality, isTransparent, backgroundColor, layersList);
+            var imageData = await this.CreateMapImageAsync(width, height, boundingBox, format, this.tileSourceFabric.ServiceProperties.JpegQuality, isTransparent, backgroundColor, layersList, cancellationToken);
 
             return File(imageData, format);
         }
@@ -238,7 +242,8 @@ namespace TileMapService.Controllers
             int quality,
             bool isTransparent,
             uint backgroundColor,
-            IList<string> layerNames)
+            IList<string> layerNames,
+            CancellationToken cancellationToken)
         {
             var imageInfo = new SKImageInfo(
                 width: width,
@@ -261,7 +266,8 @@ namespace TileMapService.Controllers
                         boundingBox,
                         canvas,
                         isTransparent,
-                        backgroundColor);
+                        backgroundColor,
+                        cancellationToken);
                 }
             }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -70,7 +71,7 @@ namespace TileMapService.Controllers
         /// <param name="extension">File extension.</param>
         /// <returns>Response with tile contents.</returns>
         [HttpGet("1.0.0/{tileset}/{z}/{x}/{y}.{extension}")]
-        public async Task<IActionResult> GetTileAsync(string tileset, int x, int y, int z, string extension)
+        public async Task<IActionResult> GetTileAsync(string tileset, int x, int y, int z, string extension, CancellationToken cancellationToken)
         {
             // TODO: z can be a string, not integer number
             if (String.IsNullOrEmpty(tileset) || String.IsNullOrEmpty(extension))
@@ -88,7 +89,7 @@ namespace TileMapService.Controllers
                     return ResponseWithNotFoundError("The requested tile is outside the bounding box of the tile map.");
                 }
 
-                var data = await tileSource.GetTileAsync(x, y, z);
+                var data = await tileSource.GetTileAsync(x, y, z, cancellationToken);
                 var result = ResponseHelper.CreateFileResponse(
                     data,
                     EC.ExtensionToMediaType(extension),

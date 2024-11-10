@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 using BitMiracle.LibTiff.Classic;
@@ -88,7 +89,7 @@ namespace TileMapService.TileSources
             return Task.CompletedTask;
         }
 
-        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
+        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
             if (this.rasterProperties == null)
             {
@@ -125,7 +126,7 @@ namespace TileMapService.TileSources
                 using var canvas = surface.Canvas;
                 canvas.Clear(new SKColor(0)); // TODO: pass and use backgroundColor
 
-                DrawGeoTiffTilesToRasterCanvas(canvas, width, height, requestedTileBounds, sourceTileCoordinates, 0, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight);
+                DrawGeoTiffTilesToRasterCanvas(canvas, width, height, requestedTileBounds, sourceTileCoordinates, 0, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight, cancellationToken);
                 var imageFormat = U.ImageHelper.SKEncodedImageFormatFromMediaType(this.configuration.ContentType);
                 using SKImage image = surface.Snapshot();
                 using SKData data = image.Encode(imageFormat, 90); // TODO: pass quality parameter
@@ -142,7 +143,8 @@ namespace TileMapService.TileSources
             int width,
             int height,
             M.Bounds boundingBox,
-            uint backgroundColor)
+            uint backgroundColor,
+            CancellationToken cancellationToken)
         {
             if (this.rasterProperties == null)
             {
@@ -165,7 +167,7 @@ namespace TileMapService.TileSources
             using var canvas = surface.Canvas;
             canvas.Clear(new SKColor(backgroundColor));
 
-            DrawGeoTiffTilesToRasterCanvas(canvas, width, height, boundingBox, sourceTileCoordinates, backgroundColor, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight);
+            DrawGeoTiffTilesToRasterCanvas(canvas, width, height, boundingBox, sourceTileCoordinates, backgroundColor, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight, cancellationToken);
 
             return await Task.FromResult(surface.Snapshot());
         }
@@ -247,7 +249,8 @@ namespace TileMapService.TileSources
             IList<GeoTiff.TileCoordinates> sourceTileCoordinates,
             uint backgroundColor,
             int sourceTileWidth,
-            int sourceTileHeight)
+            int sourceTileHeight,
+            CancellationToken cancellationToken)
         {
             // TODO: support for non-tiled tiff images
 
@@ -285,6 +288,8 @@ namespace TileMapService.TileSources
             // Draw all source tiles without scaling
             foreach (var sourceTile in sourceTileCoordinates)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var pixelX = sourceTile.X * this.rasterProperties.TileWidth;
                 var pixelY = sourceTile.Y * this.rasterProperties.TileHeight;
 

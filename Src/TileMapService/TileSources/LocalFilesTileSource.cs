@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TileMapService.TileSources
@@ -101,9 +102,9 @@ namespace TileMapService.TileSources
             return Task.CompletedTask;
         }
 
-        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
+        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
-            if ((z < this.configuration.MinZoom) || (z > this.configuration.MaxZoom))
+            if (z < this.configuration.MinZoom || z > this.configuration.MaxZoom)
             {
                 return null;
             }
@@ -121,7 +122,7 @@ namespace TileMapService.TileSources
                 {
                     using var fileStream = fileInfo.OpenRead();
                     var buffer = new byte[fileInfo.Length];
-                    await fileStream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+                    await fileStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
                     return buffer;
                 }
                 else

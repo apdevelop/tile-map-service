@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -253,7 +254,7 @@ namespace TileMapService.TileSources
             return result;
         }
 
-        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z)
+        async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
             if ((z < this.configuration.MinZoom) || (z > this.configuration.MaxZoom))
             {
@@ -279,7 +280,7 @@ namespace TileMapService.TileSources
                 // TODO: use metatiles to avoid clipping at tile borders
 
                 var url = GetSourceTileUrl(x, y, z);
-                var response = await client.GetAsync(url);
+                var response = await client.GetAsync(url, cancellationToken);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     if (response.Content.Headers.ContentType != null && response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
@@ -291,7 +292,7 @@ namespace TileMapService.TileSources
 
                     // TODO: more checks of Content-Type, response size, etc.
 
-                    var data = await response.Content.ReadAsByteArrayAsync();
+                    var data = await response.Content.ReadAsByteArrayAsync(cancellationToken);
                     this.cache?.AddTile(x, y, z, data);
 
                     return data;
@@ -308,7 +309,8 @@ namespace TileMapService.TileSources
             int height,
             Models.Bounds boundingBox,
             bool isTransparent,
-            uint backgroundColor)
+            uint backgroundColor,
+            CancellationToken cancellationToken)
         {
             if (this.client == null)
             {
@@ -321,7 +323,7 @@ namespace TileMapService.TileSources
             }
 
             var url = Wms.QueryUtility.GetMapUrl(this.configuration, width, height, boundingBox, isTransparent, backgroundColor);
-            var response = await client.GetAsync(url);
+            var response = await client.GetAsync(url, cancellationToken);
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 if (response.Content.Headers.ContentType != null &&

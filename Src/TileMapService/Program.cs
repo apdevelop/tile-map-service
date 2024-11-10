@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,8 +42,9 @@ namespace TileMapService
         private static string[] GetEnvironmentInfo() =>
             new[]
             {
-                $"MachineName='{Environment.MachineName}'  User='{Environment.UserDomainName}\\{Environment.UserName}'  CPU={Environment.ProcessorCount}  OS='{Environment.OSVersion}'",
-                $"OS x64={Environment.Is64BitOperatingSystem}  Process x64={Environment.Is64BitProcess}  .NET='{Environment.Version}'  Culture='{Thread.CurrentThread.CurrentCulture.DisplayName}'",
+                $"MachineName='{Environment.MachineName}'  Domain='{Environment.UserDomainName}'  User='{Environment.UserName}'",
+                $"CPU={Environment.ProcessorCount}  OS='{Environment.OSVersion}' ('{RuntimeInformation.OSDescription.Trim()}')",
+                $"OS x64={Environment.Is64BitOperatingSystem}  Process x64={Environment.Is64BitProcess}  .NET='{Environment.Version}'  Culture='{CultureInfo.CurrentCulture.DisplayName}' ({CultureInfo.CurrentCulture.Name})",
                 $"UtcOffset={TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)}  TZ='{TimeZoneInfo.Local.StandardName}'",
                 $"UtcNow={DateTime.UtcNow}  Uptime={TimeSpan.FromMilliseconds(Environment.TickCount64)}",
                 $"Process [PID={Environment.ProcessId}]='{Process.GetCurrentProcess()?.MainModule?.FileName}'",
