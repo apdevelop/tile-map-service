@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.649" />
+		<PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
 		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.0" />
 		<PackageReference Include="Npgsql" Version="8.0.5" />
 		<PackageReference Include="SkiaSharp" Version="2.88.9" />
