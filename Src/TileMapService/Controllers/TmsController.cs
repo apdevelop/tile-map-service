@@ -18,6 +18,8 @@ namespace TileMapService.Controllers
     [Route("tms")]
     public class TmsController : ControllerBase
     {
+        private const string Version = "1.0.0";
+
         private readonly ITileSourceFabric tileSourceFabric;
 
         public TmsController(ITileSourceFabric tileSourceFabric)
@@ -35,7 +37,7 @@ namespace TileMapService.Controllers
             return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
-        [HttpGet("1.0.0")]
+        [HttpGet(Version)]
         public IActionResult GetTileMapService()
         {
             // TODO: services/tilemapservice.xml
@@ -45,20 +47,21 @@ namespace TileMapService.Controllers
             return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
         }
 
-        [HttpGet("1.0.0/{tileset}")]
+        [HttpGet(Version + "/{tileset}")]
         public IActionResult GetTileMap(string tileset)
         {
             // TODO: services/basemap.xml
             var capabilities = this.GetCapabilities();
-            var layer = capabilities.Layers?.SingleOrDefault(l => l.Identifier == tileset);
+            var layer = capabilities.Layers.SingleOrDefault(l => l.Identifier == tileset);
             if (layer == null)
             {
                 return NotFound(); // TODO: errors in XML format
             }
-
-            var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetTileMap(layer);
-
-            return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
+            else
+            {
+                var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetTileMap(layer);
+                return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
+            }
         }
 
         /// <summary>
@@ -70,7 +73,7 @@ namespace TileMapService.Controllers
         /// <param name="z">Tile Z coordinate (zoom level).</param>
         /// <param name="extension">File extension.</param>
         /// <returns>Response with tile contents.</returns>
-        [HttpGet("1.0.0/{tileset}/{z}/{x}/{y}.{extension}")]
+        [HttpGet(Version + "/{tileset}/{z}/{x}/{y}.{extension}")]
         public async Task<IActionResult> GetTileAsync(string tileset, int x, int y, int z, string extension, CancellationToken cancellationToken)
         {
             // TODO: z can be a string, not integer number
@@ -108,19 +111,18 @@ namespace TileMapService.Controllers
 
         private Tms.Capabilities GetCapabilities()
         {
-            var layers = EC.SourcesToLayers(this.tileSourceFabric.Sources);
             return new Tms.Capabilities
             {
+                BaseUrl = this.BaseUrl,
+                Layers = EC.SourcesToLayers(this.tileSourceFabric.Sources),
                 ServiceTitle = this.tileSourceFabric.ServiceProperties.Title,
                 ServiceAbstract = this.tileSourceFabric.ServiceProperties.Abstract,
-                BaseUrl = this.BaseUrl,
-                Layers = layers.ToArray(),
             };
         }
 
         private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
 
-        private IActionResult ResponseWithNotFoundError(string message)
+        private FileContentResult ResponseWithNotFoundError(string message)
         {
             var xmlDoc = new Tms.TileMapServerError(message).ToXml();
             Response.ContentType = MediaTypeNames.Text.XmlUtf8;

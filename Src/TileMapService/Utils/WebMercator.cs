@@ -157,21 +157,21 @@ namespace TileMapService.Utils
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LongitudeToPixelXAtZoom(double longitude, int zoomLevel) =>
-            LongitudeToPixelX(longitude, (double)MapSize(zoomLevel, DefaultTileSize));
+            LongitudeToPixelX(longitude, MapSize(zoomLevel, DefaultTileSize));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LatitudeToPixelYAtZoom(double latitude, int zoomLevel) =>
-            LatitudeToPixelY(latitude, (double)MapSize(zoomLevel, DefaultTileSize));
+            LatitudeToPixelY(latitude, MapSize(zoomLevel, DefaultTileSize));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LongitudeToPixelX(double longitude, double mapSize) =>
-            ((longitude + 180.0) / 360.0) * mapSize;
+            ((longitude + 180) / 360) * mapSize;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LatitudeToPixelY(double latitude, double mapSize)
         {
             var sinLatitude = Math.Sin(MathHelper.DegreesToRadians(latitude));
-            return (0.5 - Math.Log((1.0 + sinLatitude) / (1.0 - sinLatitude)) / (4.0 * Math.PI)) * mapSize;
+            return (0.5 - Math.Log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * mapSize;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,16 +180,16 @@ namespace TileMapService.Utils
             var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
             var x = (MathHelper.Clip(pixelX, 0.0, mapSize) / mapSize) - 0.5;
 
-            return 360.0 * x;
+            return 360 * x;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double PixelYToLatitude(double pixelY, int zoomLevel)
         {
             var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
-            var y = 0.5 - (MathHelper.Clip(pixelY, 0.0, mapSize) / mapSize);
+            var y = 0.5 - (MathHelper.Clip(pixelY, 0, mapSize) / mapSize);
 
-            return 90.0 - 360.0 * Math.Atan(Math.Exp(-y * 2.0 * Math.PI)) / Math.PI;
+            return 90 - 360 * Math.Atan(Math.Exp(-y * 2 * Math.PI)) / Math.PI;
         }
     }
 }

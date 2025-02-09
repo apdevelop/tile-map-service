@@ -180,7 +180,7 @@ namespace TileMapService.Controllers
             return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
-        private IActionResult ProcessGetCapabilitiesRequest()
+        private FileContentResult ProcessGetCapabilitiesRequest()
         {
             var layers = EC.SourcesToLayers(this.tileSourceFabric.Sources)
                 .Where(l => l.Format == ImageFormats.Png || l.Format == ImageFormats.Jpeg) // Only raster formats
@@ -230,7 +230,7 @@ namespace TileMapService.Controllers
 
         private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
 
-        private IActionResult ResponseWithBadRequestError(string exceptionCode, string message)
+        private FileContentResult ResponseWithBadRequestError(string exceptionCode, string message)
         {
             var xmlDoc = new ExceptionReport(exceptionCode, message).ToXml();
             Response.ContentType = MediaTypeNames.Text.XmlUtf8;
@@ -239,7 +239,7 @@ namespace TileMapService.Controllers
             return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), Response.ContentType);
         }
 
-        private IActionResult ResponseWithNotFoundError(string exceptionCode, string message)
+        private FileContentResult ResponseWithNotFoundError(string exceptionCode, string message)
         {
             var xmlDoc = new ExceptionReport(exceptionCode, message).ToXml();
             Response.ContentType = MediaTypeNames.Text.XmlUtf8;

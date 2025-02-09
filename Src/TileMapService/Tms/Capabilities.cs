@@ -10,6 +10,6 @@ namespace TileMapService.Tms
 
         public string? BaseUrl { get; set; }
 
-        public Models.Layer[]? Layers { get; set; }
+        public Models.Layer[] Layers { get; set; } = Array.Empty<Models.Layer>();
     }
 }

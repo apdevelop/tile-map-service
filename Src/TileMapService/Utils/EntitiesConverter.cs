@@ -40,10 +40,8 @@ namespace TileMapService.Utils
                 _ => extension,
             };
 
-        public static List<Layer> SourcesToLayers(IEnumerable<SourceConfiguration> sources) =>
-            sources
-               .Select(c => SourceConfigurationToLayer(c))
-               .ToList();
+        public static Layer[] SourcesToLayers(IEnumerable<SourceConfiguration> sources) =>
+            sources.Select(SourceConfigurationToLayer).ToArray();
 
         private static Layer SourceConfigurationToLayer(SourceConfiguration c) =>
             new()

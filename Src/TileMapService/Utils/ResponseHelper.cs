@@ -41,14 +41,9 @@ namespace TileMapService.Utils
                     if (isFormatSupported)
                     {
                         var outputImage = ImageHelper.ConvertImageToFormat(imageContents, mediaType, quality);
-                        if (outputImage != null)
-                        {
-                            return new FileResponse { FileContents = outputImage, ContentType = mediaType };
-                        }
-                        else
-                        {
-                            return null;
-                        }
+                        return outputImage != null
+                            ? new FileResponse { FileContents = outputImage, ContentType = mediaType }
+                            : null;
                     }
                     else
                     {

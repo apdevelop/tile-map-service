@@ -23,12 +23,7 @@ namespace TileMapService.Tms
         {
             if (capabilities.BaseUrl == null)
             {
-                throw new ArgumentNullException(nameof(capabilities), "capabilities.BaseUrl is null.");
-            }
-
-            if (capabilities.Layers == null)
-            {
-                throw new ArgumentNullException(nameof(capabilities), "capabilities.Layers is null.");
+                throw new ArgumentNullException("capabilities.BaseUrl", "BaseUrl is null.");
             }
 
             this.serviceTitle = capabilities.ServiceTitle;
@@ -156,7 +151,7 @@ namespace TileMapService.Tms
             double unitsWidth, pixelsWidth;
             switch (layer.Srs)
             {
-                case Utils.SrsCodes.EPSG3857:
+                case SrsCodes.EPSG3857:
                     {
                         // Assuming 1x1 tile grid at zoom level 0
                         unitsWidth = 20037508.342789 * 2;
@@ -180,7 +175,7 @@ namespace TileMapService.Tms
 
                         break;
                     }
-                case Utils.SrsCodes.EPSG4326:
+                case SrsCodes.EPSG4326:
                     {
                         // Assuming 2x1 tile grid at zoom level 0
                         unitsWidth = 360;
@@ -320,12 +315,12 @@ namespace TileMapService.Tms
 
             switch (srs)
             {
-                case Utils.SrsCodes.EPSG3857:
+                case SrsCodes.EPSG3857:
                     {
                         profileAttribute.Value = Identifiers.ProfileGlobalMercator;
                         break;
                     }
-                case Utils.SrsCodes.EPSG4326:
+                case SrsCodes.EPSG4326:
                     {
                         profileAttribute.Value = Identifiers.ProfileGlobalGeodetic;
                         break;

@@ -119,7 +119,7 @@ namespace TileMapService.Controllers
             }
         }
 
-        private IActionResult ProcessGetCapabilitiesRequest(Wms.Version version)
+        private FileContentResult ProcessGetCapabilitiesRequest(Wms.Version version)
         {
             var layers = EC.SourcesToLayers(this.tileSourceFabric.Sources)
                 .Where(l => l.Srs == SrsCodes.EPSG3857) // TODO: sources with EPSG:4326 support
@@ -301,7 +301,7 @@ namespace TileMapService.Controllers
 
         private static readonly char[] LayersSeparator = new[] { ',' };
 
-        private IActionResult ResponseWithExceptionReport(string exceptionCode, string message, string locator)
+        private FileContentResult ResponseWithExceptionReport(string exceptionCode, string message, string locator)
         {
             var xmlDoc = new ExceptionReport(exceptionCode, message, locator).ToXml();
             Response.ContentType = MediaTypeNames.Application.Xml;
@@ -309,7 +309,7 @@ namespace TileMapService.Controllers
             return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), Response.ContentType);
         }
 
-        private IActionResult ResponseWithServiceExceptionReport(string? code, string message, string version)
+        private FileContentResult ResponseWithServiceExceptionReport(string? code, string message, string version)
         {
             var xmlDoc = new ServiceExceptionReport(code, message, version).ToXml();
             Response.ContentType = MediaTypeNames.Text.XmlUtf8;

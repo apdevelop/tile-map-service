@@ -76,7 +76,7 @@ namespace TileMapService.TileSources
             }
 
             // Default is tms=false for simple XYZ tile services
-            var tms = this.configuration.Tms ?? (this.configuration.Type.ToLowerInvariant() == SourceConfiguration.TypeTms);
+            var tms = this.configuration.Tms ?? (String.Compare(this.configuration.Type, SourceConfiguration.TypeTms, StringComparison.InvariantCultureIgnoreCase) == 0);
             var srs = String.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
 
             // Re-create configuration
@@ -256,7 +256,7 @@ namespace TileMapService.TileSources
 
         async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
-            if ((z < this.configuration.MinZoom) || (z > this.configuration.MaxZoom))
+            if (z < this.configuration.MinZoom || z > this.configuration.MaxZoom)
             {
                 return null;
             }
@@ -285,13 +285,12 @@ namespace TileMapService.TileSources
                 {
                     if (response.Content.Headers.ContentType != null && response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
                     {
-                        var message = await response.Content.ReadAsStringAsync();
+                        var message = await response.Content.ReadAsStringAsync(cancellationToken);
                         this.logger.LogWarning($"Error reading tile: '{message}'.");
                         return null;
                     }
 
                     // TODO: more checks of Content-Type, response size, etc.
-
                     var data = await response.Content.ReadAsByteArrayAsync(cancellationToken);
                     this.cache?.AddTile(x, y, z, data);
 
@@ -329,14 +328,14 @@ namespace TileMapService.TileSources
                 if (response.Content.Headers.ContentType != null &&
                     response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
                 {
-                    var message = await response.Content.ReadAsStringAsync();
+                    var message = await response.Content.ReadAsStringAsync(cancellationToken);
                     this.logger.LogWarning($"Error reading tile: '{message}'.");
                     return null;
                 }
 
                 // TODO: more checks of Content-Type, response size, etc.
 
-                var data = await response.Content.ReadAsByteArrayAsync();
+                var data = await response.Content.ReadAsByteArrayAsync(cancellationToken);
 
                 return data;
             }

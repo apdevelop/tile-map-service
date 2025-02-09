@@ -36,11 +36,11 @@ Simple and lightweight implementation of tile server basic features for .NET 5 /
 ### Technologies
 There are two separate solutions and corresponding projects, sharing the same source code files:
 
-| Property           | .NET 5    | .NET 8         |
-| ------------------ |:---------:|:--------------:|
-| SDK                | .NET 5.0  | .NET 8.0       |
-| MS Visual Studio   | 2019      | 2022 (17.8.3)  |
-| Status             | Legacy    | Active         |
+| Property           | .NET 5    | .NET 8      |
+| ------------------ |:---------:|:-----------:|
+| SDK                | .NET 5.0  | .NET 8.0    |
+| MS Visual Studio   | 2019      | 2022        |
+| Status             | Legacy    | Active      |
 
 Using
 * [Microsoft.Data.Sqlite](https://docs.microsoft.com/ru-ru/dotnet/standard/data/sqlite/) for working with SQLite database.
