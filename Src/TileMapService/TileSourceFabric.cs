@@ -94,7 +94,7 @@ namespace TileMapService
             {
                 SourceConfiguration.TypeLocalFiles => new LocalFilesTileSource(config),
                 SourceConfiguration.TypeMBTiles => new MBTilesTileSource(config),
-                SourceConfiguration.TypePostGIS => new PostGISTileSource(config),
+                SourceConfiguration.TypePostGIS => new PostGisTileSource(config),
                 SourceConfiguration.TypeXyz => new HttpTileSource(config, loggerFactory.CreateLogger<HttpTileSource>()),
                 SourceConfiguration.TypeTms => new HttpTileSource(config, loggerFactory.CreateLogger<HttpTileSource>()),
                 SourceConfiguration.TypeWmts => new HttpTileSource(config, loggerFactory.CreateLogger<HttpTileSource>()),

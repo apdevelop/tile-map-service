@@ -9,13 +9,13 @@ namespace TileMapService.TileSources
     /// <summary>
     /// Represents tile source with vector tiles (MVT) from PostgreSQL database with PostGIS extension.
     /// </summary>
-    class PostGISTileSource : ITileSource
+    class PostGisTileSource : ITileSource
     {
         private SourceConfiguration configuration;
 
         private readonly string connectionString;
 
-        public PostGISTileSource(SourceConfiguration configuration)
+        public PostGisTileSource(SourceConfiguration configuration)
         {
             if (String.IsNullOrEmpty(configuration.Id))
             {
@@ -92,13 +92,11 @@ namespace TileMapService.TileSources
                     throw new InvalidOperationException("Table geometry field must be defined.");
                 }
 
-                string[]? fields = null;
-                if (!String.IsNullOrWhiteSpace(postgis.Fields))
-                {
-                    fields = postgis.Fields.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                }
+                var fields = !String.IsNullOrWhiteSpace(postgis.Fields)
+                    ? postgis.Fields.Split(FieldsSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    : null;
 
-                return await this.ReadPostGISVectorTileAsync(
+                return await this.ReadPostGisVectorTileAsync(
                     postgis.Table,
                     postgis.Geometry,
                     fields,
@@ -111,16 +109,18 @@ namespace TileMapService.TileSources
 
         SourceConfiguration ITileSource.Configuration => this.configuration;
 
+        private static readonly string[] FieldsSeparator = [","];
+
         #endregion
 
-        private async Task<byte[]?> ReadPostGISVectorTileAsync(
+        private async Task<byte[]?> ReadPostGisVectorTileAsync(
             string tableName,
             string geometry,
             string[]? fields,
             int x,
             int y,
             int z,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default)
         {
             // https://blog.crunchydata.com/blog/dynamic-vector-tiles-from-postgis
             // https://postgis.net/docs/ST_AsMVT.html
