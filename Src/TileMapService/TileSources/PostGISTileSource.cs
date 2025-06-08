@@ -109,7 +109,7 @@ namespace TileMapService.TileSources
 
         SourceConfiguration ITileSource.Configuration => this.configuration;
 
-        private static readonly string[] FieldsSeparator = [","];
+        private static readonly string[] FieldsSeparator = new string[] { "," };
 
         #endregion
 

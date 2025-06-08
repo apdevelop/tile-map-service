@@ -9,9 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{BA9C4EF9-3
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TileMapService.NET8", "TileMapService\TileMapService.NET8.csproj", "{37F1E4F6-A0BD-408A-82EC-AB00A3425243}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TileMapService", "TileMapService\TileMapService.csproj", "{37F1E4F6-A0BD-408A-82EC-AB00A3425243}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TileMapService.Tests.NET8", "TileMapService.Tests\TileMapService.Tests.NET8.csproj", "{6B956BBE-0085-439E-B8C0-650BA1A5AFDF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TileMapService.Tests", "TileMapService.Tests\TileMapService.Tests.csproj", "{6B956BBE-0085-439E-B8C0-650BA1A5AFDF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
