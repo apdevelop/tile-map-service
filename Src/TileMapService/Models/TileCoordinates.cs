@@ -1,6 +1,6 @@
 ﻿namespace TileMapService.Models
 {
-    class TileCoordinates
+    public class TileCoordinates
     {
         public int X { get; set; }
 

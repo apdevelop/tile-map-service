@@ -184,10 +184,7 @@ namespace TileMapService.Controllers
                 return this.ResponseWithServiceExceptionReport(Identifiers.LayerNotDefined, message, version);
             }
 
-            if ((width < MinSize) ||
-                (width > MaxSize) ||
-                (height < MinSize) ||
-                (height > MaxSize))
+            if (width < MinSize || width > MaxSize || height < MinSize || height > MaxSize)
             {
                 var message = $"Missing or invalid requested map size. Parameters WIDTH and HEIGHT must present and be positive integers (got WIDTH={width}, HEIGHT={height}).";
                 return this.ResponseWithServiceExceptionReport(Identifiers.MissingOrInvalidParameter, message, version);
@@ -255,20 +252,17 @@ namespace TileMapService.Controllers
             using var canvas = surface.Canvas;
             canvas.Clear(new SKColor(backgroundColor));
 
-            foreach (var layerName in layerNames)
+            foreach (var layerName in layerNames.Where(this.tileSourceFabric.Contains))
             {
-                if (this.tileSourceFabric.Contains(layerName))
-                {
-                    await WmsHelper.DrawLayerAsync( // TODO: ? pass required format to avoid conversions
-                        this.tileSourceFabric.Get(layerName),
-                        width,
-                        height,
-                        boundingBox,
-                        canvas,
-                        isTransparent,
-                        backgroundColor,
-                        cancellationToken);
-                }
+                await WmsHelper.DrawLayerAsync( // TODO: ? pass required format to avoid conversions
+                    this.tileSourceFabric.Get(layerName),
+                    width,
+                    height,
+                    boundingBox,
+                    canvas,
+                    isTransparent,
+                    backgroundColor,
+                    cancellationToken);
             }
 
             using SKImage image = surface.Snapshot();

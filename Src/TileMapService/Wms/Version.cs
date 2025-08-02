@@ -3,7 +3,7 @@
     /// <summary>
     /// WMS protocol version.
     /// </summary>
-    enum Version
+    public enum Version
     {
         /// <summary>
         /// Version 1.1.1

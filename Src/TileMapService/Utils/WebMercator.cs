@@ -9,7 +9,7 @@ namespace TileMapService.Utils
     /// </summary>
     public static class WebMercator
     {
-        public const int TileSize = 256; // TODO: cusom resolution values
+        public const int TileSize = 256; // TODO: custom tile size / resolution
 
         public const int DefaultTileSize = 256;
 
@@ -23,7 +23,7 @@ namespace TileMapService.Utils
         /// </summary>
         public const int DefaultTileHeight = 256;
 
-        private const double EarthRadius = 6378137.0;
+        private const double EarthRadius = 6378137;
 
         private const double MaxLatitude = 85.0511287798;
 
@@ -45,11 +45,11 @@ namespace TileMapService.Utils
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Longitude(double x) =>
-            x / (EarthRadius * Math.PI / 180.0);
+            x / (EarthRadius * Math.PI / 180);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Latitude(double y) =>
-            MathHelper.RadiansToDegrees(2.0 * Math.Atan(Math.Exp(y / EarthRadius)) - Math.PI / 2.0);
+            MathHelper.RadiansToDegrees(2 * Math.Atan(Math.Exp(y / EarthRadius)) - Math.PI / 2);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double X(double longitude) =>
@@ -70,29 +70,25 @@ namespace TileMapService.Utils
         /// Similar to PostGIS ST_TileEnvelope function: https://postgis.net/docs/ST_TileEnvelope.html
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Models.Bounds GetTileBounds(int tileX, int tileY, int zoomLevel)
-        {
-            return new Models.Bounds(
+        public static Models.Bounds GetTileBounds(int tileX, int tileY, int zoomLevel) =>
+            new Models.Bounds(
                 TileXtoEpsg3857X(tileX, zoomLevel),
                 TileYtoEpsg3857Y(tileY + 1, zoomLevel),
                 TileXtoEpsg3857X(tileX + 1, zoomLevel),
                 TileYtoEpsg3857Y(tileY, zoomLevel));
-        }
 
-        public static Models.GeographicalBounds GetTileGeographicalBounds(int tileX, int tileY, int zoomLevel)
-        {
-            return new Models.GeographicalBounds(
+        public static Models.GeographicalBounds GetTileGeographicalBounds(int tileX, int tileY, int zoomLevel) =>
+            new Models.GeographicalBounds(
                 new Models.GeographicalPoint(PixelXToLongitude(TileSize * tileX, zoomLevel), PixelYToLatitude(TileSize * tileY + TileSize, zoomLevel)),
                 new Models.GeographicalPoint(PixelXToLongitude(TileSize * tileX + TileSize, zoomLevel), PixelYToLatitude(TileSize * tileY, zoomLevel)));
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TileXtoEpsg3857X(int tileX, int zoomLevel)
         {
             var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
             var pixelX = tileX * TileSize;
-            var x = (Utils.MathHelper.Clip(pixelX, 0.0, mapSize) / mapSize) - 0.5;
-            var longitude = 360.0 * x;
+            var x = (MathHelper.Clip(pixelX, 0, mapSize) / mapSize) - 0.5;
+            var longitude = 360 * x;
 
             return EarthRadius * MathHelper.DegreesToRadians(longitude);
         }
@@ -102,12 +98,17 @@ namespace TileMapService.Utils
         {
             var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
             var pixelY = tileY * TileSize;
-            var y = 0.5 - (MathHelper.Clip(pixelY, 0.0, mapSize) / mapSize);
-            var latitude = 90.0 - 360.0 * Math.Atan(Math.Exp(-y * 2.0 * Math.PI)) / Math.PI;
+            var y = 0.5 - (MathHelper.Clip(pixelY, 0, mapSize) / mapSize);
+            var latitude = 90 - 360 * Math.Atan(Math.Exp(-y * 2 * Math.PI)) / Math.PI;
 
             return EarthRadius * MathHelper.Artanh(Math.Sin(MathHelper.DegreesToRadians(latitude)));
         }
 
+        /// <summary>
+        /// Returns number of tiles along axis at given zoom level.
+        /// </summary>
+        /// <param name="zoomLevel">Zoom level.</param>
+        /// <returns>Number of tiles along axis</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int TileCount(int zoomLevel) =>
             1 << zoomLevel;
@@ -125,7 +126,7 @@ namespace TileMapService.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double MapSize(double width, double longitudeMin, double longitudeMax)
         {
-            if (width <= 0.0)
+            if (width <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(width), width, "Width must be greater than zero.");
             }
@@ -135,7 +136,7 @@ namespace TileMapService.Utils
                 throw new ArgumentException("longitudeMin >= longitudeMax");
             }
 
-            var mapSize = width / ((longitudeMax - longitudeMin) / 360.0);
+            var mapSize = width / ((longitudeMax - longitudeMin) / 360);
 
             return mapSize;
         }
@@ -178,7 +179,7 @@ namespace TileMapService.Utils
         public static double PixelXToLongitude(double pixelX, int zoomLevel)
         {
             var mapSize = (double)MapSize(zoomLevel, DefaultTileSize);
-            var x = (MathHelper.Clip(pixelX, 0.0, mapSize) / mapSize) - 0.5;
+            var x = (MathHelper.Clip(pixelX, 0, mapSize) / mapSize) - 0.5;
 
             return 360 * x;
         }

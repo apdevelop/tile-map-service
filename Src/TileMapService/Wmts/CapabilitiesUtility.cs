@@ -301,14 +301,12 @@ namespace TileMapService.Wmts
             const string UpperCornerElementName = "UpperCorner";
             var wgs84BoundingBoxElement = doc.CreateElement(OwsPrefix, "WGS84BoundingBox", Identifiers.OwsNamespaceUri);
 
-            static string FormatPoint(M.GeographicalPoint point)
-            {
-                return String.Format( // TODO: rounding rule ?
+            static string FormatPoint(M.GeographicalPoint point) =>
+                String.Format( // TODO: rounding rule ?
                     CultureInfo.InvariantCulture,
                     "{0:0.000000##########} {1:0.000000##########}",
                     point.Longitude,
                     point.Latitude);
-            }
 
             switch (layer.Srs)
             {

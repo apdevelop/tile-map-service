@@ -10,19 +10,16 @@ using TileMapService.Utils;
 
 namespace TileMapService.Wms
 {
-    static class WmsHelper
+    public static class WmsHelper
     {
         public static Version GetWmsVersion(string version)
         {
-            Version wmsVersion;
             switch (version)
             {
-                case Identifiers.Version111: { wmsVersion = Version.Version111; break; }
-                case Identifiers.Version130: { wmsVersion = Version.Version130; break; }
+                case Identifiers.Version111: return Version.Version111;
+                case Identifiers.Version130: return Version.Version130;
                 default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
             }
-
-            return wmsVersion;
         }
 
         public static async Task DrawLayerAsync(
@@ -62,7 +59,7 @@ namespace TileMapService.Wms
                 var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates, cancellationToken);
                 if (sourceTiles.Count > 0)
                 {
-                    WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, WebMercator.TileSize);
+                    WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, WebMercator.TileSize, cancellationToken);
                 }
             }
         }
@@ -98,7 +95,8 @@ namespace TileMapService.Wms
             Models.Bounds boundingBox,
             IList<Models.TileDataset> sourceTiles,
             uint backgroundColor,
-            int tileSize)
+            int tileSize,
+            CancellationToken cancellationToken)
         {
             var zoom = sourceTiles[0].Z;
             var tileMinX = sourceTiles.Min(t => t.X);
@@ -121,6 +119,7 @@ namespace TileMapService.Wms
             // Draw all tiles
             foreach (var sourceTile in sourceTiles)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var offsetX = (sourceTile.X - tileMinX) * tileSize;
                 var offsetY = (sourceTile.Y - tileMinY) * tileSize;
                 using var sourceImage = SKImage.FromEncodedData(sourceTile.ImageData);
@@ -140,23 +139,32 @@ namespace TileMapService.Wms
             outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKPaint { FilterQuality = SKFilterQuality.High, });
         }
 
-        public static List<Models.TileCoordinates> BuildTileCoordinatesList(Models.Bounds boundingBox, int width)
+        public static Models.TileCoordinates[] BuildTileCoordinatesList(Models.Bounds boundingBox, int width)
         {
             var geoBBox = EntitiesConverter.MapRectangleToGeographicalBounds(boundingBox);
             var zoomLevel = FindOptimalTileZoomLevel(width, geoBBox);
-            var tileCoordMin = GetTileCoordinatesAtPoint(geoBBox.MinLongitude, geoBBox.MinLatitude, zoomLevel);
-            var tileCoordMax = GetTileCoordinatesAtPoint(geoBBox.MaxLongitude, geoBBox.MaxLatitude, zoomLevel);
+            var tileCoordBottomLeft = GetTileCoordinatesAtPoint(geoBBox.MinLongitude, geoBBox.MinLatitude, zoomLevel);
+            var tileCoordTopRight = GetTileCoordinatesAtPoint(geoBBox.MaxLongitude, geoBBox.MaxLatitude, zoomLevel);
 
-            var tileCoordinates = new List<Models.TileCoordinates>();
-            for (var tileX = tileCoordMin.X; tileX <= tileCoordMax.X; tileX++)
+            // Cropping bounds, because coordinates of boundingBox can be beyond of CRS standard bounds
+            var maxTileNumber = WebMercator.TileCount(zoomLevel) - 1;
+            tileCoordBottomLeft.Y = Math.Min(tileCoordBottomLeft.Y, maxTileNumber);
+            tileCoordTopRight.Y = Math.Max(tileCoordTopRight.Y, 0);
+
+            // Using array for slightly better performance
+            var totalNumber = (tileCoordTopRight.X - tileCoordBottomLeft.X + 1) * (tileCoordBottomLeft.Y - tileCoordTopRight.Y + 1);
+            var result = new Models.TileCoordinates[totalNumber];
+            var counter = 0;
+            for (var tileX = tileCoordBottomLeft.X; tileX <= tileCoordTopRight.X; tileX++)
             {
-                for (var tileY = tileCoordMax.Y; tileY <= tileCoordMin.Y; tileY++)
+                for (var tileY = tileCoordTopRight.Y; tileY <= tileCoordBottomLeft.Y; tileY++)
                 {
-                    tileCoordinates.Add(new Models.TileCoordinates(tileX, tileY, zoomLevel));
+                    result[counter] = new Models.TileCoordinates(tileX, tileY, zoomLevel);
+                    counter++;
                 }
             }
 
-            return tileCoordinates;
+            return result;
         }
 
         private static int FindOptimalTileZoomLevel(int width, Models.GeographicalBounds geoBBox)
@@ -178,12 +186,10 @@ namespace TileMapService.Wms
             return minZoom;
         }
 
-        private static Models.TileCoordinates GetTileCoordinatesAtPoint(double longitude, double latitude, int zoomLevel)
-        {
-            return new Models.TileCoordinates(
+        private static Models.TileCoordinates GetTileCoordinatesAtPoint(double longitude, double latitude, int zoomLevel) =>
+            new Models.TileCoordinates(
                 (int)Math.Floor(WebMercator.TileCoordinateXAtZoom(longitude, zoomLevel)),
                 (int)Math.Floor(WebMercator.TileCoordinateYAtZoom(latitude, zoomLevel)),
                 zoomLevel);
-        }
     }
 }

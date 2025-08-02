@@ -58,9 +58,9 @@ namespace TileMapService.TileSources
             var sourceCapabilities = await this.GetSourceCapabilitiesAsync();
 
             // TODO: combine capabilies with configuration
-            var title = String.IsNullOrEmpty(this.configuration.Title) ?
-                this.configuration.Id :
-                this.configuration.Title;
+            var title = String.IsNullOrEmpty(this.configuration.Title)
+                ? this.configuration.Id
+                : this.configuration.Title;
 
             var minZoom = this.configuration.MinZoom ?? 0;
             var maxZoom = this.configuration.MaxZoom ?? 24;

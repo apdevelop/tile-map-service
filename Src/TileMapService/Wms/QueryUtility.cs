@@ -134,7 +134,7 @@ namespace TileMapService.Wms
                 { WmsQueryRequest, Identifiers.GetMap },
                 { WmsQueryVersion, wmsVersion },
                 { WmsQueryLayers, layers },
-                { (wmsVersion == Identifiers.Version130) ? WmsQueryCrs : WmsQuerySrs, EPSG3857 }, // TODO: EPSG:4326 support
+                { wmsVersion == Identifiers.Version130 ? WmsQueryCrs : WmsQuerySrs, EPSG3857 }, // TODO: EPSG:4326 support
                 { WmsQueryBBox, boundingBox.ToBBoxString() },
                 { WmsQueryWidth, width.ToString(CultureInfo.InvariantCulture) },
                 { WmsQueryHeight, height.ToString(CultureInfo.InvariantCulture) },
