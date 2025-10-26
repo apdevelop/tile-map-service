@@ -15,7 +15,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
-		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.9" />
+		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.10" />
 		<PackageReference Include="SkiaSharp" Version="3.119.0" />
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.0" />
 		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />

@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
@@ -11,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace TileMapService
 {
-    class Program
+    static class Program
     {
         public static async Task Main()
         {
@@ -26,7 +25,7 @@ namespace TileMapService
                 .SetMinimumLevel(LogLevel.Trace)
                 .AddConsole());
 
-            var logger = loggerFactory.CreateLogger<Program>();
+            var logger = loggerFactory.CreateLogger(typeof(Program));
             logger.LogInformation($"System info: {Environment.NewLine}{String.Join(Environment.NewLine, GetEnvironmentInfo())}");
 
             if (host.Services.GetService(typeof(ITileSourceFabric)) is not ITileSourceFabric service)
@@ -35,8 +34,7 @@ namespace TileMapService
             }
 
             await service.InitAsync();
-
-            host.Run();
+            await host.RunAsync();
         }
 
         private static string[] GetEnvironmentInfo() =>
