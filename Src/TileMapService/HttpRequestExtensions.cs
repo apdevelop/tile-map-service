@@ -18,22 +18,18 @@ namespace TileMapService
             var connection = request.HttpContext.Connection;
             if (connection.RemoteIpAddress != null)
             {
-                if (connection.LocalIpAddress != null)
-                {
-                    return connection.RemoteIpAddress.Equals(connection.LocalIpAddress);
-                }
-                else
-                {
-                    return IPAddress.IsLoopback(connection.RemoteIpAddress);
-                }
+                return connection.LocalIpAddress != null
+                    ? connection.RemoteIpAddress.Equals(connection.LocalIpAddress)
+                    : IPAddress.IsLoopback(connection.RemoteIpAddress);
             }
-
-            if (connection.RemoteIpAddress == null && connection.LocalIpAddress == null)
+            else if (connection.RemoteIpAddress == null && connection.LocalIpAddress == null)
             {
                 return true;
             }
-
-            return false;
+            else
+            {
+                return false;
+            }
         }
     }
 }

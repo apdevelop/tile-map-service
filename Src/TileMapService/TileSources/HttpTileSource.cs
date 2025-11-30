@@ -55,7 +55,7 @@ namespace TileMapService.TileSources
 
             this.client = new HttpClient { Timeout = TimeSpan.FromSeconds(15), }; // TODO: add custom headers from configuration
 
-            var sourceCapabilities = await this.GetSourceCapabilitiesAsync();
+            var sourceCapabilities = await this.GetSourceCapabilitiesAsync().ConfigureAwait(false);
 
             // TODO: combine capabilies with configuration
             var title = String.IsNullOrEmpty(this.configuration.Title)
@@ -154,10 +154,10 @@ namespace TileMapService.TileSources
             {
                 case SourceConfiguration.TypeTms:
                     {
-                        var r = await this.client.GetAsync(this.configuration.Location);
+                        var r = await this.client.GetAsync(this.configuration.Location).ConfigureAwait(false);
                         if (r.IsSuccessStatusCode)
                         {
-                            var xml = await r.Content.ReadAsStringAsync();
+                            var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
                             if (!String.IsNullOrEmpty(xml))
                             {
                                 var doc = new XmlDocument();
@@ -189,10 +189,10 @@ namespace TileMapService.TileSources
                                 .Value;
                         }
 
-                        var r = await this.client.GetAsync(capabilitiesUrl);
+                        var r = await this.client.GetAsync(capabilitiesUrl).ConfigureAwait(false);
                         if (r.IsSuccessStatusCode)
                         {
-                            var xml = await r.Content.ReadAsStringAsync();
+                            var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
                             if (!String.IsNullOrEmpty(xml))
                             {
                                 var doc = new XmlDocument();
@@ -228,10 +228,10 @@ namespace TileMapService.TileSources
 
                         // TODO: cache XML Capabilities documents from same source
                         var url = Wms.QueryUtility.GetCapabilitiesUrl(this.configuration);
-                        var r = await this.client.GetAsync(url);
+                        var r = await this.client.GetAsync(url).ConfigureAwait(false);
                         if (r.IsSuccessStatusCode)
                         {
-                            var xml = await r.Content.ReadAsStringAsync();
+                            var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
                             if (!String.IsNullOrEmpty(xml))
                             {
                                 var doc = new XmlDocument();
@@ -280,18 +280,18 @@ namespace TileMapService.TileSources
                 // TODO: use metatiles to avoid clipping at tile borders
 
                 var url = GetSourceTileUrl(x, y, z);
-                var response = await client.GetAsync(url, cancellationToken);
+                var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     if (response.Content.Headers.ContentType != null && response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
                     {
-                        var message = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var message = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                         this.logger.LogWarning($"Error reading tile: '{message}'.");
                         return null;
                     }
 
                     // TODO: more checks of Content-Type, response size, etc.
-                    var data = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                    var data = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
                     this.cache?.AddTile(x, y, z, data);
 
                     return data;
@@ -322,20 +322,20 @@ namespace TileMapService.TileSources
             }
 
             var url = Wms.QueryUtility.GetMapUrl(this.configuration, width, height, boundingBox, isTransparent, backgroundColor);
-            var response = await client.GetAsync(url, cancellationToken);
+            var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 if (response.Content.Headers.ContentType != null &&
                     response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
                 {
-                    var message = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var message = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                     this.logger.LogWarning($"Error reading tile: '{message}'.");
                     return null;
                 }
 
                 // TODO: more checks of Content-Type, response size, etc.
 
-                var data = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                var data = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
 
                 return data;
             }

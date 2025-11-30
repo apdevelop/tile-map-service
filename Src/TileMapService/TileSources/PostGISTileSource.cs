@@ -103,7 +103,7 @@ namespace TileMapService.TileSources
                     x,
                     Utils.WebMercator.FlipYCoordinate(y, z),
                     z,
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
             }
         }
 

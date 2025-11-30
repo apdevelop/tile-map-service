@@ -191,13 +191,13 @@ namespace TileMapService.Wms
                         Name = layerName != null ? layerName.InnerText : String.Empty,
                         Title = layerTitle != null ? layerTitle.InnerText : String.Empty,
                         IsQueryable = layerQueryable != null && layerQueryable.Value == "1",
-                        GeographicalBounds = bbox != null && bbox.Attributes != null ?
-                            new Models.GeographicalBounds(
-                                minx != null ? Double.Parse(minx, CultureInfo.InvariantCulture) : 0.0,
-                                miny != null ? Double.Parse(miny, CultureInfo.InvariantCulture) : 0.0,
-                                maxx != null ? Double.Parse(maxx, CultureInfo.InvariantCulture) : 0.0,
-                                maxy != null ? Double.Parse(maxy, CultureInfo.InvariantCulture) : 0.0) :
-                            null,
+                        GeographicalBounds = bbox != null && bbox.Attributes != null
+                            ? new Models.GeographicalBounds(
+                                minx != null ? Double.Parse(minx, CultureInfo.InvariantCulture) : 0,
+                                miny != null ? Double.Parse(miny, CultureInfo.InvariantCulture) : 0,
+                                maxx != null ? Double.Parse(maxx, CultureInfo.InvariantCulture) : 0,
+                                maxy != null ? Double.Parse(maxy, CultureInfo.InvariantCulture) : 0)
+                            : null,
                     });
                 }
             }

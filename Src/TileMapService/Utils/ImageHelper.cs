@@ -75,9 +75,9 @@ namespace TileMapService.Utils
                 {
                     // Projection parameters
                     var values = new double[19];
-                    values[0] = 6378137.0;
-                    values[1] = 6378137.0;
-                    values[16] = 1.0;
+                    values[0] = 6378137;
+                    values[1] = 6378137;
+                    values[16] = 1;
                     if (!tiff.SetField(TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG, values.Length, values))
                     {
                         throw new InvalidOperationException($"Error writing {TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG}.");
@@ -87,7 +87,7 @@ namespace TileMapService.Utils
                     // https://freeimage.sourceforge.io/fnet/html/CC586183.htm
                     var scaleX = (boundingBox.Right - boundingBox.Left) / width;
                     var scaleY = (boundingBox.Top - boundingBox.Bottom) / height;
-                    double[] scales = new[] { scaleX, scaleY, 0.0 };
+                    double[] scales = new[] { scaleX, scaleY, 0 };
                     if (!tiff.SetField(TiffTag.GEOTIFF_MODELPIXELSCALETAG, scales.Length, scales))
                     {
                         throw new InvalidOperationException($"Error writing {TiffTag.GEOTIFF_MODELPIXELSCALETAG}.");
@@ -95,7 +95,7 @@ namespace TileMapService.Utils
 
                     // Tie point
                     // https://freeimage.sourceforge.io/fnet/html/38F9430A.htm
-                    double[] tiePoints = new[] { 0.0, 0.0, 0.0, boundingBox.Left, boundingBox.Top, 0.0 };
+                    double[] tiePoints = new[] { 0, 0, 0, boundingBox.Left, boundingBox.Top, 0 };
                     if (!tiff.SetField(TiffTag.GEOTIFF_MODELTIEPOINTTAG, tiePoints.Length, tiePoints))
                     {
                         throw new InvalidOperationException($"Error writing {TiffTag.GEOTIFF_MODELTIEPOINTTAG}.");
@@ -257,7 +257,7 @@ namespace TileMapService.Utils
             var tiePointsCount = tiePointTag[0].ToInt();
             var tiePoints = tiePointTag[1].ToDoubleArray();
 
-            if ((tiePoints.Length != 6) || (tiePoints[0] != 0) || (tiePoints[1] != 0) || (tiePoints[2] != 0) || (tiePoints[5] != 0))
+            if (tiePoints.Length != 6 || tiePoints[0] != 0 || tiePoints[1] != 0 || tiePoints[2] != 0 || tiePoints[5] != 0)
             {
                 throw new FormatException($"Only single tie point is supported."); // TODO: Only simple tie points scheme is supported
             }
@@ -461,7 +461,7 @@ namespace TileMapService.Utils
 
             M.GeographicalBounds? geographicalBounds = null;
             M.Bounds? projectedBounds = null;
-            double pixelWidth = 0.0, pixelHeight = 0.0;
+            double pixelWidth = 0, pixelHeight = 0;
 
             switch (srId)
             {
@@ -561,9 +561,7 @@ namespace TileMapService.Utils
         public static (int Width, int Height)? GetImageSize(byte[] imageData)
         {
             using var image = SKImage.FromEncodedData(imageData);
-            return image != null ?
-                (image.Width, image.Height) :
-                null;
+            return image != null ? (image.Width, image.Height) : null;
         }
 
         public static SKEncodedImageFormat SKEncodedImageFormatFromMediaType(string mediaType) =>

@@ -37,7 +37,7 @@ namespace TileMapService.Wms
                 (source.Configuration.Cache == null))
             {
                 // Cascading GetMap request to WMS source as single GetMap request
-                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor, cancellationToken);
+                var imageData = await ((TileSources.HttpTileSource)source).GetWmsMapAsync(width, height, boundingBox, isTransparent, backgroundColor, cancellationToken).ConfigureAwait(false);
                 if (imageData != null)
                 {
                     using var sourceImage = SKImage.FromEncodedData(imageData);
@@ -47,7 +47,7 @@ namespace TileMapService.Wms
             else if (String.Compare(source.Configuration.Type, SourceConfiguration.TypeGeoTiff, StringComparison.OrdinalIgnoreCase) == 0)
             {
                 // Get part of GeoTIFF source image in single request
-                using var image = await ((TileSources.RasterTileSource)source).GetImagePartAsync(width, height, boundingBox, backgroundColor, cancellationToken);
+                using var image = await ((TileSources.RasterTileSource)source).GetImagePartAsync(width, height, boundingBox, backgroundColor, cancellationToken).ConfigureAwait(false);
                 if (image != null)
                 {
                     outputCanvas.DrawImage(image, SKRect.Create(0, 0, image.Width, image.Height));
@@ -56,7 +56,7 @@ namespace TileMapService.Wms
             else
             {
                 var tileCoordinates = WmsHelper.BuildTileCoordinatesList(boundingBox, width);
-                var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates, cancellationToken);
+                var sourceTiles = await GetSourceTilesAsync(source, tileCoordinates, cancellationToken).ConfigureAwait(false);
                 if (sourceTiles.Count > 0)
                 {
                     WmsHelper.DrawWebMercatorTilesToRasterCanvas(outputCanvas, width, height, boundingBox, sourceTiles, backgroundColor, WebMercator.TileSize, cancellationToken);
@@ -78,7 +78,7 @@ namespace TileMapService.Wms
                 var tileCount = WebMercator.TileCount(tc.Z);
                 var x = tc.X % tileCount;
 
-                var tileData = await source.GetTileAsync(x, WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z, cancellationToken);
+                var tileData = await source.GetTileAsync(x, WebMercator.FlipYCoordinate(tc.Y, tc.Z), tc.Z, cancellationToken).ConfigureAwait(false);
                 if (tileData != null)
                 {
                     sourceTiles.Add(new Models.TileDataset(tc.X, tc.Y, tc.Z, tileData));

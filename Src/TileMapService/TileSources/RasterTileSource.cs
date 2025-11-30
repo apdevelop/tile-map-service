@@ -101,7 +101,7 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("configuration.ContentType property is null.");
             }
 
-            if ((z < this.configuration.MinZoom) || (z > this.configuration.MaxZoom))
+            if (z < this.configuration.MinZoom || z > this.configuration.MaxZoom)
             {
                 return null;
             }
@@ -131,7 +131,7 @@ namespace TileMapService.TileSources
                 using SKImage image = surface.Snapshot();
                 using SKData data = image.Encode(imageFormat, 90); // TODO: pass quality parameter
 
-                return await Task.FromResult(data.ToArray());
+                return await Task.FromResult(data.ToArray()).ConfigureAwait(false);
             }
         }
 
@@ -169,7 +169,7 @@ namespace TileMapService.TileSources
 
             DrawGeoTiffTilesToRasterCanvas(canvas, width, height, boundingBox, sourceTileCoordinates, backgroundColor, this.rasterProperties.TileWidth, this.rasterProperties.TileHeight, cancellationToken);
 
-            return await Task.FromResult(surface.Snapshot());
+            return await Task.FromResult(surface.Snapshot()).ConfigureAwait(false);
         }
 
         #region Coordinates utils

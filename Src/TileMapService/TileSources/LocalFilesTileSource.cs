@@ -122,7 +122,7 @@ namespace TileMapService.TileSources
                 {
                     using var fileStream = fileInfo.OpenRead();
                     var buffer = new byte[fileInfo.Length];
-                    await fileStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+                    await fileStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false);
                     return buffer;
                 }
                 else
