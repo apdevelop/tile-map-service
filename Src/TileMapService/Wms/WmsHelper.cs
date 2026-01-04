@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using SkiaSharp;
 
+using TileMapService.Models;
 using TileMapService.Utils;
 
 namespace TileMapService.Wms

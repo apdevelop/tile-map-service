@@ -6,9 +6,11 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
+
 using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
 
+using TileMapService.Models;
 using MBT = TileMapService.MBTiles;
 
 namespace TileMapService.Tests

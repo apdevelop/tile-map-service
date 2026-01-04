@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
 
+using TileMapService.Models;
 using MBT = TileMapService.MBTiles;
 
 namespace TileMapService.Tests

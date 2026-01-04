@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace TileMapService
+namespace TileMapService.Models
 {
     /// <summary>
     /// Represents entire service properties.
@@ -12,29 +12,24 @@ namespace TileMapService
         /// User-friendly title (displayed name) of service.
         /// </summary>
         [JsonPropertyName("title")]
-        public string Title { get; set; } = String.Empty;
+        public string Title { get; set; } = string.Empty;
 
         /// <summary>
         /// Detailed text description of service.
         /// </summary>
         [JsonPropertyName("abstract")]
-        public string Abstract { get; set; } = String.Empty;
+        public string Abstract { get; set; } = string.Empty;
 
         /// <summary>
         /// Keywords describing service.
         /// </summary>
         [JsonPropertyName("keywords")]
-        public string Keywords { get; set; } = String.Empty;
+        public string Keywords { get; set; } = string.Empty;
 
-        public string[]? KeywordsList
-        {
-            get
-            {
-                return String.IsNullOrWhiteSpace(this.Keywords)
+        public string[]? KeywordsList =>
+            string.IsNullOrWhiteSpace(Keywords)
                     ? null
-                    : this.Keywords.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            }
-        }
+                    : Keywords.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         /// <summary>
         /// Quality (compression level) for JPEG output in WMS endpoint.

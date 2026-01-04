@@ -22,11 +22,11 @@ namespace TileMapService.TileSources
     /// </remarks>
     class RasterTileSource : ITileSource
     {
-        private SourceConfiguration configuration;
+        private M.SourceConfiguration configuration;
 
         private M.RasterProperties? rasterProperties;
 
-        public RasterTileSource(SourceConfiguration configuration)
+        public RasterTileSource(M.SourceConfiguration configuration)
         {
             // TODO: report real WMS layer bounds from raster bounds
             // TODO: EPSG:4326 tile response (for WMTS, WMS)
@@ -67,7 +67,7 @@ namespace TileMapService.TileSources
             var maxZoom = this.configuration.MaxZoom ?? 24;
 
             // Re-create configuration
-            this.configuration = new SourceConfiguration
+            this.configuration = new M.SourceConfiguration
             {
                 Id = this.configuration.Id,
                 Type = this.configuration.Type,
@@ -135,7 +135,7 @@ namespace TileMapService.TileSources
             }
         }
 
-        SourceConfiguration ITileSource.Configuration => this.configuration;
+        M.SourceConfiguration ITileSource.Configuration => this.configuration;
 
         #endregion
 

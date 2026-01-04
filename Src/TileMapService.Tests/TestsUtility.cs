@@ -12,7 +12,7 @@ using NUnit.Framework;
 
 namespace TileMapService.Tests
 {
-    class TestsUtility
+    static class TestsUtility
     {
         public static async Task<IHost> CreateAndRunServiceHostAsync(string json, int port)
         {

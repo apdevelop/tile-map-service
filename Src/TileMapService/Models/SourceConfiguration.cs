@@ -1,7 +1,6 @@
-﻿using System;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace TileMapService
+namespace TileMapService.Models
 {
     /// <summary>
     /// Represents source configuration and properties.
@@ -17,7 +16,7 @@ namespace TileMapService
         /// Type of source, "file", "mbtiles", "postgis", "xyz", "geotiff", "tms", "wmts", "wms".
         /// </summary>
         [JsonPropertyName("type")]
-        public string Type { get; set; } = String.Empty;
+        public string Type { get; set; } = string.Empty;
 
         #region Types
         /// <summary>
@@ -73,7 +72,7 @@ namespace TileMapService
         /// String identifier of tile source (case-sensitive).
         /// </summary>
         [JsonPropertyName("id")]
-        public string Id { get; set; } = String.Empty;
+        public string Id { get; set; } = string.Empty;
 
         /// <summary>
         /// Name of image format ("png", "jpg", "mvt", "pbf").
@@ -85,13 +84,13 @@ namespace TileMapService
         /// User-friendly title (displayed name) of source.
         /// </summary>
         [JsonPropertyName("title")]
-        public string Title { get; set; } = String.Empty;
+        public string Title { get; set; } = string.Empty;
 
         /// <summary>
         /// Detailed text description of source.
         /// </summary>
         [JsonPropertyName("abstract")]
-        public string Abstract { get; set; } = String.Empty;
+        public string Abstract { get; set; } = string.Empty;
 
         /// <summary>
         /// An attribution (HTML) string, which explains the sources of data and/or style for the map.
@@ -139,7 +138,7 @@ namespace TileMapService
         /// Maximum extent of the tiles coordinates in EPSG:4326 coordinate system.
         /// </summary>
         [JsonIgnore] // TODO: allow reading from config file
-        public Models.GeographicalBounds? GeographicalBounds { get; set; }
+        public GeographicalBounds? GeographicalBounds { get; set; }
 
         /// <summary>
         /// Cache configuration, if used.

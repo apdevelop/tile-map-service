@@ -4,6 +4,8 @@ using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 
+using TileMapService.Models;
+
 namespace TileMapService.TileSources
 {
     /// <summary>

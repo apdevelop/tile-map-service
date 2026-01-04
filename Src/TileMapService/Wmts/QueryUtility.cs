@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 
 using Microsoft.AspNetCore.Http.Extensions;
 
+using TileMapService.Models;
+
 namespace TileMapService.Wmts
 {
     class QueryUtility

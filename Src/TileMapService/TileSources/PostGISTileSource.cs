@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 
 using Npgsql;
 
+using TileMapService.Models;
+
 namespace TileMapService.TileSources
 {
     /// <summary>
