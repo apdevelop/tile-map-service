@@ -2,15 +2,11 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net5.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<UserSecretsId>f052d8ac-cdc5-4dfb-86b5-763554895d34</UserSecretsId>
 		<AssemblyName>tms</AssemblyName>
 		<RootNamespace>TileMapService</RootNamespace>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(VisualStudioVersion)' &gt;= '17.0'">
-		<TargetFrameworks>net5.0;net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -21,11 +17,7 @@
 		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
-		<PackageReference Include="Npgsql" Version="8.0.7" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+	<ItemGroup>
 		<PackageReference Include="Npgsql" Version="9.0.4" />
 	</ItemGroup>
 

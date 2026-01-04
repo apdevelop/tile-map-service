@@ -14,7 +14,7 @@ namespace TileMapService
     {
         public static async Task Main()
         {
-            var host = Host.CreateDefaultBuilder()
+            var host = Host.CreateDefaultBuilder() // TODO: replace with WebApplicationBuilder
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
                     .Build();
 
