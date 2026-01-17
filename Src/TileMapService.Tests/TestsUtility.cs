@@ -5,10 +5,11 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NUnit.Framework;
 
 namespace TileMapService.Tests
 {
@@ -16,33 +17,21 @@ namespace TileMapService.Tests
     {
         public static async Task<IHost> CreateAndRunServiceHostAsync(string json, int port)
         {
-            // https://docs.microsoft.com/ru-ru/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0
-            var host = Host.CreateDefaultBuilder()
-                    .ConfigureAppConfiguration(configurationBuilder =>
-                    {
-                        var configuration = new ConfigurationBuilder()
-                            .AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(json)))
-                            .Build();
+            var builder = WebApplication.CreateBuilder();
+            builder.Configuration.Sources.Clear();
+            builder.Configuration.AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(json)));
+            builder.WebHost.ConfigureKestrel((context, serverOptions) => serverOptions.Listen(IPAddress.Loopback, port));
+            builder.Services.AddControllers().AddApplicationPart(typeof(TileSourceFabric).Assembly);
+            builder.Services.AddSingleton<ITileSourceFabric, TileSourceFabric>();
 
-                        // https://stackoverflow.com/a/58594026/1182448
-                        configurationBuilder.Sources.Clear();
-                        configurationBuilder.AddConfiguration(configuration);
-                    })
-                    .ConfigureWebHostDefaults(webHostBuilder =>
-                    {
-                        webHostBuilder.UseStartup<Startup>();
-                        webHostBuilder.UseKestrel(options =>
-                        {
-                            options.Listen(IPAddress.Loopback, port);
-                        });
-                    })
-                    .Build();
+            var app = builder.Build();
+            app.MapControllers();
 
-            await (host.Services.GetService(typeof(ITileSourceFabric)) as ITileSourceFabric).InitAsync();
+            await (app.Services.GetService(typeof(ITileSourceFabric)) as ITileSourceFabric).InitAsync();
 
-            var _ = host.RunAsync();
+            _ = app.RunAsync();
 
-            return host;
+            return app;
         }
 
         public static string UpdateXmlContents(string xml, int portNumber)
@@ -53,7 +42,7 @@ namespace TileMapService.Tests
             return xml.Replace(s11, s12);
         }
 
-        public static void CompareXml(string expectedXml, string actualXml)
+        public static string CompareXml(string expectedXml, string actualXml)
         {
             var comparer = new NetBike.XmlUnit.XmlComparer
             {
@@ -67,10 +56,9 @@ namespace TileMapService.Tests
 
             var result = comparer.Compare(expectedReader, actualReader);
 
-            if (!result.IsEqual)
-            {
-                Assert.Fail(result.Differences.First().Difference.ToString());
-            }
+            return result.IsEqual 
+                ? null 
+                : result.Differences.First().Difference.ToString();
         }
 
         public static byte[] ReadResource(string id)

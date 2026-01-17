@@ -11,7 +11,7 @@ using TileMapService.TileSources;
 
 namespace TileMapService
 {
-    class TileSourceFabric : ITileSourceFabric
+    public class TileSourceFabric : ITileSourceFabric
     {
         private readonly ILogger<TileSourceFabric> logger;
 

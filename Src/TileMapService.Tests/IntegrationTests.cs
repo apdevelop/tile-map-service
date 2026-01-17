@@ -136,7 +136,8 @@ namespace TileMapService.Tests
             var actualXml = await r.Content.ReadAsStringAsync();
             expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
-            TestsUtility.CompareXml(expectedXml, actualXml);
+            var result = TestsUtility.CompareXml(expectedXml, actualXml);
+            Assert.That(result, Is.Null, result);
         }
 
         [Test]
@@ -149,7 +150,8 @@ namespace TileMapService.Tests
             var actualXml = await r.Content.ReadAsStringAsync();
             expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
-            TestsUtility.CompareXml(expectedXml, actualXml);
+            var result = TestsUtility.CompareXml(expectedXml, actualXml);
+            Assert.That(result, Is.Null, result);
         }
 
         [Test]
@@ -162,7 +164,8 @@ namespace TileMapService.Tests
             var actualXml = await r.Content.ReadAsStringAsync();
             expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
-            TestsUtility.CompareXml(expectedXml, actualXml);
+            var result = TestsUtility.CompareXml(expectedXml, actualXml);
+            Assert.That(result, Is.Null, result);
         }
 
         [Test]
@@ -175,7 +178,8 @@ namespace TileMapService.Tests
             var actualXml = await r.Content.ReadAsStringAsync();
             expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
-            TestsUtility.CompareXml(expectedXml, actualXml);
+            var result = TestsUtility.CompareXml(expectedXml, actualXml);
+            Assert.That(result, Is.Null, result);
         }
 
         [Test]
@@ -188,7 +192,8 @@ namespace TileMapService.Tests
             var actualXml = await r.Content.ReadAsStringAsync();
             expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
-            TestsUtility.CompareXml(expectedXml, actualXml);
+            var result = TestsUtility.CompareXml(expectedXml, actualXml);
+            Assert.That(result, Is.Null, result);
         }
 
         [Test]
@@ -201,7 +206,8 @@ namespace TileMapService.Tests
             var actualXml = await r.Content.ReadAsStringAsync();
             expectedXml = TestsUtility.UpdateXmlContents(expectedXml, TestConfiguration.PortNumber);
 
-            TestsUtility.CompareXml(expectedXml, actualXml);
+            var result = TestsUtility.CompareXml(expectedXml, actualXml);
+            Assert.That(result, Is.Null, result);
         }
 
         [Test]

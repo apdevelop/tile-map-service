@@ -4,7 +4,6 @@
 		<OutputType>Exe</OutputType>
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
-		<UserSecretsId>f052d8ac-cdc5-4dfb-86b5-763554895d34</UserSecretsId>
 		<AssemblyName>tms</AssemblyName>
 		<RootNamespace>TileMapService</RootNamespace>
 	</PropertyGroup>
