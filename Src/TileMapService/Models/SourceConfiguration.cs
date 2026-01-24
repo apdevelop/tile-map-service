@@ -163,6 +163,9 @@ namespace TileMapService.Models
         /// </summary>
         [JsonPropertyName("postgis")]
         public PostGisSourceTableConfiguration? PostGis { get; set; }
+
+        [JsonIgnore]
+        public TileMatrixSet[] TileMatrixSet { get; set; } = [];
     }
 
     /// <summary>

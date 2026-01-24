@@ -31,25 +31,25 @@ namespace TileMapService.Controllers
             this.tileSourceFabric = tileSourceFabric;
         }
 
+#pragma warning disable S107
         [HttpGet]
         [Route("")]
         public async Task<IActionResult> ProcessWmsRequestAsync(
-              string service = Identifiers.Wms,
-              string version = Identifiers.Version111,
-              string? request = null,
-              string? layers = null,
-              ////string styles = null,
-              string? srs = null, // WMS version 1.1.1
-              string? crs = null, // WMS version 1.3.0
-              string? bbox = null,
-              int width = 0,
-              int height = 0,
-              string? format = null,
-              // Optional GetMap request parameters
-              bool? transparent = false,
-              string bgcolor = Identifiers.DefaultBackgroundColor,
-              string exceptions = MediaTypeNames.Application.OgcServiceExceptionXml,
-              CancellationToken cancellationToken = default
+            string service = Identifiers.Wms,
+            string version = Identifiers.Version111,
+            string? request = null,
+            string? layers = null,
+            ////string styles = null,
+            string? srs = null, // WMS version 1.1.1
+            string? crs = null, // WMS version 1.3.0
+            string? bbox = null,
+            int width = 0,
+            int height = 0,
+            string? format = null,
+            // Optional GetMap request parameters
+            bool? transparent = false,
+            string bgcolor = Identifiers.DefaultBackgroundColor,
+            string exceptions = MediaTypeNames.Application.OgcServiceExceptionXml,
             ////string time = null,
             ////string sld = null,
             ////string sld_body = null,
@@ -60,8 +60,9 @@ namespace TileMapService.Controllers
             ////int y = 0,
             ////int i = 0, // WMS version 1.3.0
             ////int j = 0, // WMS version 1.3.0
-            ////int feature_count = 1
-            )
+            ////int feature_count = 1,
+            CancellationToken cancellationToken = default)
+#pragma warning restore S107
         {
             //// $"WMS [{Request.GetOwinContext().Request.RemoteIpAddress}:{Request.GetOwinContext().Request.RemotePort}] {Request.RequestUri}";
 

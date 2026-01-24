@@ -9,20 +9,22 @@ using TileMapService.Models;
 
 namespace TileMapService.Wmts
 {
-    class QueryUtility
+    static class QueryUtility
     {
-        private const string WmtsQueryService = "service";
-        private const string WmtsQueryVersion = "version";
-        private const string WmtsQueryRequest = "request";
-        private const string WmtsQueryFormat = "format";
+        #region Parameters names
 
-        internal const string WmtsQueryLayer = "layer";
-        private const string WmtsQueryStyle = "style";
-        private const string WmtsQueryTilematrixSet = "tilematrixset";
+        internal const string WmtsQueryService = "SERVICE";
+        internal const string WmtsQueryVersion = "VERSION";
+        internal const string WmtsQueryRequest = "REQUEST";
+        internal const string WmtsQueryFormat = "FORMAT";
+        internal const string WmtsQueryLayer = "LAYER";
+        internal const string WmtsQueryStyle = "STYLE";
+        internal const string WmtsQueryTilematrixSet = "TILEMATRIXSET";
+        internal const string WmtsQueryTileMatrix = "TILEMATRIX";
+        internal const string WmtsQueryTileColumn = "TILECOL";
+        internal const string WmtsQueryTileRow = "TILEROW";
 
-        private const string WmtsQueryTileMatrix = "tilematrix";
-        private const string WmtsQueryTileCol = "tilecol";
-        private const string WmtsQueryTileRow = "tilerow";
+        #endregion
 
         public static string GetCapabilitiesKvpUrl(string url)
         {
@@ -53,7 +55,7 @@ namespace TileMapService.Wmts
             if (IsResourceUrl(baseUrl))
             {
                 return baseUrl
-                    .Replace("{" + WmtsQueryTileCol + "}", x.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+                    .Replace("{" + WmtsQueryTileColumn + "}", x.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
                     .Replace("{" + WmtsQueryTileRow + "}", y.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
                     .Replace("{" + WmtsQueryTileMatrix + "}", z.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);
             }
@@ -102,6 +104,14 @@ namespace TileMapService.Wmts
                     format = configuration.ContentType;
                 }
 
+                // TileMatrix
+                var tileMatrix = z.ToString(CultureInfo.InvariantCulture);
+                var tms = configuration.TileMatrixSet.FirstOrDefault(t => t.Identifier == tileMatrixSet);
+                if (tms != null && z < tms.TileMatrices.Length && !String.IsNullOrEmpty(tms.TileMatrices[z].Identifier))
+                {
+                    tileMatrix = tms.TileMatrices[z].Identifier!; // Assuming Zoom level indexed array
+                }
+
                 var qb = new QueryBuilder
                 {
                     { WmtsQueryService, Identifiers.WMTS },
@@ -111,8 +121,8 @@ namespace TileMapService.Wmts
                     { WmtsQueryStyle, style },
                     { WmtsQueryTilematrixSet, tileMatrixSet },
                     { WmtsQueryFormat, format },
-                    { WmtsQueryTileMatrix, z.ToString(CultureInfo.InvariantCulture) },
-                    { WmtsQueryTileCol, x.ToString(CultureInfo.InvariantCulture) },
+                    { WmtsQueryTileMatrix, tileMatrix },
+                    { WmtsQueryTileColumn, x.ToString(CultureInfo.InvariantCulture) },
                     { WmtsQueryTileRow, y.ToString(CultureInfo.InvariantCulture) },
                 };
 
@@ -120,12 +130,9 @@ namespace TileMapService.Wmts
             }
         }
 
-        private static bool IsResourceUrl(string url)
-        {
-            return
-                (url.IndexOf("{" + WmtsQueryTileMatrix + "}", StringComparison.OrdinalIgnoreCase) > 0) &&
-                (url.IndexOf("{" + WmtsQueryTileRow + "}", StringComparison.OrdinalIgnoreCase) > 0) &&
-                (url.IndexOf("{" + WmtsQueryTileCol + "}", StringComparison.OrdinalIgnoreCase) > 0);
-        }
+        private static bool IsResourceUrl(string url) =>
+            (url.IndexOf("{" + WmtsQueryTileMatrix + "}", StringComparison.OrdinalIgnoreCase) >= 0) &&
+            (url.IndexOf("{" + WmtsQueryTileRow + "}", StringComparison.OrdinalIgnoreCase) >= 0) &&
+            (url.IndexOf("{" + WmtsQueryTileColumn + "}", StringComparison.OrdinalIgnoreCase) >= 0);
     }
 }

@@ -101,19 +101,17 @@ namespace TileMapService.Wmts
             var operationsMetadataElement = doc.CreateElement(OwsPrefix, Identifiers.OperationsMetadataElement, Identifiers.OwsNamespaceUri);
             operationsMetadataElement.AppendChild(CreateOperationElement(
                 doc,
-                new[]
-                {
+                [
                     new OperationProperties { Href = this.baseUrl + $"/{Identifiers.Version100}/WMTSCapabilities.xml", Encoding = Identifiers.RESTful },
                     new OperationProperties { Href = this.baseUrl + "?", Encoding = Identifiers.KVP },
-                },
+                ],
                 Identifiers.GetCapabilities));
             operationsMetadataElement.AppendChild(CreateOperationElement(
                 doc,
-                new[]
-                {
+                [
                     new OperationProperties { Href = this.baseUrl + $"/tile/{Identifiers.Version100}/", Encoding = Identifiers.RESTful },
                     new OperationProperties { Href = this.baseUrl + "?", Encoding = Identifiers.KVP },
-                },
+                ],
                 Identifiers.GetTile));
             // TODO: ? GetFeatureInfo
             rootElement.AppendChild(operationsMetadataElement);
@@ -183,23 +181,27 @@ namespace TileMapService.Wmts
             nsManager.AddNamespace(OwsPrefix, Identifiers.OwsNamespaceUri);
             nsManager.AddNamespace("ns", WmtsNamespaceUri);
 
-            var xpath = "/ns:Capabilities/ns:Contents/ns:Layer";
+            const string LayersXPath = "/ns:Capabilities/ns:Contents/ns:Layer";
+            const string TileMatrixSetsXPath = "/ns:Capabilities/ns:Contents/ns:TileMatrixSet";
+
+            var tileMatrixSets = xmlDoc.SelectNodes(TileMatrixSetsXPath, nsManager);
 
             var result = new List<M.Layer>();
-            var layers = xmlDoc.SelectNodes(xpath, nsManager);
+            var layers = xmlDoc.SelectNodes(LayersXPath, nsManager);
             if (layers != null)
             {
                 foreach (XmlNode layer in layers)
                 {
                     var layerIdentifier = layer.SelectSingleNode(OwsPrefix + ":" + "Identifier", nsManager);
                     var layerTitle = layer.SelectSingleNode(OwsPrefix + ":" + "Title", nsManager);
+                    var wgs84bbox = layer.SelectSingleNode(OwsPrefix + ":" + "WGS84BoundingBox", nsManager);
+                    var tileMatrixSetLinks = layer.SelectNodes("ns:TileMatrixSetLink", nsManager);
 
                     M.GeographicalBounds? geographicalBounds = null;
-                    var bbox = layer.SelectSingleNode(OwsPrefix + ":" + "WGS84BoundingBox", nsManager);
-                    if (bbox != null)
+                    if (wgs84bbox != null)
                     {
-                        var lowerCorner = bbox.SelectSingleNode(OwsPrefix + ":" + Identifiers.LowerCornerElement, nsManager);
-                        var upperCorner = bbox.SelectSingleNode(OwsPrefix + ":" + Identifiers.UpperCornerElement, nsManager);
+                        var lowerCorner = wgs84bbox.SelectSingleNode(OwsPrefix + ":" + Identifiers.LowerCornerElement, nsManager);
+                        var upperCorner = wgs84bbox.SelectSingleNode(OwsPrefix + ":" + Identifiers.UpperCornerElement, nsManager);
                         if (lowerCorner != null &&
                             upperCorner != null &&
                             !String.IsNullOrEmpty(lowerCorner.InnerText) &&
@@ -217,11 +219,43 @@ namespace TileMapService.Wmts
                         // TODO: use ResourceURL format="image/jpeg"
                     }
 
+                    // Get list of TileMatrixSets for layer
+                    var layersTileMatrixSets = new List<M.TileMatrixSet>();
+                    if (tileMatrixSetLinks?.Count > 0 && tileMatrixSets?.Count > 0)
+                    {
+                        foreach (XmlNode tmsLink in tileMatrixSetLinks)
+                        {
+                            var tileMatrixSetId = tmsLink.SelectSingleNode("ns:TileMatrixSet", nsManager)?.InnerText;
+                            var tileMatrixSet = tileMatrixSets.Cast<XmlNode>()
+                                .FirstOrDefault(n => n.SelectSingleNode(OwsPrefix + ":" + "Identifier", nsManager)?.InnerText == tileMatrixSetId);
+                            var tileMatrixList = tileMatrixSet?.SelectNodes("ns:TileMatrix", nsManager);
+                            var supportedCRS = tileMatrixSet?.SelectSingleNode(OwsPrefix + ":" + "SupportedCRS", nsManager)?.InnerText;
+
+                            if (tileMatrixList != null)
+                            {
+                                var tmss = new List<M.TileMatrix>();
+                                foreach (XmlNode tileMatrix in tileMatrixList)
+                                {
+                                    var tileMatrixIdentifier = tileMatrix.SelectSingleNode(OwsPrefix + ":" + "Identifier", nsManager)?.InnerText;
+                                    tmss.Add(new M.TileMatrix { Identifier = tileMatrixIdentifier });
+                                }
+
+                                layersTileMatrixSets.Add(new M.TileMatrixSet
+                                {
+                                    Identifier = tileMatrixSetId,
+                                    SupportedCRS = supportedCRS,
+                                    TileMatrices = tmss.ToArray(),
+                                });
+                            }
+                        }
+                    }
+
                     result.Add(new M.Layer
                     {
                         Identifier = layerIdentifier != null ? layerIdentifier.InnerText : String.Empty,
                         Title = layerTitle != null ? layerTitle.InnerText : String.Empty,
                         GeographicalBounds = geographicalBounds,
+                        TileMatrixSet = layersTileMatrixSets.ToArray(),
                     });
                 }
             }

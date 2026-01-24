@@ -39,32 +39,32 @@ namespace TileMapService.Controllers
         /// <param name="tileCol">Column index of a tile matrix.</param>
         /// <param name="format">Output format (MIME type) of the tile.</param>
         /// <returns></returns>
+#pragma warning disable IDE0060, S107, S6967
         [HttpGet("")]
         public async Task<IActionResult> ProcessRequestAsync(
             string? service = null,
             string? request = null,
             string version = Identifiers.Version100,
             string? layer = null,
-#pragma warning disable IDE0060
             string style = "default", // Not used
-#pragma warning restore IDE0060
             string format = MediaTypeNames.Image.Png,
-            ////string tileMatrixSet = null,
+            ////string tileMatrixSet = null, // Not supported
             string? tileMatrix = null,
             int tileRow = 0,
             int tileCol = 0,
             CancellationToken cancellationToken = default)
+#pragma warning restore IDE0060, S107, S6967
         {
             // TODO: check requirements of standard
             if ((String.Compare(service, Identifiers.WMTS, StringComparison.Ordinal) != 0) &&
                 (String.Compare(service, Identifiers.WMS, StringComparison.Ordinal) != 0)) // QGIS compatibility
             {
-                return ResponseWithBadRequestError(Identifiers.MissingParameterValue, "SERVICE parameter is not defined");
+                return ResponseWithBadRequestError(Identifiers.MissingParameterValue, $"{QueryUtility.WmtsQueryService} parameter is not defined");
             }
 
             if (String.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
             {
-                return ResponseWithBadRequestError(Identifiers.InvalidParameterValue, $"Invalid VERSION parameter value (must be {Identifiers.Version100})");
+                return ResponseWithBadRequestError(Identifiers.InvalidParameterValue, $"Invalid {QueryUtility.WmtsQueryVersion} parameter value (must be {Identifiers.Version100})");
             }
 
             if (String.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
@@ -75,12 +75,12 @@ namespace TileMapService.Controllers
             {
                 if (String.IsNullOrEmpty(tileMatrix))
                 {
-                    return ResponseWithBadRequestError(Identifiers.MissingParameter, "TILEMATRIX parameter is not defined");
+                    return ResponseWithBadRequestError(Identifiers.MissingParameter, $"{QueryUtility.WmtsQueryTileMatrix} parameter is not defined");
                 }
 
                 if (String.IsNullOrEmpty(layer))
                 {
-                    return ResponseWithBadRequestError(Identifiers.MissingParameter, "LAYER parameter is not defined");
+                    return ResponseWithBadRequestError(Identifiers.MissingParameter, $"{QueryUtility.WmtsQueryLayer} parameter is not defined");
                 }
 
                 if (!this.tileSourceFabric.Contains(layer))
@@ -90,7 +90,7 @@ namespace TileMapService.Controllers
 
                 if (String.IsNullOrEmpty(format))
                 {
-                    return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
+                    return ResponseWithBadRequestError(Identifiers.MissingParameter, $"{QueryUtility.WmtsQueryFormat} parameter is not defined");
                 }
 
                 return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
@@ -133,6 +133,7 @@ namespace TileMapService.Controllers
         /// <param name="tileCol">Column index of a tile matrix.</param>
         /// <param name="format">Output image format (MIME type) of the tile.</param>
         /// <returns></returns>
+#pragma warning disable IDE0060, S107
         [HttpGet("tile/{version}/{layer}/{style}/{tilematrixset}/{tilematrix}/{tilerow}/{tilecol}.{format}")]
         public async Task<IActionResult> ProcessGetTileRestfulRequestAsync(
             string? tileMatrixSet,
@@ -141,11 +142,10 @@ namespace TileMapService.Controllers
             int tileCol,
             string version = Identifiers.Version100,
             string? layer = null,
-#pragma warning disable IDE0060
             string style = "default", // Not used
-#pragma warning restore IDE0060
-             string format = "png",
-             CancellationToken cancellationToken = default)
+            string format = "png",
+            CancellationToken cancellationToken = default)
+#pragma warning restore IDE0060, S107
         {
             if (String.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
             {
@@ -187,7 +187,7 @@ namespace TileMapService.Controllers
                 .ToList();
 
             var xmlDoc = new CapabilitiesUtility(
-                new Wmts.ServiceProperties
+                new ServiceProperties
                 {
                     Title = this.tileSourceFabric.ServiceProperties.Title,
                     Abstract = this.tileSourceFabric.ServiceProperties.Abstract,

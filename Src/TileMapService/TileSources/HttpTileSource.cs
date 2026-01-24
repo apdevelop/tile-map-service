@@ -52,7 +52,7 @@ namespace TileMapService.TileSources
         {
             // Configuration values priority:
             // 1. Default values for http source type.
-            // 2. Actual values (from source metadata).
+            // 2. Actual values (from source metadata / capabilities).
             // 3. Values from configuration file - overrides given above, if provided.
 
             this.client = new HttpClient { Timeout = TimeSpan.FromSeconds(15), }; // TODO: add custom headers from configuration
@@ -103,6 +103,7 @@ namespace TileMapService.TileSources
                 Wmts = this.configuration.Wmts,
                 Wms = this.configuration.Wms,
                 PostGis = null,
+                TileMatrixSet = sourceCapabilities != null ? sourceCapabilities.TileMatrixSet : [], // Actual for WMTS sources
             };
 
             if (this.configuration.Cache != null)
@@ -126,7 +127,7 @@ namespace TileMapService.TileSources
             this.logger.LogInformation($"Source '{this.configuration.Id}' initialization completed.");
         }
 
-        private async Task<Models.Layer?> GetSourceCapabilitiesAsync()
+        private async Task<Layer?> GetSourceCapabilitiesAsync()
         {
             if (this.client == null)
             {
@@ -143,7 +144,7 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            var result = new Models.Layer
+            var result = new Layer
             {
                 GeographicalBounds = null,
                 TileWidth = Utils.WebMercator.DefaultTileWidth,
@@ -178,9 +179,9 @@ namespace TileMapService.TileSources
                         string? sourceLayerIdentifier = null, capabilitiesUrl = null;
                         if (this.configuration.Wmts != null)
                         {
-                            capabilitiesUrl = (!String.IsNullOrWhiteSpace(this.configuration.Wmts.CapabilitiesUrl) && this.configuration.Wmts.CapabilitiesUrl.EndsWith(".xml")) ?
-                                this.configuration.Wmts.CapabilitiesUrl :
-                                Wmts.QueryUtility.GetCapabilitiesKvpUrl(this.configuration.Location);
+                            capabilitiesUrl = String.IsNullOrWhiteSpace(this.configuration.Wmts.CapabilitiesUrl) || !this.configuration.Wmts.CapabilitiesUrl.EndsWith(".xml")
+                                ? Wmts.QueryUtility.GetCapabilitiesKvpUrl(this.configuration.Location)
+                                : this.configuration.Wmts.CapabilitiesUrl;
                             sourceLayerIdentifier = this.configuration.Wmts.Layer;
                         }
                         else
@@ -204,6 +205,7 @@ namespace TileMapService.TileSources
                                 if (layer != null)
                                 {
                                     result.GeographicalBounds = layer.GeographicalBounds;
+                                    result.TileMatrixSet = layer.TileMatrixSet;
                                 }
 
                                 // TODO: detect KVP/RESTful syntax support for GetTile from source capabilities
@@ -285,11 +287,15 @@ namespace TileMapService.TileSources
                 var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    if (response.Content.Headers.ContentType != null && response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
+                    if (response.Content.Headers.ContentType != null)
                     {
-                        var message = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                        this.logger.LogWarning($"Error reading tile: '{message}'.");
-                        return null;
+                        if (response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml ||
+                            response.Content.Headers.ContentType.MediaType == MediaTypeNames.Text.Xml)
+                        {
+                            var message = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                            this.logger.LogWarning($"Error reading tile: '{message}'."); // TODO: ? parse XML doc
+                            return null;
+                        }
                     }
 
                     // TODO: more checks of Content-Type, response size, etc.
