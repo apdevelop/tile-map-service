@@ -1,5 +1,7 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using System;
 using System.Collections.Generic;
+
+using Microsoft.Data.Sqlite;
 
 namespace TileMapService.MBTiles
 {
@@ -8,7 +10,7 @@ namespace TileMapService.MBTiles
     /// </summary>
     /// <remarks>
     /// Supports only Spherical Mercator tile grid and TMS tiling scheme (Y axis is going up).
-    /// SQLite doesn't support asynchronous I/O. so the async ADO.NET methods will execute synchronously in Microsoft.Data.Sqlite.
+    /// SQLite doesn't support asynchronous I/O, so the async ADO.NET methods will execute synchronously in Microsoft.Data.Sqlite.
     /// </remarks>
     public class Repository
     {
@@ -39,12 +41,6 @@ namespace TileMapService.MBTiles
 
         // TODO: Grids / UTFGrid
 
-        private static readonly string ReadTileDataCommandText =
-            $"SELECT {ColumnTileData} FROM {TableTiles} WHERE (({ColumnZoomLevel} = @zoom_level) AND ({ColumnTileColumn} = @tile_column) AND ({ColumnTileRow} = @tile_row))";
-
-        private static readonly string ReadMetadataCommandText =
-            $"SELECT {ColumnMetadataName}, {ColumnMetadataValue} FROM {TableMetadata}";
-
         #endregion
 
         /// <summary>
@@ -54,7 +50,7 @@ namespace TileMapService.MBTiles
         /// <param name="isFullAccess">Allows database modification if true.</param>
         public Repository(string path, bool isFullAccess = false)
         {
-            this.connectionString = new SqliteConnectionStringBuilder
+            connectionString = new SqliteConnectionStringBuilder
             {
                 DataSource = path,
                 Mode = isFullAccess ? SqliteOpenMode.ReadWriteCreate : SqliteOpenMode.ReadOnly,
@@ -74,65 +70,46 @@ namespace TileMapService.MBTiles
         /// <returns>Tile image contents.</returns>
         public byte[]? ReadTile(int tileColumn, int tileRow, int zoomLevel)
         {
-            using var connection = new SqliteConnection(this.connectionString);
+            const string ReadTileDataCommandText = $"SELECT {ColumnTileData} FROM {TableTiles} WHERE ({ColumnZoomLevel} = @zoomLevel) AND ({ColumnTileColumn} = @tileColumn) AND ({ColumnTileRow} = @tileRow)";
+
+            using var connection = new SqliteConnection(connectionString);
             using var command = new SqliteCommand(ReadTileDataCommandText, connection);
-            command.Parameters.AddRange(new[]
-            {
-                new SqliteParameter("@tile_column", tileColumn),
-                new SqliteParameter("@tile_row", tileRow),
-                new SqliteParameter("@zoom_level", zoomLevel),
-            });
+            command.Parameters.AddRange(
+            [
+                new SqliteParameter("@tileColumn", tileColumn),
+                new SqliteParameter("@tileRow", tileRow),
+                new SqliteParameter("@zoomLevel", zoomLevel),
+            ]);
 
             connection.Open();
-            using var dr = command.ExecuteReader();
-            byte[]? result = null;
-
-            if (dr.Read())
-            {
-                result = (byte[])dr[0];
-            }
-
-            dr.Close();
-
-            return result;
+            using var reader = command.ExecuteReader();
+            return reader.Read() && !reader.IsDBNull(0) ? (byte[])reader[0] : null;
         }
 
         public byte[]? ReadFirstTile()
         {
-            using var connection = new SqliteConnection(this.connectionString);
-            using var command = new SqliteCommand($"SELECT {ColumnTileData} FROM {TableTiles} LIMIT 1", connection);
+            const string ReadFirstTileCommandText = $"SELECT {ColumnTileData} FROM {TableTiles} LIMIT 1";
+
+            using var connection = new SqliteConnection(connectionString);
+            using var command = new SqliteCommand(ReadFirstTileCommandText, connection);
 
             connection.Open();
-            using var dr = command.ExecuteReader();
-            byte[]? result = null;
-
-            if (dr.Read())
-            {
-                result = (byte[])dr[0];
-            }
-
-            dr.Close();
-
-            return result;
+            using var reader = command.ExecuteReader();
+            return reader.Read() && !reader.IsDBNull(0) ? (byte[])reader[0] : null;
         }
 
-        public (int Min, int Max)? GetZoomLevelRange()
+        public (int Min, int Max)? ReadZoomLevelRange()
         {
-            using var connection = new SqliteConnection(this.connectionString);
-            using var command = new SqliteCommand($"SELECT MIN({ColumnZoomLevel}), MAX({ColumnZoomLevel}) FROM {TableTiles}", connection);
+            const string ReadMinMaxCommandText = $"SELECT MIN({ColumnZoomLevel}), MAX({ColumnZoomLevel}) FROM {TableTiles}";
+
+            using var connection = new SqliteConnection(connectionString);
+            using var command = new SqliteCommand(ReadMinMaxCommandText, connection);
 
             connection.Open();
-            using var dr = command.ExecuteReader();
-
-            (int Min, int Max)? result = null;
-            if (dr.Read())
-            {
-                result = (Min: dr.GetInt32(0), Max: dr.GetInt32(1));
-            }
-
-            dr.Close();
-
-            return result;
+            using var reader = command.ExecuteReader();
+            return reader.Read() && !reader.IsDBNull(0) && !reader.IsDBNull(1)
+                ? (Min: reader.GetInt32(0), Max: reader.GetInt32(1))
+                : null;
         }
 
         /// <summary>
@@ -141,22 +118,26 @@ namespace TileMapService.MBTiles
         /// <returns>Metadata records.</returns>
         public MetadataItem[] ReadMetadata()
         {
-            using var connection = new SqliteConnection(this.connectionString);
-            using var command = new SqliteCommand(ReadMetadataCommandText, connection);
+            const string ReadMetadataCommandText = $"SELECT {ColumnMetadataName}, {ColumnMetadataValue} FROM {TableMetadata}";
+
             var result = new List<MetadataItem>();
 
+            using var connection = new SqliteConnection(connectionString);
+            using var command = new SqliteCommand(ReadMetadataCommandText, connection);
+
             connection.Open();
-            using (var dr = command.ExecuteReader())
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
             {
-                while (dr.Read())
+                if (reader.IsDBNull(0))
                 {
-                    result.Add(new MetadataItem(dr.GetString(0), dr.IsDBNull(1) ? null : dr.GetString(1)));
+                    throw new InvalidOperationException("Metadata name cannot be NULL.");
                 }
 
-                dr.Close();
+                result.Add(new MetadataItem(reader.GetString(0), reader.IsDBNull(1) ? null : reader.GetString(1)));
             }
 
-            return result.ToArray();
+            return [.. result];
         }
 
         #endregion
@@ -167,14 +148,14 @@ namespace TileMapService.MBTiles
         {
             var repository = new Repository(path, true);
 
-            var createMetadataCommand = $"CREATE TABLE {TableMetadata} ({ColumnMetadataName} text, {ColumnMetadataValue} text)";
-            repository.ExecuteSqlQuery(createMetadataCommand);
+            const string CreateMetadataCommand = $"CREATE TABLE {TableMetadata} ({ColumnMetadataName} text, {ColumnMetadataValue} text)";
+            repository.ExecuteSqlQuery(CreateMetadataCommand);
 
-            var createTilesCommand = $"CREATE TABLE {TableTiles} ({ColumnZoomLevel} integer, {ColumnTileColumn} integer, {ColumnTileRow} integer, {ColumnTileData} blob)";
-            repository.ExecuteSqlQuery(createTilesCommand);
+            const string CreateTilesCommand = $"CREATE TABLE {TableTiles} ({ColumnZoomLevel} integer, {ColumnTileColumn} integer, {ColumnTileRow} integer, {ColumnTileData} blob)";
+            repository.ExecuteSqlQuery(CreateTilesCommand);
 
-            var createTileIndexCommand = $"CREATE UNIQUE INDEX {IndexTile} ON {TableTiles} ({ColumnZoomLevel}, {ColumnTileColumn}, {ColumnTileRow})";
-            repository.ExecuteSqlQuery(createTileIndexCommand);
+            const string CreateTileIndexCommand = $"CREATE UNIQUE INDEX {IndexTile} ON {TableTiles} ({ColumnZoomLevel}, {ColumnTileColumn}, {ColumnTileRow})";
+            repository.ExecuteSqlQuery(CreateTileIndexCommand);
 
             return repository;
         }
@@ -188,17 +169,21 @@ namespace TileMapService.MBTiles
         /// <param name="tileData">Tile image contents.</param>
         public void AddTile(int tileColumn, int tileRow, int zoomLevel, byte[] tileData)
         {
-            var commandText = @$"INSERT INTO {TableTiles} 
+            const string InsertTileCommandText = @$"INSERT INTO {TableTiles} 
                     ({ColumnTileColumn}, {ColumnTileRow}, {ColumnZoomLevel}, {ColumnTileData}) 
                     VALUES
-                    (@{ColumnTileColumn}, @{ColumnTileRow}, @{ColumnZoomLevel}, @{ColumnTileData})";
+                    (@tileColumn, @tileRow, @zoomLevel, @tileData)";
 
-            using var connection = new SqliteConnection(this.connectionString);
-            using var command = new SqliteCommand(commandText, connection);
-            command.Parameters.Add(new SqliteParameter($"@{ColumnTileColumn}", tileColumn));
-            command.Parameters.Add(new SqliteParameter($"@{ColumnTileRow}", tileRow));
-            command.Parameters.Add(new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel));
-            command.Parameters.Add(new SqliteParameter($"@{ColumnTileData}", tileData));
+            using var connection = new SqliteConnection(connectionString);
+            using var command = new SqliteCommand(InsertTileCommandText, connection);
+            command.Parameters.AddRange(
+            [
+                new SqliteParameter("@tileColumn", tileColumn),
+                new SqliteParameter("@tileRow", tileRow),
+                new SqliteParameter("@zoomLevel", zoomLevel),
+                new SqliteParameter("@tileData", tileData),
+            ]);
+
             connection.Open();
             command.ExecuteNonQuery();
         }
@@ -209,22 +194,26 @@ namespace TileMapService.MBTiles
         /// <param name="item">Key/value metadata item.</param>
         public void AddMetadataItem(MetadataItem item)
         {
-            using var connection = new SqliteConnection(this.connectionString);
-            var commandText = @$"INSERT INTO {TableMetadata} 
+            const string InsertMetadataCommandText = @$"INSERT INTO {TableMetadata} 
                     ({ColumnMetadataName}, {ColumnMetadataValue}) 
                     VALUES
                     (@{ColumnMetadataName}, @{ColumnMetadataValue})";
 
-            using var command = new SqliteCommand(commandText, connection);
-            command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataName}", item.Name));
-            command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataValue}", item.Value));
+            using var connection = new SqliteConnection(connectionString);
+            using var command = new SqliteCommand(InsertMetadataCommandText, connection);
+            command.Parameters.AddRange(
+            [
+                new SqliteParameter($"@{ColumnMetadataName}", item.Name),
+                new SqliteParameter($"@{ColumnMetadataValue}", item.Value),
+            ]);
+
             connection.Open();
             command.ExecuteNonQuery();
         }
 
         private void ExecuteSqlQuery(string commandText)
         {
-            using var connection = new SqliteConnection(this.connectionString);
+            using var connection = new SqliteConnection(connectionString);
             using var command = new SqliteCommand(commandText, connection);
             connection.Open();
             command.ExecuteNonQuery();

@@ -40,10 +40,10 @@ namespace TileMapService.TileSources
 
         Task ITileSource.InitAsync()
         {
-            // Configuration values priority:
+            // Configuration values priority order; next one overrides given before
             // 1. Default values for MBTiles source type.
             // 2. Actual values (MBTiles metadata table values).
-            // 3. Values from configuration file - overrides given above, if provided.
+            // 3. Values from configuration file.
 
             if (String.IsNullOrEmpty(this.configuration.Location))
             {
@@ -53,15 +53,15 @@ namespace TileMapService.TileSources
             this.repository = new MBTiles.Repository(configuration.Location, false);
             var metadata = new MBTiles.Metadata(this.repository.ReadMetadata());
 
-            var title = String.IsNullOrEmpty(this.configuration.Title) ?
-                    (!String.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Id) :
-                    this.configuration.Title;
+            var title = String.IsNullOrEmpty(this.configuration.Title)
+                ? (!String.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Id)
+                : this.configuration.Title;
 
-            var format = String.IsNullOrEmpty(this.configuration.Format) ?
-                    (!String.IsNullOrEmpty(metadata.Format) ? metadata.Format : ImageFormats.Png) :
-                    this.configuration.Format;
+            var format = String.IsNullOrEmpty(this.configuration.Format)
+                ? (!String.IsNullOrEmpty(metadata.Format) ? metadata.Format : ImageFormats.Png)
+                : this.configuration.Format;
 
-            // Get tile width and height from first tile, for raster formats
+            // Get tile image width and height from first tile, for raster formats
             var tileWidth = Utils.WebMercator.DefaultTileWidth;
             var tileHeight = Utils.WebMercator.DefaultTileHeight;
             var firstTile = this.repository.ReadFirstTile();
@@ -79,7 +79,7 @@ namespace TileMapService.TileSources
             var maxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? null;
             if (minZoom == null || maxZoom == null)
             {
-                var zoomRange = this.repository.GetZoomLevelRange();
+                var zoomRange = this.repository.ReadZoomLevelRange();
                 if (zoomRange.HasValue)
                 {
                     minZoom = zoomRange.Value.Min;

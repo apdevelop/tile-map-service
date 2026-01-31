@@ -46,12 +46,12 @@ namespace TileMapService.MBTiles
         #endregion
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Repository"/> class.
+        /// Initializes a new instance of the <see cref="CacheRepository"/> class.
         /// </summary>
         /// <param name="path">Full path to MBTiles database file.</param>
         public CacheRepository(string path)
         {
-            this.connectionString = new SqliteConnectionStringBuilder
+            connectionString = new SqliteConnectionStringBuilder
             {
                 DataSource = path,
                 Mode = SqliteOpenMode.ReadWriteCreate,
@@ -71,54 +71,38 @@ namespace TileMapService.MBTiles
         /// <returns>Tile image contents.</returns>
         public byte[]? ReadTile(int tileColumn, int tileRow, int zoomLevel)
         {
-            using var connection = new SqliteConnection(this.connectionString);
-            byte[]? result = null;
             string? tileId = null;
 
             // TODO: index / memory cache (hashset) for xyz columns
-            var command1Text = $"SELECT {ColumnTileId} FROM {TableMap} WHERE (({ColumnZoomLevel} = @{ColumnZoomLevel}) AND ({ColumnTileColumn} = @{ColumnTileColumn}) AND ({ColumnTileRow} = @{ColumnTileRow}))";
-            using (var command = new SqliteCommand(command1Text, connection))
+            const string Command1Text = $"SELECT {ColumnTileId} FROM {TableMap} WHERE (({ColumnZoomLevel} = @{ColumnZoomLevel}) AND ({ColumnTileColumn} = @{ColumnTileColumn}) AND ({ColumnTileRow} = @{ColumnTileRow}))";
+            using var connection = new SqliteConnection(connectionString);
+            using var command1 = new SqliteCommand(Command1Text, connection);
+            command1.Parameters.AddRange(
+            [
+                new SqliteParameter($"@{ColumnTileColumn}", tileColumn),
+                new SqliteParameter($"@{ColumnTileRow}", tileRow),
+                new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel),
+            ]);
+
+            connection.Open();
+            using var reader1 = command1.ExecuteReader();
+            if (reader1.Read())
             {
-                command.Parameters.AddRange(new[]
-                {
-                    new SqliteParameter($"@{ColumnTileColumn}", tileColumn),
-                    new SqliteParameter($"@{ColumnTileRow}", tileRow),
-                    new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel),
-                });
-
-                connection.Open();
-                using (var dr = command.ExecuteReader())
-                {
-                    if (dr.Read())
-                    {
-                        tileId = (string)dr[0];
-                    }
-
-                    dr.Close();
-                }
-
-                if (tileId == null)
-                {
-                    return null;
-                }
+                tileId = (string)reader1[0];
             }
 
+            if (tileId == null)
             {
-                var command2Text = $"SELECT {ColumnTileData} FROM {TableImages} WHERE {ColumnTileId} = @{ColumnTileId}";
-                using var command = new SqliteCommand(command2Text, connection);
-                command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
-
-                connection.Open();
-                using var dr = command.ExecuteReader();
-                if (dr.Read())
-                {
-                    result = (byte[])dr[0];
-                }
-
-                dr.Close();
+                return null;
             }
 
-            return result;
+            const string Command2Text = $"SELECT {ColumnTileData} FROM {TableImages} WHERE {ColumnTileId} = @{ColumnTileId}";
+            using var command2 = new SqliteCommand(Command2Text, connection);
+            command2.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
+
+            connection.Open();
+            using var reader2 = command2.ExecuteReader();
+            return reader2.Read() && !reader2.IsDBNull(0) ? (byte[])reader2[0] : null;
         }
 
         #endregion
@@ -129,7 +113,7 @@ namespace TileMapService.MBTiles
         {
             var repository = new CacheRepository(path);
 
-            const string queryText = @"
+            const string QueryText = @"
                 create table if not exists images(
                   tile_id text,
                   tile_data blob,
@@ -157,7 +141,7 @@ namespace TileMapService.MBTiles
                      join images on images.tile_id = map.tile_id;
                 ";
 
-            repository.ExecuteSqlQuery(queryText);
+            repository.ExecuteSqlQuery(QueryText);
 
             // TODO: fill metadata table
 
@@ -167,87 +151,76 @@ namespace TileMapService.MBTiles
         public void AddTile(int tileColumn, int tileRow, int zoomLevel, byte[] tileData)
         {
             var blankColor = Utils.ImageHelper.CheckIfImageIsBlank(tileData);
-            var tileId = (blankColor == null) ?
-                TileIdFromCoordinates(tileColumn, tileRow, zoomLevel) :
-                "#" + blankColor.Value.ToString("X8");
+            var tileId = blankColor == null
+                ? TileIdFromCoordinates(tileColumn, tileRow, zoomLevel)
+                : "#" + blankColor.Value.ToString("X8");
 
-            using var connection = new SqliteConnection(this.connectionString);
+            using var connection = new SqliteConnection(connectionString);
             connection.Open();
 
             using var transaction = connection.BeginTransaction();
             var isImageExists = false;
 
             // Check if image with this id is stored
+
+            const string Command1Text = $"SELECT COUNT({ColumnTileId}) FROM {TableImages} WHERE {ColumnTileId} = @{ColumnTileId}";
+            using var command1 = new SqliteCommand(Command1Text, connection, transaction);
+            command1.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
+
+            connection.Open();
+            using var reader = command1.ExecuteReader();
+            if (reader.Read())
             {
-                var command0Text = $"SELECT COUNT({ColumnTileId}) FROM {TableImages} WHERE {ColumnTileId} = @{ColumnTileId}";
-                using var command = new SqliteCommand(command0Text, connection, transaction);
-                command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
-
-                connection.Open();
-                using var dr = command.ExecuteReader();
-                if (dr.Read())
-                {
-                    isImageExists = Convert.ToInt64(dr[0]) == 1;
-                }
-
-                dr.Close();
+                isImageExists = Convert.ToInt64(reader[0]) == 1;
             }
 
             if (!isImageExists) // Store image if not exists with this id
             {
-                var command1Text = @$"INSERT INTO {TableImages} 
+                var command2Text = @$"INSERT INTO {TableImages} 
                             ({ColumnTileId}, {ColumnTileData}) 
                             VALUES
                             (@{ColumnTileId}, @{ColumnTileData})";
 
-                using var command = new SqliteCommand(command1Text, connection, transaction);
-                command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
-                command.Parameters.Add(new SqliteParameter($"@{ColumnTileData}", tileData));
-                command.ExecuteNonQuery();
+                using var command2 = new SqliteCommand(command2Text, connection, transaction);
+                command2.Parameters.AddRange(
+                [
+                    new SqliteParameter($"@{ColumnTileId}", tileId),
+                    new SqliteParameter($"@{ColumnTileData}", tileData),
+                ]);
+
+                command2.ExecuteNonQuery();
             }
 
-            {
-                var command2Text = @$"INSERT OR IGNORE INTO {TableMap} 
+            const string Command3Text = @$"INSERT OR IGNORE INTO {TableMap} 
                         ({ColumnTileColumn}, {ColumnTileRow}, {ColumnZoomLevel}, {ColumnTileId}) 
                         VALUES
                         (@{ColumnTileColumn}, @{ColumnTileRow}, @{ColumnZoomLevel}, @{ColumnTileId})";
 
-                using var command = new SqliteCommand(command2Text, connection, transaction);
-                command.Parameters.Add(new SqliteParameter($"@{ColumnTileColumn}", tileColumn));
-                command.Parameters.Add(new SqliteParameter($"@{ColumnTileRow}", tileRow));
-                command.Parameters.Add(new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel));
-                command.Parameters.Add(new SqliteParameter($"@{ColumnTileId}", tileId));
-                command.ExecuteNonQuery();
-            }
+            using var command3 = new SqliteCommand(Command3Text, connection, transaction);
+            command3.Parameters.AddRange(
+            [
+                new SqliteParameter($"@{ColumnTileColumn}", tileColumn),
+                new SqliteParameter($"@{ColumnTileRow}", tileRow),
+                new SqliteParameter($"@{ColumnZoomLevel}", zoomLevel),
+                new SqliteParameter($"@{ColumnTileId}", tileId),
+            ]);
+
+            command3.ExecuteNonQuery();
 
             transaction.Commit();
         }
 
-        public void AddMetadataItem(MetadataItem item)
-        {
-            var commandText = @$"INSERT INTO {TableMetadata} 
-                    ({ColumnMetadataName}, {ColumnMetadataValue}) 
-                    VALUES
-                    (@{ColumnMetadataName}, @{ColumnMetadataValue})";
-
-            using var connection = new SqliteConnection(this.connectionString);
-            using var command = new SqliteCommand(commandText, connection);
-            command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataName}", item.Name));
-            command.Parameters.Add(new SqliteParameter($"@{ColumnMetadataValue}", item.Value));
-            connection.Open();
-            command.ExecuteNonQuery();
-        }
-
         private void ExecuteSqlQuery(string commandText)
         {
-            using var connection = new SqliteConnection(this.connectionString);
+            using var connection = new SqliteConnection(connectionString);
             using var command = new SqliteCommand(commandText, connection);
             connection.Open();
             command.ExecuteNonQuery();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string TileIdFromCoordinates(int tileColumn, int tileRow, int zoomLevel) => String.Format(CultureInfo.InvariantCulture, "{0}-{1}-{2}", tileColumn, tileRow, zoomLevel);
+        private static string TileIdFromCoordinates(int tileColumn, int tileRow, int zoomLevel) =>
+            String.Format(CultureInfo.InvariantCulture, "{0}-{1}-{2}", tileColumn, tileRow, zoomLevel);
 
         #endregion
     }
