@@ -15,12 +15,12 @@ namespace TileMapService.Wms
     {
         public static Version GetWmsVersion(string version)
         {
-            switch (version)
+            return version switch
             {
-                case Identifiers.Version111: return Version.Version111;
-                case Identifiers.Version130: return Version.Version130;
-                default: throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported.");
-            }
+                Identifiers.Version111 => Version.Version111,
+                Identifiers.Version130 => Version.Version130,
+                _ => throw new ArgumentOutOfRangeException(nameof(version), $"WMS version '{version}' is not supported."),
+            };
         }
 
         public static async Task DrawLayerAsync(
@@ -34,7 +34,7 @@ namespace TileMapService.Wms
             CancellationToken cancellationToken)
         {
             // TODO: check SRS support in source
-            if ((String.Compare(source.Configuration.Type, SourceConfiguration.TypeWms, StringComparison.OrdinalIgnoreCase) == 0) &&
+            if ((string.Compare(source.Configuration.Type, SourceConfiguration.TypeWms, StringComparison.OrdinalIgnoreCase) == 0) &&
                 (source.Configuration.Cache == null))
             {
                 // Cascading GetMap request to WMS source as single GetMap request
@@ -45,7 +45,7 @@ namespace TileMapService.Wms
                     outputCanvas.DrawImage(sourceImage, SKRect.Create(0, 0, sourceImage.Width, sourceImage.Height));
                 }
             }
-            else if (String.Compare(source.Configuration.Type, SourceConfiguration.TypeGeoTiff, StringComparison.OrdinalIgnoreCase) == 0)
+            else if (string.Compare(source.Configuration.Type, SourceConfiguration.TypeGeoTiff, StringComparison.OrdinalIgnoreCase) == 0)
             {
                 // Get part of GeoTIFF source image in single request
                 using var image = await ((TileSources.RasterTileSource)source).GetImagePartAsync(width, height, boundingBox, backgroundColor, cancellationToken).ConfigureAwait(false);
@@ -65,12 +65,12 @@ namespace TileMapService.Wms
             }
         }
 
-        private static async Task<List<Models.TileDataset>> GetSourceTilesAsync(
+        private static async Task<List<TileDataset>> GetSourceTilesAsync(
             ITileSource source,
-            IList<Models.TileCoordinates> tileCoordinates,
+            IList<TileCoordinates> tileCoordinates,
             CancellationToken cancellationToken)
         {
-            var sourceTiles = new List<Models.TileDataset>(tileCoordinates.Count);
+            var sourceTiles = new List<TileDataset>(tileCoordinates.Count);
             foreach (var tc in tileCoordinates)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -93,8 +93,8 @@ namespace TileMapService.Wms
             SKCanvas outputCanvas,
             int width,
             int height,
-            Models.Bounds boundingBox,
-            IList<Models.TileDataset> sourceTiles,
+            Bounds boundingBox,
+            IList<TileDataset> sourceTiles,
             uint backgroundColor,
             int tileSize,
             CancellationToken cancellationToken)
@@ -140,7 +140,7 @@ namespace TileMapService.Wms
             outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKPaint { FilterQuality = SKFilterQuality.High, });
         }
 
-        public static Models.TileCoordinates[] BuildTileCoordinatesList(Models.Bounds boundingBox, int width)
+        public static TileCoordinates[] BuildTileCoordinatesList(Models.Bounds boundingBox, int width)
         {
             var geoBBox = EntitiesConverter.MapRectangleToGeographicalBounds(boundingBox);
             var zoomLevel = FindOptimalTileZoomLevel(width, geoBBox);
@@ -154,13 +154,13 @@ namespace TileMapService.Wms
 
             // Using array for slightly better performance
             var totalNumber = (tileCoordTopRight.X - tileCoordBottomLeft.X + 1) * (tileCoordBottomLeft.Y - tileCoordTopRight.Y + 1);
-            var result = new Models.TileCoordinates[totalNumber];
+            var result = new TileCoordinates[totalNumber];
             var counter = 0;
             for (var tileX = tileCoordBottomLeft.X; tileX <= tileCoordTopRight.X; tileX++)
             {
                 for (var tileY = tileCoordTopRight.Y; tileY <= tileCoordBottomLeft.Y; tileY++)
                 {
-                    result[counter] = new Models.TileCoordinates(tileX, tileY, zoomLevel);
+                    result[counter] = new TileCoordinates(tileX, tileY, zoomLevel);
                     counter++;
                 }
             }
@@ -172,7 +172,7 @@ namespace TileMapService.Wms
         {
             var mapSize = WebMercator.MapSize(width, geoBBox.MinLongitude, geoBBox.MaxLongitude);
             var minZoom = 0;
-            var minDistance = Double.MaxValue;
+            var minDistance = double.MaxValue;
             for (var zoom = 0; zoom < 24; zoom++) // TODO: range?
             {
                 var mapSizeAtZoom = WebMercator.MapSize(zoom, WebMercator.DefaultTileSize); // TODO: ? use tile size parameter instead of const
@@ -187,8 +187,8 @@ namespace TileMapService.Wms
             return minZoom;
         }
 
-        private static Models.TileCoordinates GetTileCoordinatesAtPoint(double longitude, double latitude, int zoomLevel) =>
-            new Models.TileCoordinates(
+        private static TileCoordinates GetTileCoordinatesAtPoint(double longitude, double latitude, int zoomLevel) =>
+            new(
                 (int)Math.Floor(WebMercator.TileCoordinateXAtZoom(longitude, zoomLevel)),
                 (int)Math.Floor(WebMercator.TileCoordinateYAtZoom(latitude, zoomLevel)),
                 zoomLevel);

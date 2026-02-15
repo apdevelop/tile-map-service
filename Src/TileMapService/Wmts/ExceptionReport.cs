@@ -1,5 +1,4 @@
-﻿using System;
-using System.Xml;
+﻿using System.Xml;
 
 namespace TileMapService.Wmts
 {
@@ -18,9 +17,9 @@ namespace TileMapService.Wmts
         public XmlDocument ToXml()
         {
             var doc = new XmlDocument();
-            var rootElement = doc.CreateElement(String.Empty, Identifiers.ExceptionReportElement, Identifiers.OwsNamespaceUri);
+            var rootElement = doc.CreateElement(string.Empty, Identifiers.ExceptionReportElement, Identifiers.OwsNamespaceUri);
 
-            var exceptionElement = doc.CreateElement(String.Empty, Identifiers.ExceptionElement, Identifiers.OwsNamespaceUri);
+            var exceptionElement = doc.CreateElement(string.Empty, Identifiers.ExceptionElement, Identifiers.OwsNamespaceUri);
             exceptionElement.SetAttribute(Identifiers.ExceptionCodeAttribute, this.exceptionCode);
             exceptionElement.AppendChild(doc.CreateTextNode(this.message));
             rootElement.AppendChild(exceptionElement);

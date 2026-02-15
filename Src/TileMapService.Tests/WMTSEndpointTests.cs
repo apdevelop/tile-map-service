@@ -131,8 +131,8 @@ namespace TileMapService.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(tileMatrix, Is.Not.Null);
-                Assert.That(Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileWidth", nsManager).InnerText, CultureInfo.InvariantCulture), Is.EqualTo(512));
-                Assert.That(Int32.Parse(tileMatrix.SelectSingleNode("//ns:TileHeight", nsManager).InnerText, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(int.Parse(tileMatrix.SelectSingleNode("//ns:TileWidth", nsManager).InnerText, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(int.Parse(tileMatrix.SelectSingleNode("//ns:TileHeight", nsManager).InnerText, CultureInfo.InvariantCulture), Is.EqualTo(512));
             });
         }
 

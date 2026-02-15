@@ -71,14 +71,14 @@ namespace TileMapService.Utils
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Models.Bounds GetTileBounds(int tileX, int tileY, int zoomLevel) =>
-            new Models.Bounds(
+            new(
                 TileXtoEpsg3857X(tileX, zoomLevel),
                 TileYtoEpsg3857Y(tileY + 1, zoomLevel),
                 TileXtoEpsg3857X(tileX + 1, zoomLevel),
                 TileYtoEpsg3857Y(tileY, zoomLevel));
 
         public static Models.GeographicalBounds GetTileGeographicalBounds(int tileX, int tileY, int zoomLevel) =>
-            new Models.GeographicalBounds(
+            new(
                 new Models.GeographicalPoint(PixelXToLongitude(TileSize * tileX, zoomLevel), PixelYToLatitude(TileSize * tileY + TileSize, zoomLevel)),
                 new Models.GeographicalPoint(PixelXToLongitude(TileSize * tileX + TileSize, zoomLevel), PixelYToLatitude(TileSize * tileY, zoomLevel)));
 

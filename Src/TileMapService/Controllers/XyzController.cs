@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +34,7 @@ namespace TileMapService.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTileWithUrlQueryParametersAsync(string id, int x, int y, int z, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(id))
             {
                 return BadRequest();
             }
@@ -64,7 +63,7 @@ namespace TileMapService.Controllers
         [HttpGet("{id}/{z}/{x}/{y}.{extension}")]
         public async Task<IActionResult> GetTileWithUrlPathAsync(string id, int x, int y, int z, string extension, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(extension))
+            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(extension))
             {
                 return BadRequest();
             }
@@ -89,7 +88,7 @@ namespace TileMapService.Controllers
         [HttpGet("{tileset}/{z}/{x}/{y}")]
         public async Task<IActionResult> GetTileWithUrlPathAsync(string id, int x, int y, int z, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(id))
             {
                 return BadRequest();
             }
@@ -114,7 +113,7 @@ namespace TileMapService.Controllers
                 return NotFound();
             }
 
-            if (String.IsNullOrEmpty(mediaType))
+            if (string.IsNullOrEmpty(mediaType))
             {
                 mediaType = MediaTypeNames.Image.Png;
             }

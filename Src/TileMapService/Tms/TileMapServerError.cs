@@ -1,5 +1,4 @@
-﻿using System;
-using System.Xml;
+﻿using System.Xml;
 
 namespace TileMapService.Tms
 {
@@ -15,7 +14,7 @@ namespace TileMapService.Tms
         public XmlDocument ToXml()
         {
             var doc = new XmlDocument();
-            var rootElement = doc.CreateElement(String.Empty, "TileMapServerError", String.Empty);
+            var rootElement = doc.CreateElement(string.Empty, "TileMapServerError", string.Empty);
 
             var messageElement = doc.CreateElement("Message");
             messageElement.AppendChild(doc.CreateTextNode(this.message));

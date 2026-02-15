@@ -56,29 +56,29 @@ namespace TileMapService.Controllers
 #pragma warning restore IDE0060, S107, S6967
         {
             // TODO: check requirements of standard
-            if ((String.Compare(service, Identifiers.WMTS, StringComparison.Ordinal) != 0) &&
-                (String.Compare(service, Identifiers.WMS, StringComparison.Ordinal) != 0)) // QGIS compatibility
+            if ((string.Compare(service, Identifiers.WMTS, StringComparison.Ordinal) != 0) &&
+                (string.Compare(service, Identifiers.WMS, StringComparison.Ordinal) != 0)) // QGIS compatibility
             {
                 return ResponseWithBadRequestError(Identifiers.MissingParameterValue, $"{QueryUtility.WmtsQueryService} parameter is not defined");
             }
 
-            if (String.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
+            if (string.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
             {
                 return ResponseWithBadRequestError(Identifiers.InvalidParameterValue, $"Invalid {QueryUtility.WmtsQueryVersion} parameter value (must be {Identifiers.Version100})");
             }
 
-            if (String.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
+            if (string.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
             {
                 return this.ProcessGetCapabilitiesRequest();
             }
-            else if (String.Compare(request, Identifiers.GetTile, StringComparison.Ordinal) == 0)
+            else if (string.Compare(request, Identifiers.GetTile, StringComparison.Ordinal) == 0)
             {
-                if (String.IsNullOrEmpty(tileMatrix))
+                if (string.IsNullOrEmpty(tileMatrix))
                 {
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, $"{QueryUtility.WmtsQueryTileMatrix} parameter is not defined");
                 }
 
-                if (String.IsNullOrEmpty(layer))
+                if (string.IsNullOrEmpty(layer))
                 {
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, $"{QueryUtility.WmtsQueryLayer} parameter is not defined");
                 }
@@ -88,12 +88,12 @@ namespace TileMapService.Controllers
                     return ResponseWithNotFoundError(Identifiers.NotFound, $"Specified layer '{layer}' was not found");
                 }
 
-                if (String.IsNullOrEmpty(format))
+                if (string.IsNullOrEmpty(format))
                 {
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, $"{QueryUtility.WmtsQueryFormat} parameter is not defined");
                 }
 
-                return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
+                return await this.GetTileAsync(layer, tileCol, tileRow, int.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
             }
             else
             {
@@ -112,7 +112,7 @@ namespace TileMapService.Controllers
         public IActionResult ProcessGetCapabilitiesRestfulRequest(
             string version = Identifiers.Version100)
         {
-            if (String.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
+            if (string.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
             {
                 return ResponseWithBadRequestError(Identifiers.InvalidParameterValue, $"Invalid VERSION parameter value (must be {Identifiers.Version100})");
             }
@@ -147,22 +147,22 @@ namespace TileMapService.Controllers
             CancellationToken cancellationToken = default)
 #pragma warning restore IDE0060, S107
         {
-            if (String.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
+            if (string.Compare(version, Identifiers.Version100, StringComparison.Ordinal) != 0)
             {
                 return ResponseWithBadRequestError(Identifiers.InvalidParameterValue, "Invalid VERSION parameter value (1.0.0 available only)");
             }
 
-            if (String.IsNullOrEmpty(tileMatrixSet))
+            if (string.IsNullOrEmpty(tileMatrixSet))
             {
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "TILEMATRIXSET parameter is not defined");
             }
 
-            if (String.IsNullOrEmpty(tileMatrix))
+            if (string.IsNullOrEmpty(tileMatrix))
             {
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "TILEMATRIX parameter is not defined");
             }
 
-            if (String.IsNullOrEmpty(layer))
+            if (string.IsNullOrEmpty(layer))
             {
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "LAYER parameter is not defined");
             }
@@ -172,12 +172,12 @@ namespace TileMapService.Controllers
                 return ResponseWithNotFoundError(Identifiers.NotFound, $"Specified layer '{layer}' was not found");
             }
 
-            if (String.IsNullOrEmpty(format))
+            if (string.IsNullOrEmpty(format))
             {
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
             }
 
-            return await this.GetTileAsync(layer, tileCol, tileRow, Int32.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
+            return await this.GetTileAsync(layer, tileCol, tileRow, int.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
         private FileContentResult ProcessGetCapabilitiesRequest()

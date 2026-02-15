@@ -144,8 +144,8 @@ namespace TileMapService.Tests
             var tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
             Assert.Multiple(() =>
             {
-                Assert.That(Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
-                Assert.That(Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(int.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(int.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
                 Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("png"));
             });
 
@@ -161,8 +161,8 @@ namespace TileMapService.Tests
             tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
             Assert.Multiple(() =>
             {
-                Assert.That(Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
-                Assert.That(Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
+                Assert.That(int.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
+                Assert.That(int.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
                 Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("jpg"));
             });
 
@@ -174,13 +174,13 @@ namespace TileMapService.Tests
             Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
-            Assert.That(xml.SelectSingleNode("/TileMap/Abstract").InnerText, Is.EqualTo(String.Empty));
+            Assert.That(xml.SelectSingleNode("/TileMap/Abstract").InnerText, Is.EqualTo(string.Empty));
             
             tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
             Assert.Multiple(() =>
             {
-                Assert.That(Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
-                Assert.That(Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
+                Assert.That(int.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
+                Assert.That(int.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
                 Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("jpg")); // TODO: or "jpeg" ?
             });
 
@@ -208,8 +208,8 @@ namespace TileMapService.Tests
             var tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
             Assert.Multiple(() =>
             {
-                Assert.That(Int32.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
-                Assert.That(Int32.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(int.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
+                Assert.That(int.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
                 Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("png"));
             });
 

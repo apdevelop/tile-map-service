@@ -37,7 +37,7 @@ namespace TileMapService
             else
             {
                 this.tileSources = sources
-                        .Where(c => !String.IsNullOrEmpty(c.Id)) // Skip disabled sources
+                        .Where(c => !string.IsNullOrEmpty(c.Id)) // Skip disabled sources
                         .ToDictionary(c => c.Id, c => CreateTileSource(c));
             }
 
@@ -71,9 +71,10 @@ namespace TileMapService
 
         ITileSource ITileSourceFabric.Get(string id) => this.tileSources[id];
 
-        List<SourceConfiguration> ITileSourceFabric.Sources => this.tileSources
-                        .Select(s => s.Value.Configuration)
-                        .ToList();
+        List<SourceConfiguration> ITileSourceFabric.Sources =>
+            this.tileSources
+                .Select(s => s.Value.Configuration)
+                .ToList();
 
         ServiceProperties ITileSourceFabric.ServiceProperties => this.serviceProperties;
 
@@ -81,12 +82,9 @@ namespace TileMapService
 
         private ITileSource CreateTileSource(SourceConfiguration config)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
+            ArgumentNullException.ThrowIfNull(config);
 
-            if (String.IsNullOrEmpty(config.Type))
+            if (string.IsNullOrEmpty(config.Type))
             {
                 throw new InvalidOperationException("config.Type is null or empty");
             }

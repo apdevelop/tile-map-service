@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace TileMapService.Models
 {
@@ -17,11 +16,10 @@ namespace TileMapService.Models
             var items = s.Split(',');
             return new GeographicalPointWithZoom
             {
-                Longitude = Double.Parse(items[0], CultureInfo.InvariantCulture),
-                Latitude = Double.Parse(items[1], CultureInfo.InvariantCulture),
-                ZoomLevel = Int32.Parse(items[2], CultureInfo.InvariantCulture),
+                Longitude = double.Parse(items[0], CultureInfo.InvariantCulture),
+                Latitude = double.Parse(items[1], CultureInfo.InvariantCulture),
+                ZoomLevel = int.Parse(items[2], CultureInfo.InvariantCulture),
             };
         }
     }
 }
-

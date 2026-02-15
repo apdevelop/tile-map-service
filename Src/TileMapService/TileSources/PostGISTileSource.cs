@@ -19,12 +19,12 @@ namespace TileMapService.TileSources
 
         public PostGisTileSource(SourceConfiguration configuration)
         {
-            if (String.IsNullOrEmpty(configuration.Id))
+            if (string.IsNullOrEmpty(configuration.Id))
             {
                 throw new ArgumentException("Source identifier is null or empty string.");
             }
 
-            if (String.IsNullOrEmpty(configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new ArgumentException("Source location is null or empty string.");
             }
@@ -37,9 +37,9 @@ namespace TileMapService.TileSources
 
         Task ITileSource.InitAsync()
         {
-            var title = String.IsNullOrEmpty(this.configuration.Title) ?
-                    this.configuration.Id :
-                    this.configuration.Title;
+            var title = string.IsNullOrEmpty(this.configuration.Title)
+                ? this.configuration.Id
+                : this.configuration.Title;
 
             var minZoom = this.configuration.MinZoom ?? 0;
             var maxZoom = this.configuration.MaxZoom ?? 20;
@@ -84,17 +84,17 @@ namespace TileMapService.TileSources
             {
                 var postgis = this.configuration.PostGis ?? throw new InvalidOperationException("PostGIS connection options must be defined.");
 
-                if (String.IsNullOrWhiteSpace(postgis.Table))
+                if (string.IsNullOrWhiteSpace(postgis.Table))
                 {
                     throw new InvalidOperationException("Table name must be defined.");
                 }
 
-                if (String.IsNullOrWhiteSpace(postgis.Geometry))
+                if (string.IsNullOrWhiteSpace(postgis.Geometry))
                 {
                     throw new InvalidOperationException("Table geometry field must be defined.");
                 }
 
-                var fields = !String.IsNullOrWhiteSpace(postgis.Fields)
+                var fields = !string.IsNullOrWhiteSpace(postgis.Fields)
                     ? postgis.Fields.Split(FieldsSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     : null;
 
@@ -111,7 +111,7 @@ namespace TileMapService.TileSources
 
         SourceConfiguration ITileSource.Configuration => this.configuration;
 
-        private static readonly string[] FieldsSeparator = new string[] { "," };
+        private static readonly string[] FieldsSeparator = [","];
 
         #endregion
 
@@ -132,7 +132,7 @@ namespace TileMapService.TileSources
                     WITH mvtgeom AS
                     (
                         SELECT ST_AsMVTGeom({geometry}, ST_TileEnvelope({z},{x},{y})) AS geom 
-                            {(fields != null && fields.Length > 0 ? ", " + String.Join(',', fields) : String.Empty)}
+                            {(fields != null && fields.Length > 0 ? ", " + string.Join(',', fields) : string.Empty)}
                         FROM ""{tableName}""
                         WHERE ST_Intersects({geometry}, ST_TileEnvelope({z},{x},{y}))
                     )

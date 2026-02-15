@@ -31,10 +31,7 @@ namespace TileMapService.Models
         /// <returns></returns>
         public static GeographicalBounds FromCommaSeparatedString(string s)
         {
-            if (s == null)
-            {
-                throw new ArgumentNullException(nameof(s));
-            }
+            ArgumentNullException.ThrowIfNull(s);
 
             var items = s.Split(',');
             if (items.Length != 4)
@@ -44,60 +41,24 @@ namespace TileMapService.Models
 
             return new GeographicalBounds(
                 new GeographicalPoint(
-                    Double.Parse(items[0], CultureInfo.InvariantCulture),
-                    Double.Parse(items[1], CultureInfo.InvariantCulture)),
+                    double.Parse(items[0], CultureInfo.InvariantCulture),
+                    double.Parse(items[1], CultureInfo.InvariantCulture)),
                 new GeographicalPoint(
-                    Double.Parse(items[2], CultureInfo.InvariantCulture),
-                    Double.Parse(items[3], CultureInfo.InvariantCulture))
+                    double.Parse(items[2], CultureInfo.InvariantCulture),
+                    double.Parse(items[3], CultureInfo.InvariantCulture))
             );
         }
 
-        public GeographicalPoint Min
-        {
-            get
-            {
-                return this.pointMin;
-            }
-        }
+        public GeographicalPoint Min => this.pointMin;
 
-        public GeographicalPoint Max
-        {
-            get
-            {
-                return this.pointMax;
-            }
-        }
+        public GeographicalPoint Max => this.pointMax;
 
-        public double MinLongitude
-        {
-            get
-            {
-                return this.pointMin.Longitude;
-            }
-        }
+        public double MinLongitude => this.pointMin.Longitude;
 
-        public double MinLatitude
-        {
-            get
-            {
-                return this.pointMin.Latitude;
-            }
-        }
+        public double MinLatitude => this.pointMin.Latitude;
 
-        public double MaxLongitude
-        {
-            get
-            {
-                return this.pointMax.Longitude;
-            }
-        }
+        public double MaxLongitude => this.pointMax.Longitude;
 
-        public double MaxLatitude
-        {
-            get
-            {
-                return this.pointMax.Latitude;
-            }
-        }
+        public double MaxLatitude => this.pointMax.Latitude;
     }
 }

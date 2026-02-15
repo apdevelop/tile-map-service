@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -22,7 +21,7 @@ namespace TileMapService.MBTiles
             var bounds = this.GetItem(MetadataItem.KeyBounds);
             if (bounds != null)
             {
-                if (!String.IsNullOrEmpty(bounds.Value))
+                if (!string.IsNullOrEmpty(bounds.Value))
                 {
                     this.Bounds = Models.GeographicalBounds.FromCommaSeparatedString(bounds.Value);
                 }
@@ -31,28 +30,22 @@ namespace TileMapService.MBTiles
             var center = this.GetItem(MetadataItem.KeyCenter);
             if (center != null)
             {
-                if (!String.IsNullOrEmpty(center.Value))
+                if (!string.IsNullOrEmpty(center.Value))
                 {
                     this.Center = Models.GeographicalPointWithZoom.FromMBTilesMetadataString(center.Value);
                 }
             }
 
-            var minzoom = this.GetItem(MetadataItem.KeyMinZoom);
-            if (minzoom != null)
+            var minZoom = this.GetItem(MetadataItem.KeyMinZoom);
+            if (minZoom != null && int.TryParse(minZoom.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int minZoomValue))
             {
-                if (Int32.TryParse(minzoom.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int minZoomValue))
-                {
-                    this.MinZoom = minZoomValue;
-                }
+                this.MinZoom = minZoomValue;
             }
 
-            var maxzoom = this.GetItem(MetadataItem.KeyMaxZoom);
-            if (maxzoom != null)
+            var maxZoom = this.GetItem(MetadataItem.KeyMaxZoom);
+            if (maxZoom != null && int.TryParse(maxZoom.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int maxZoomValue))
             {
-                if (Int32.TryParse(maxzoom.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int maxZoomValue))
-                {
-                    this.MaxZoom = maxZoomValue;
-                }
+                this.MaxZoom = maxZoomValue;
             }
 
             this.Attribution = this.GetItem(MetadataItem.KeyAttribution)?.Value;

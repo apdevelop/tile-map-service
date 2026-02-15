@@ -45,7 +45,7 @@ namespace TileMapService.Wmts
             SourceConfiguration configuration,
             int x, int y, int z)
         {
-            if (String.IsNullOrWhiteSpace(configuration.Location))
+            if (string.IsNullOrWhiteSpace(configuration.Location))
             {
                 throw new ArgumentException("Location must be valid string");
             }
@@ -65,8 +65,8 @@ namespace TileMapService.Wmts
                 var items = Utils.UrlHelper.GetQueryParameters(baseUrl);
 
                 // Layer
-                var layer = String.Empty;
-                if (configuration.Wmts != null && !String.IsNullOrWhiteSpace(configuration.Wmts.Layer))
+                var layer = string.Empty;
+                if (configuration.Wmts != null && !string.IsNullOrWhiteSpace(configuration.Wmts.Layer))
                 {
                     layer = configuration.Wmts.Layer;
                 }
@@ -77,7 +77,7 @@ namespace TileMapService.Wmts
 
                 // Style
                 var style = "normal";
-                if (configuration.Wmts != null && !String.IsNullOrWhiteSpace(configuration.Wmts.Style))
+                if (configuration.Wmts != null && !string.IsNullOrWhiteSpace(configuration.Wmts.Style))
                 {
                     style = configuration.Wmts.Style;
                 }
@@ -87,8 +87,8 @@ namespace TileMapService.Wmts
                 }
 
                 // TileMatrixSet
-                var tileMatrixSet = String.Empty;
-                if (configuration.Wmts != null && !String.IsNullOrWhiteSpace(configuration.Wmts.TileMatrixSet))
+                var tileMatrixSet = string.Empty;
+                if (configuration.Wmts != null && !string.IsNullOrWhiteSpace(configuration.Wmts.TileMatrixSet))
                 {
                     tileMatrixSet = configuration.Wmts.TileMatrixSet;
                 }
@@ -99,7 +99,7 @@ namespace TileMapService.Wmts
 
                 // Format
                 var format = MediaTypeNames.Image.Png;
-                if (!String.IsNullOrWhiteSpace(configuration.ContentType))
+                if (!string.IsNullOrWhiteSpace(configuration.ContentType))
                 {
                     format = configuration.ContentType;
                 }
@@ -107,7 +107,7 @@ namespace TileMapService.Wmts
                 // TileMatrix
                 var tileMatrix = z.ToString(CultureInfo.InvariantCulture);
                 var tms = configuration.TileMatrixSet.FirstOrDefault(t => t.Identifier == tileMatrixSet);
-                if (tms != null && z < tms.TileMatrices.Length && !String.IsNullOrEmpty(tms.TileMatrices[z].Identifier))
+                if (tms != null && z < tms.TileMatrices.Length && !string.IsNullOrEmpty(tms.TileMatrices[z].Identifier))
                 {
                     tileMatrix = tms.TileMatrices[z].Identifier!; // Assuming Zoom level indexed array
                 }
@@ -131,8 +131,8 @@ namespace TileMapService.Wmts
         }
 
         private static bool IsResourceUrl(string url) =>
-            (url.IndexOf("{" + WmtsQueryTileMatrix + "}", StringComparison.OrdinalIgnoreCase) >= 0) &&
-            (url.IndexOf("{" + WmtsQueryTileRow + "}", StringComparison.OrdinalIgnoreCase) >= 0) &&
-            (url.IndexOf("{" + WmtsQueryTileColumn + "}", StringComparison.OrdinalIgnoreCase) >= 0);
+            url.Contains("{" + WmtsQueryTileMatrix + "}", StringComparison.OrdinalIgnoreCase) &&
+            url.Contains("{" + WmtsQueryTileRow + "}", StringComparison.OrdinalIgnoreCase) &&
+            url.Contains("{" + WmtsQueryTileColumn + "}", StringComparison.OrdinalIgnoreCase);
     }
 }

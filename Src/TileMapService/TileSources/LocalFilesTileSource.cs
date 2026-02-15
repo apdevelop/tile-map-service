@@ -20,12 +20,12 @@ namespace TileMapService.TileSources
 
         public LocalFilesTileSource(SourceConfiguration configuration)
         {
-            if (String.IsNullOrEmpty(configuration.Id))
+            if (string.IsNullOrEmpty(configuration.Id))
             {
                 throw new ArgumentException("Source identifier is null or empty string");
             }
 
-            if (String.IsNullOrEmpty(configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new ArgumentException("Source location is null or empty string");
             }
@@ -37,12 +37,12 @@ namespace TileMapService.TileSources
 
         Task ITileSource.InitAsync()
         {
-            if (String.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(this.configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Format)) // TODO: from first file, if any
+            if (string.IsNullOrEmpty(this.configuration.Format)) // TODO: from first file, if any
             {
                 throw new InvalidOperationException("configuration.Format is null or empty");
             }
@@ -62,18 +62,20 @@ namespace TileMapService.TileSources
                 var baseFolder = new Uri(this.configuration.Location[..zIndex]).LocalPath;
                 foreach (var directory in Directory.GetDirectories(baseFolder))
                 {
-                    if (Int32.TryParse(Path.GetFileName(directory), out int zoomLevel)) // Directory name is integer number
+                    if (int.TryParse(Path.GetFileName(directory), out int zoomLevel)) // Directory name is integer number
                     {
                         zoomLevels.Add(zoomLevel);
                     }
                 }
             }
 
-            var title = String.IsNullOrEmpty(this.configuration.Title) ?
-                this.configuration.Id :
-                this.configuration.Title;
+            var title = string.IsNullOrEmpty(this.configuration.Title)
+                ? this.configuration.Id
+                : this.configuration.Title;
 
-            var srs = String.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
+            var srs = string.IsNullOrWhiteSpace(this.configuration.Srs)
+                ? Utils.SrsCodes.EPSG3857
+                : this.configuration.Srs.Trim().ToUpper();
 
             var minZoom = this.configuration.MinZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Min(z => z) : 0);
             var maxZoom = this.configuration.MaxZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 20);
@@ -112,7 +114,7 @@ namespace TileMapService.TileSources
             }
             else
             {
-                if (String.IsNullOrEmpty(this.configuration.Location))
+                if (string.IsNullOrEmpty(this.configuration.Location))
                 {
                     throw new InvalidOperationException("configuration.Location is null or empty");
                 }
@@ -139,12 +141,10 @@ namespace TileMapService.TileSources
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetLocalFilePath(string template, int x, int y, int z)
-        {
-            return template
-                    .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
-                    .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
-                    .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);
-        }
+        private static string GetLocalFilePath(string template, int x, int y, int z) =>
+            template
+                .Replace("{x}", x.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+                .Replace("{y}", y.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+                .Replace("{z}", z.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);
     }
 }

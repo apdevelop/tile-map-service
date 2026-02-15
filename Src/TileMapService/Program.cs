@@ -33,7 +33,7 @@ namespace TileMapService
                 .AddConsole());
 
             var logger = loggerFactory.CreateLogger(typeof(Program));
-            logger.LogInformation($"System info: {Environment.NewLine}{String.Join(Environment.NewLine, GetEnvironmentInfo())}");
+            logger.LogInformation($"System info: {Environment.NewLine}{string.Join(Environment.NewLine, GetEnvironmentInfo())}");
 
             if (app.Services.GetService(typeof(ITileSourceFabric)) is ITileSourceFabric tileSourceFabric)
             {

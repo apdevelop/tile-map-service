@@ -45,7 +45,7 @@ namespace TileMapService.Wmts
         public XmlDocument GetCapabilities()
         {
             var doc = new XmlDocument();
-            var rootElement = doc.CreateElement(String.Empty, "Capabilities", WmtsNamespaceUri);
+            var rootElement = doc.CreateElement(string.Empty, "Capabilities", WmtsNamespaceUri);
             rootElement.SetAttribute("xmlns:" + OwsPrefix, Identifiers.OwsNamespaceUri);
             rootElement.SetAttribute("xmlns:" + XlinkPrefix, Identifiers.XlinkNamespaceUri);
             rootElement.SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
@@ -56,11 +56,11 @@ namespace TileMapService.Wmts
             var serviceIdentificationElement = doc.CreateElement(OwsPrefix, "ServiceIdentification", Identifiers.OwsNamespaceUri);
 
             var titleElement = doc.CreateElement(OwsPrefix, Identifiers.TitleElement, Identifiers.OwsNamespaceUri);
-            titleElement.InnerText = this.service.Title ?? String.Empty;
+            titleElement.InnerText = this.service.Title ?? string.Empty;
             serviceIdentificationElement.AppendChild(titleElement);
 
             var abstractElement = doc.CreateElement(OwsPrefix, Identifiers.AbstractElement, Identifiers.OwsNamespaceUri);
-            abstractElement.InnerText = this.service.Abstract ?? String.Empty;
+            abstractElement.InnerText = this.service.Abstract ?? string.Empty;
             serviceIdentificationElement.AppendChild(abstractElement);
 
             var serviceKeywordListElement = doc.CreateElement(OwsPrefix, Identifiers.KeywordsElement, Identifiers.OwsNamespaceUri);
@@ -68,7 +68,7 @@ namespace TileMapService.Wmts
             {
                 foreach (var keyword in service.Keywords)
                 {
-                    if (!String.IsNullOrWhiteSpace(keyword))
+                    if (!string.IsNullOrWhiteSpace(keyword))
                     {
                         var serviceKeywordElement = doc.CreateElement(OwsPrefix, Identifiers.KeywordElement, Identifiers.OwsNamespaceUri);
                         serviceKeywordElement.InnerText = keyword;
@@ -92,7 +92,7 @@ namespace TileMapService.Wmts
             var serviceProviderElement = doc.CreateElement(OwsPrefix, "ServiceProvider", Identifiers.OwsNamespaceUri);
             var serviceContactElement = doc.CreateElement(OwsPrefix, "ServiceContact", Identifiers.OwsNamespaceUri);
             var contactInfoElement = doc.CreateElement(OwsPrefix, "ContactInfo", Identifiers.OwsNamespaceUri);
-            contactInfoElement.InnerText = String.Empty;
+            contactInfoElement.InnerText = string.Empty;
             serviceContactElement.AppendChild(contactInfoElement);
             serviceProviderElement.AppendChild(serviceContactElement);
 
@@ -116,7 +116,7 @@ namespace TileMapService.Wmts
             // TODO: ? GetFeatureInfo
             rootElement.AppendChild(operationsMetadataElement);
 
-            var contentsElement = doc.CreateElement(String.Empty, "Contents", WmtsNamespaceUri);
+            var contentsElement = doc.CreateElement(string.Empty, "Contents", WmtsNamespaceUri);
 
             var identifiers = new HashSet<string>();
             foreach (var layer in this.layers)
@@ -125,7 +125,7 @@ namespace TileMapService.Wmts
                 {
                     case Utils.SrsCodes.EPSG3857:
                         {
-                            var identifier = String.Format(CultureInfo.InvariantCulture, "google3857_{0}-{1}", layer.MinZoom, layer.MaxZoom);
+                            var identifier = string.Format(CultureInfo.InvariantCulture, "google3857_{0}-{1}", layer.MinZoom, layer.MaxZoom);
                             contentsElement.AppendChild(CreateLayerElement(doc, this.baseUrl, layer, identifier));
                             if (identifiers.Add(identifier))
                             {
@@ -141,7 +141,7 @@ namespace TileMapService.Wmts
                         }
                     case Utils.SrsCodes.EPSG4326:
                         {
-                            var identifier = String.Format(CultureInfo.InvariantCulture, "WGS84_{0}-{1}", layer.MinZoom, layer.MaxZoom);
+                            var identifier = string.Format(CultureInfo.InvariantCulture, "WGS84_{0}-{1}", layer.MinZoom, layer.MaxZoom);
                             contentsElement.AppendChild(CreateLayerElement(doc, this.baseUrl, layer, identifier));
                             if (identifiers.Add(identifier))
                             {
@@ -204,15 +204,15 @@ namespace TileMapService.Wmts
                         var upperCorner = wgs84bbox.SelectSingleNode(OwsPrefix + ":" + Identifiers.UpperCornerElement, nsManager);
                         if (lowerCorner != null &&
                             upperCorner != null &&
-                            !String.IsNullOrEmpty(lowerCorner.InnerText) &&
-                            !String.IsNullOrEmpty(lowerCorner.InnerText))
+                            !string.IsNullOrEmpty(lowerCorner.InnerText) &&
+                            !string.IsNullOrEmpty(lowerCorner.InnerText))
                         {
                             var lowerCornerValues = lowerCorner.InnerText.Split(' ');
                             var upperCornerValues = upperCorner.InnerText.Split(' ');
-                            var minx = Double.Parse(lowerCornerValues[0], CultureInfo.InvariantCulture);
-                            var miny = Double.Parse(lowerCornerValues[1], CultureInfo.InvariantCulture);
-                            var maxx = Double.Parse(upperCornerValues[0], CultureInfo.InvariantCulture);
-                            var maxy = Double.Parse(upperCornerValues[1], CultureInfo.InvariantCulture);
+                            var minx = double.Parse(lowerCornerValues[0], CultureInfo.InvariantCulture);
+                            var miny = double.Parse(lowerCornerValues[1], CultureInfo.InvariantCulture);
+                            var maxx = double.Parse(upperCornerValues[0], CultureInfo.InvariantCulture);
+                            var maxy = double.Parse(upperCornerValues[1], CultureInfo.InvariantCulture);
                             geographicalBounds = new M.GeographicalBounds(minx, miny, maxx, maxy);
                         }
 
@@ -252,8 +252,8 @@ namespace TileMapService.Wmts
 
                     result.Add(new M.Layer
                     {
-                        Identifier = layerIdentifier != null ? layerIdentifier.InnerText : String.Empty,
-                        Title = layerTitle != null ? layerTitle.InnerText : String.Empty,
+                        Identifier = layerIdentifier != null ? layerIdentifier.InnerText : string.Empty,
+                        Title = layerTitle != null ? layerTitle.InnerText : string.Empty,
                         GeographicalBounds = geographicalBounds,
                         TileMatrixSet = layersTileMatrixSets.ToArray(),
                     });
@@ -304,31 +304,31 @@ namespace TileMapService.Wmts
             M.Layer layer,
             string tileMatrixSetIdentifier)
         {
-            var layerElement = doc.CreateElement(String.Empty, Identifiers.LayerElement, WmtsNamespaceUri);
+            var layerElement = doc.CreateElement(string.Empty, Identifiers.LayerElement, WmtsNamespaceUri);
 
             var titleElement = doc.CreateElement(OwsPrefix, "Title", Identifiers.OwsNamespaceUri);
-            titleElement.InnerText = layer.Title ?? String.Empty;
+            titleElement.InnerText = layer.Title ?? string.Empty;
             layerElement.AppendChild(titleElement);
 
             var abstractElement = doc.CreateElement(OwsPrefix, "Abstract", Identifiers.OwsNamespaceUri);
-            abstractElement.InnerText = layer.Abstract ?? String.Empty;
+            abstractElement.InnerText = layer.Abstract ?? string.Empty;
             layerElement.AppendChild(abstractElement);
 
             var identifierElement = doc.CreateElement(OwsPrefix, "Identifier", Identifiers.OwsNamespaceUri);
-            identifierElement.InnerText = layer.Identifier ?? String.Empty;
+            identifierElement.InnerText = layer.Identifier ?? string.Empty;
             layerElement.AppendChild(identifierElement);
 
             const string StyleNormal = "normal";
 
-            var styleElement = doc.CreateElement(String.Empty, "Style", WmtsNamespaceUri);
+            var styleElement = doc.CreateElement(string.Empty, "Style", WmtsNamespaceUri);
             var styleIdentifierElement = doc.CreateElement(OwsPrefix, "Identifier", Identifiers.OwsNamespaceUri);
             styleIdentifierElement.InnerText = StyleNormal;
             styleElement.SetAttribute("isDefault", "true");
             styleElement.AppendChild(styleIdentifierElement);
             layerElement.AppendChild(styleElement);
 
-            var formatElement = doc.CreateElement(String.Empty, "Format", WmtsNamespaceUri);
-            formatElement.InnerText = layer.ContentType ?? String.Empty;
+            var formatElement = doc.CreateElement(string.Empty, "Format", WmtsNamespaceUri);
+            formatElement.InnerText = layer.ContentType ?? string.Empty;
             layerElement.AppendChild(formatElement);
 
             const string LowerCornerElementName = "LowerCorner";
@@ -336,7 +336,7 @@ namespace TileMapService.Wmts
             var wgs84BoundingBoxElement = doc.CreateElement(OwsPrefix, "WGS84BoundingBox", Identifiers.OwsNamespaceUri);
 
             static string FormatPoint(M.GeographicalPoint point) =>
-                String.Format( // TODO: rounding rule ?
+                string.Format( // TODO: rounding rule ?
                     CultureInfo.InvariantCulture,
                     "{0:0.000000##########} {1:0.000000##########}",
                     point.Longitude,
@@ -388,17 +388,17 @@ namespace TileMapService.Wmts
                     }
             }
 
-            var tileMatrixSetLinkElement = doc.CreateElement(String.Empty, "TileMatrixSetLink", WmtsNamespaceUri);
+            var tileMatrixSetLinkElement = doc.CreateElement(string.Empty, "TileMatrixSetLink", WmtsNamespaceUri);
 
-            var tileMatrixSetElement = doc.CreateElement(String.Empty, "TileMatrixSet", WmtsNamespaceUri);
+            var tileMatrixSetElement = doc.CreateElement(string.Empty, "TileMatrixSet", WmtsNamespaceUri);
             tileMatrixSetElement.InnerText = tileMatrixSetIdentifier;
 
             tileMatrixSetLinkElement.AppendChild(tileMatrixSetElement);
             layerElement.AppendChild(tileMatrixSetLinkElement);
 
             // https://<wmts-url>/tile/<wmts-version>/<layer>/<style>/<tilematrixset>/<tilematrix>/<tilerow>/<tilecol>.<format>
-            var resourceURLElement = doc.CreateElement(String.Empty, Identifiers.ResourceURLElement, WmtsNamespaceUri);
-            resourceURLElement.SetAttribute("format", layer.ContentType ?? String.Empty);
+            var resourceURLElement = doc.CreateElement(string.Empty, Identifiers.ResourceURLElement, WmtsNamespaceUri);
+            resourceURLElement.SetAttribute("format", layer.ContentType ?? string.Empty);
             resourceURLElement.SetAttribute("template", $"{baseUrl}/tile/{Identifiers.Version100}/{layer.Identifier}/{{Style}}/{{TileMatrixSet}}/{{TileMatrix}}/{{TileRow}}/{{TileCol}}.{layer.Format}");
             resourceURLElement.SetAttribute("resourceType", "tile");
             layerElement.AppendChild(resourceURLElement);
@@ -413,7 +413,7 @@ namespace TileMapService.Wmts
             string supportedCrs,
             string wellKnownScaleSet)
         {
-            var tileMatrixSetElement = doc.CreateElement(String.Empty, "TileMatrixSet", WmtsNamespaceUri);
+            var tileMatrixSetElement = doc.CreateElement(string.Empty, "TileMatrixSet", WmtsNamespaceUri);
 
             var identifierElement = doc.CreateElement(OwsPrefix, "Identifier", Identifiers.OwsNamespaceUri);
             identifierElement.InnerText = identifier;
@@ -458,13 +458,13 @@ namespace TileMapService.Wmts
             supportedCRSElement.InnerText = supportedCrs;
             tileMatrixSetElement.AppendChild(supportedCRSElement);
 
-            var wellKnownScaleSetElement = doc.CreateElement(String.Empty, "WellKnownScaleSet", WmtsNamespaceUri);
+            var wellKnownScaleSetElement = doc.CreateElement(string.Empty, "WellKnownScaleSet", WmtsNamespaceUri);
             wellKnownScaleSetElement.InnerText = wellKnownScaleSet;
             tileMatrixSetElement.AppendChild(wellKnownScaleSetElement);
 
             for (var zoom = layer.MinZoom; zoom <= layer.MaxZoom; zoom++)
             {
-                var tileMatrixElement = doc.CreateElement(String.Empty, "TileMatrix", WmtsNamespaceUri);
+                var tileMatrixElement = doc.CreateElement(string.Empty, "TileMatrix", WmtsNamespaceUri);
 
                 var tileMatrixIdentifierElement = doc.CreateElement(OwsPrefix, "Identifier", Identifiers.OwsNamespaceUri);
                 tileMatrixIdentifierElement.InnerText = zoom.ToString(CultureInfo.InvariantCulture);
@@ -480,11 +480,11 @@ namespace TileMapService.Wmts
                             matrixWidth = 1 << zoom;
                             matrixHeight = 1 << zoom;
 
-                            var scaleDenominatorElement = doc.CreateElement(String.Empty, "ScaleDenominator", WmtsNamespaceUri);
+                            var scaleDenominatorElement = doc.CreateElement(string.Empty, "ScaleDenominator", WmtsNamespaceUri);
                             scaleDenominatorElement.InnerText = (scaleDenominator / ((double)(1 << zoom))).ToString(CultureInfo.InvariantCulture);
                             tileMatrixElement.AppendChild(scaleDenominatorElement);
 
-                            var topLeftCornerElement = doc.CreateElement(String.Empty, "TopLeftCorner", WmtsNamespaceUri);
+                            var topLeftCornerElement = doc.CreateElement(string.Empty, "TopLeftCorner", WmtsNamespaceUri);
                             topLeftCornerElement.InnerText = "-20037508.342789 20037508.342789"; // TODO: const
                             tileMatrixElement.AppendChild(topLeftCornerElement);
                             break;
@@ -495,11 +495,11 @@ namespace TileMapService.Wmts
                             matrixWidth = 2 * (1 << zoom);
                             matrixHeight = 1 << zoom;
 
-                            var scaleDenominatorElement = doc.CreateElement(String.Empty, "ScaleDenominator", WmtsNamespaceUri);
+                            var scaleDenominatorElement = doc.CreateElement(string.Empty, "ScaleDenominator", WmtsNamespaceUri);
                             scaleDenominatorElement.InnerText = (scaleDenominator / ((double)(1 << zoom))).ToString(CultureInfo.InvariantCulture);
                             tileMatrixElement.AppendChild(scaleDenominatorElement);
 
-                            var topLeftCornerElement = doc.CreateElement(String.Empty, "TopLeftCorner", WmtsNamespaceUri);
+                            var topLeftCornerElement = doc.CreateElement(string.Empty, "TopLeftCorner", WmtsNamespaceUri);
                             topLeftCornerElement.InnerText = "90.000000 -180.000000"; // TODO: const
                             tileMatrixElement.AppendChild(topLeftCornerElement);
                             break;
@@ -510,19 +510,19 @@ namespace TileMapService.Wmts
                         }
                 }
 
-                var tileWidthElement = doc.CreateElement(String.Empty, Identifiers.TileWidthElement, WmtsNamespaceUri);
+                var tileWidthElement = doc.CreateElement(string.Empty, Identifiers.TileWidthElement, WmtsNamespaceUri);
                 tileWidthElement.InnerText = layer.TileWidth.ToString(CultureInfo.InvariantCulture);
                 tileMatrixElement.AppendChild(tileWidthElement);
 
-                var tileHeightElement = doc.CreateElement(String.Empty, Identifiers.TileHeightElement, WmtsNamespaceUri);
+                var tileHeightElement = doc.CreateElement(string.Empty, Identifiers.TileHeightElement, WmtsNamespaceUri);
                 tileHeightElement.InnerText = layer.TileHeight.ToString(CultureInfo.InvariantCulture);
                 tileMatrixElement.AppendChild(tileHeightElement);
 
-                var matrixWidthElement = doc.CreateElement(String.Empty, "MatrixWidth", WmtsNamespaceUri);
+                var matrixWidthElement = doc.CreateElement(string.Empty, "MatrixWidth", WmtsNamespaceUri);
                 matrixWidthElement.InnerText = matrixWidth.ToString(CultureInfo.InvariantCulture);
                 tileMatrixElement.AppendChild(matrixWidthElement);
 
-                var matrixHeightElement = doc.CreateElement(String.Empty, "MatrixHeight", WmtsNamespaceUri);
+                var matrixHeightElement = doc.CreateElement(string.Empty, "MatrixHeight", WmtsNamespaceUri);
                 matrixHeightElement.InnerText = matrixHeight.ToString(CultureInfo.InvariantCulture);
                 tileMatrixElement.AppendChild(matrixHeightElement);
 
@@ -534,9 +534,9 @@ namespace TileMapService.Wmts
 
         class OperationProperties
         {
-            public string Href { get; set; } = String.Empty;
+            public string Href { get; set; } = string.Empty;
 
-            public string Encoding { get; set; } = String.Empty;
+            public string Encoding { get; set; } = string.Empty;
         }
     }
 }

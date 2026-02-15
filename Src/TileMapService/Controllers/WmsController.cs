@@ -66,31 +66,31 @@ namespace TileMapService.Controllers
         {
             //// $"WMS [{Request.GetOwinContext().Request.RemoteIpAddress}:{Request.GetOwinContext().Request.RemotePort}] {Request.RequestUri}";
 
-            if (String.Compare(service, Identifiers.Wms, StringComparison.OrdinalIgnoreCase) != 0)
+            if (string.Compare(service, Identifiers.Wms, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 var message = $"Unknown service: '{service}' (should be '{Identifiers.Wms}')";
                 return this.ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "service");
             }
 
-            if ((String.Compare(version, Identifiers.Version111, StringComparison.Ordinal) != 0) &&
-                (String.Compare(version, Identifiers.Version130, StringComparison.Ordinal) != 0))
+            if ((string.Compare(version, Identifiers.Version111, StringComparison.Ordinal) != 0) &&
+                (string.Compare(version, Identifiers.Version130, StringComparison.Ordinal) != 0))
             {
                 var message = $"Unsupported {nameof(version)}: {version} (should be one of: {Identifiers.Version111}, {Identifiers.Version130})";
                 return this.ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "version");
             }
 
-            if ((String.Compare(exceptions, MediaTypeNames.Application.OgcServiceExceptionXml, StringComparison.Ordinal) != 0) &&
-                (String.Compare(exceptions, "XML", StringComparison.Ordinal) != 0))
+            if ((string.Compare(exceptions, MediaTypeNames.Application.OgcServiceExceptionXml, StringComparison.Ordinal) != 0) &&
+                (string.Compare(exceptions, "XML", StringComparison.Ordinal) != 0))
             {
                 var message = $"Unsupported {nameof(exceptions)}: {exceptions} (should be {MediaTypeNames.Application.OgcServiceExceptionXml})";
                 return this.ResponseWithExceptionReport(Identifiers.InvalidParameterValue, message, "exceptions");
             }
 
-            if (String.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
+            if (string.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
             {
                 return this.ProcessGetCapabilitiesRequest(WmsHelper.GetWmsVersion(version));
             }
-            else if (String.Compare(request, Identifiers.GetMap, StringComparison.Ordinal) == 0)
+            else if (string.Compare(request, Identifiers.GetMap, StringComparison.Ordinal) == 0)
             {
                 return await this.ProcessGetMapRequestAsync(
                     version,
@@ -104,7 +104,7 @@ namespace TileMapService.Controllers
                     bgcolor,
                     cancellationToken);
             } // TODO: GetFeatureInfo request
-            ////else if (String.Compare(request, Identifiers.GetFeatureInfo, StringComparison.Ordinal) == 0)
+            ////else if (string.Compare(request, Identifiers.GetFeatureInfo, StringComparison.Ordinal) == 0)
             ////{
             ////return await this.ProcessGetFeatureInfoRequestAsync(
             ////    bbox, width,
@@ -128,7 +128,7 @@ namespace TileMapService.Controllers
                 .Select(l => new Layer
                 {
                     Name = l.Identifier,
-                    Title = String.IsNullOrEmpty(l.Title) ? l.Identifier : l.Title,
+                    Title = string.IsNullOrEmpty(l.Title) ? l.Identifier : l.Title,
                     Abstract = l.Abstract,
                     IsQueryable = false,
                     GeographicalBounds = l.GeographicalBounds,
@@ -137,7 +137,7 @@ namespace TileMapService.Controllers
 
             var xmlDoc = new CapabilitiesUtility(BaseUrl + "/wms").CreateCapabilitiesDocument(
                 version,
-                new Wms.ServiceProperties
+                new ServiceProperties
                 {
                     Title = this.tileSourceFabric.ServiceProperties.Title,
                     Abstract = this.tileSourceFabric.ServiceProperties.Abstract,
@@ -165,7 +165,7 @@ namespace TileMapService.Controllers
             const int MinSize = 1;
             const int MaxSize = 32768;
 
-            if (String.IsNullOrEmpty(format))
+            if (string.IsNullOrEmpty(format))
             {
                 var message = "No map output format was specified";
                 return this.ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
@@ -179,7 +179,7 @@ namespace TileMapService.Controllers
                 return this.ResponseWithServiceExceptionReport(Identifiers.InvalidFormat, message, version);
             }
 
-            if (String.IsNullOrEmpty(layers))
+            if (string.IsNullOrEmpty(layers))
             {
                 var message = "GetMap request must include a valid LAYERS parameter.";
                 return this.ResponseWithServiceExceptionReport(Identifiers.LayerNotDefined, message, version);
@@ -191,14 +191,14 @@ namespace TileMapService.Controllers
                 return this.ResponseWithServiceExceptionReport(Identifiers.MissingOrInvalidParameter, message, version);
             }
 
-            if (String.IsNullOrEmpty(srs))
+            if (string.IsNullOrEmpty(srs))
             {
                 var message = $"GetMap request must include a valid {(WmsHelper.GetWmsVersion(version) == Wms.Version.Version130 ? "CRS" : "SRS")} parameter.";
                 return this.ResponseWithServiceExceptionReport(Identifiers.MissingBBox, message, version);
             }
 
             // TODO: EPSG:4326 output support
-            if (String.Compare(srs, Identifiers.EPSG3857, StringComparison.OrdinalIgnoreCase) != 0)
+            if (string.Compare(srs, Identifiers.EPSG3857, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 var message = $"SRS '{srs}' is not supported, only {Identifiers.EPSG3857} is currently supported.";
                 return this.ResponseWithServiceExceptionReport(Identifiers.InvalidSRS, message, version);
@@ -268,7 +268,7 @@ namespace TileMapService.Controllers
 
             using SKImage image = surface.Snapshot();
 
-            if (String.Compare(mediaType, MediaTypeNames.Image.Tiff, StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Compare(mediaType, MediaTypeNames.Image.Tiff, StringComparison.OrdinalIgnoreCase) == 0)
             {
                 using var bitmap = SKBitmap.FromImage(image);
                 // TODO: improve performance of pixels processing, maybe using unsafe/pointers
@@ -285,16 +285,16 @@ namespace TileMapService.Controllers
         }
 
         // TODO: more output formats
-        private static readonly string[] SupportedOutputFormats = new[]
-        {
+        private static readonly string[] SupportedOutputFormats =
+        [
             MediaTypeNames.Image.Png,
             MediaTypeNames.Image.Jpeg,
             MediaTypeNames.Image.Tiff,
-        };
+        ];
 
         private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
 
-        private static readonly char[] LayersSeparator = new[] { ',' };
+        private static readonly char[] LayersSeparator = [','];
 
         private FileContentResult ResponseWithExceptionReport(string exceptionCode, string message, string locator)
         {

@@ -7,12 +7,11 @@ namespace TileMapService.Utils
     static class ResponseHelper
     {
         private static readonly string[] SupportedTileFormats =
-            new[]
-            {
-                MediaTypeNames.Image.Png,
-                MediaTypeNames.Image.Jpeg,
-                MediaTypeNames.Image.Webp,
-            };
+        [
+            MediaTypeNames.Image.Png,
+            MediaTypeNames.Image.Jpeg,
+            MediaTypeNames.Image.Webp,
+        ];
 
         public static bool IsTileFormatSupported(string mediaType)
         {
@@ -22,14 +21,14 @@ namespace TileMapService.Utils
         public static bool IsFormatInList(IList<string> mediaTypes, string mediaType)
         {
             return mediaTypes.Any(mt =>
-                String.Compare(mediaType, mt, StringComparison.OrdinalIgnoreCase) == 0);
+                string.Compare(mediaType, mt, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
         public static FileResponse? CreateFileResponse(byte[]? imageContents, string mediaType, string? sourceContentType, int quality)
         {
             if (imageContents != null && imageContents.Length > 0)
             {
-                if (String.Compare(mediaType, sourceContentType, StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Compare(mediaType, sourceContentType, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     // Return original source image
                     return new FileResponse { FileContents = imageContents, ContentType = mediaType };

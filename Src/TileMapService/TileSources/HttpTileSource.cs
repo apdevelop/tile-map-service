@@ -33,12 +33,12 @@ namespace TileMapService.TileSources
         {
             this.logger = logger;
 
-            if (String.IsNullOrEmpty(configuration.Id))
+            if (string.IsNullOrEmpty(configuration.Id))
             {
                 throw new ArgumentException("Source identifier is null or empty string");
             }
 
-            if (String.IsNullOrEmpty(configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new ArgumentException("Source location is null or empty string");
             }
@@ -60,26 +60,26 @@ namespace TileMapService.TileSources
             var sourceCapabilities = await this.GetSourceCapabilitiesAsync().ConfigureAwait(false);
 
             // TODO: combine capabilies with configuration
-            var title = String.IsNullOrEmpty(this.configuration.Title)
+            var title = string.IsNullOrEmpty(this.configuration.Title)
                 ? this.configuration.Id
                 : this.configuration.Title;
 
             var minZoom = this.configuration.MinZoom ?? 0;
             var maxZoom = this.configuration.MaxZoom ?? 24;
 
-            if (String.IsNullOrEmpty(this.configuration.Type))
+            if (string.IsNullOrEmpty(this.configuration.Type))
             {
                 throw new InvalidOperationException("configuration.Type is null or empty");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Format)) // TODO: get from metadata
+            if (string.IsNullOrEmpty(this.configuration.Format)) // TODO: get from metadata
             {
                 throw new InvalidOperationException("configuration.Format is null or empty");
             }
 
             // Default is tms=false for simple XYZ tile services
-            var tms = this.configuration.Tms ?? (String.Compare(this.configuration.Type, SourceConfiguration.TypeTms, StringComparison.InvariantCultureIgnoreCase) == 0);
-            var srs = String.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
+            var tms = this.configuration.Tms ?? (string.Compare(this.configuration.Type, SourceConfiguration.TypeTms, StringComparison.InvariantCultureIgnoreCase) == 0);
+            var srs = string.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
 
             // Re-create configuration
             this.configuration = new SourceConfiguration
@@ -109,7 +109,7 @@ namespace TileMapService.TileSources
             if (this.configuration.Cache != null)
             {
                 var dbpath = this.configuration.Cache.DbFile;
-                if (String.IsNullOrEmpty(dbpath))
+                if (string.IsNullOrEmpty(dbpath))
                 {
                     throw new InvalidOperationException("DBpath is null or empty string");
                 }
@@ -134,12 +134,12 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("HTTP client was not initialized.");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Type))
+            if (string.IsNullOrEmpty(this.configuration.Type))
             {
                 throw new InvalidOperationException("configuration.Type is null or empty");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(this.configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
@@ -161,7 +161,7 @@ namespace TileMapService.TileSources
                         if (r.IsSuccessStatusCode)
                         {
                             var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            if (!String.IsNullOrEmpty(xml))
+                            if (!string.IsNullOrEmpty(xml))
                             {
                                 var doc = new XmlDocument();
                                 doc.LoadXml(xml);
@@ -179,7 +179,7 @@ namespace TileMapService.TileSources
                         string? sourceLayerIdentifier = null, capabilitiesUrl = null;
                         if (this.configuration.Wmts != null)
                         {
-                            capabilitiesUrl = String.IsNullOrWhiteSpace(this.configuration.Wmts.CapabilitiesUrl) || !this.configuration.Wmts.CapabilitiesUrl.EndsWith(".xml")
+                            capabilitiesUrl = string.IsNullOrWhiteSpace(this.configuration.Wmts.CapabilitiesUrl) || !this.configuration.Wmts.CapabilitiesUrl.EndsWith(".xml")
                                 ? Wmts.QueryUtility.GetCapabilitiesKvpUrl(this.configuration.Location)
                                 : this.configuration.Wmts.CapabilitiesUrl;
                             sourceLayerIdentifier = this.configuration.Wmts.Layer;
@@ -188,7 +188,7 @@ namespace TileMapService.TileSources
                         {
                             capabilitiesUrl = Wmts.QueryUtility.GetCapabilitiesKvpUrl(this.configuration.Location);
                             sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(this.configuration.Location)
-                                .First(p => String.Compare(p.Key, Wmts.QueryUtility.WmtsQueryLayer, StringComparison.OrdinalIgnoreCase) == 0)
+                                .First(p => string.Compare(p.Key, Wmts.QueryUtility.WmtsQueryLayer, StringComparison.OrdinalIgnoreCase) == 0)
                                 .Value;
                         }
 
@@ -196,7 +196,7 @@ namespace TileMapService.TileSources
                         if (r.IsSuccessStatusCode)
                         {
                             var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            if (!String.IsNullOrEmpty(xml))
+                            if (!string.IsNullOrEmpty(xml))
                             {
                                 var doc = new XmlDocument();
                                 doc.LoadXml(xml);
@@ -226,7 +226,7 @@ namespace TileMapService.TileSources
                         else
                         {
                             sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(this.configuration.Location)
-                                .First(p => String.Compare(p.Key, Wms.QueryUtility.WmsQueryLayers, StringComparison.OrdinalIgnoreCase) == 0)
+                                .First(p => string.Compare(p.Key, Wms.QueryUtility.WmsQueryLayers, StringComparison.OrdinalIgnoreCase) == 0)
                                 .Value;
                         }
 
@@ -236,7 +236,7 @@ namespace TileMapService.TileSources
                         if (r.IsSuccessStatusCode)
                         {
                             var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            if (!String.IsNullOrEmpty(xml))
+                            if (!string.IsNullOrEmpty(xml))
                             {
                                 var doc = new XmlDocument();
                                 doc.LoadXml(xml);
@@ -324,7 +324,7 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("HTTP client was not initialized.");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(this.configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
@@ -356,22 +356,22 @@ namespace TileMapService.TileSources
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetSourceTileUrl(int x, int y, int z)
         {
-            if (String.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(this.configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Type))
+            if (string.IsNullOrEmpty(this.configuration.Type))
             {
                 throw new InvalidOperationException("configuration.Type is null or empty");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Format))
+            if (string.IsNullOrEmpty(this.configuration.Format))
             {
                 throw new InvalidOperationException("configuration.Format is null or empty");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.ContentType))
+            if (string.IsNullOrEmpty(this.configuration.ContentType))
             {
                 throw new InvalidOperationException("configuration.ContentType is null or empty");
             }

@@ -33,12 +33,12 @@ namespace TileMapService.TileSources
             // TODO: add support for MapInfo RASTER files
             // TODO: add support for multiple rasters (directory with rasters)
 
-            if (String.IsNullOrEmpty(configuration.Id))
+            if (string.IsNullOrEmpty(configuration.Id))
             {
                 throw new ArgumentException("Source identifier is null or empty string.");
             }
 
-            if (String.IsNullOrEmpty(configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new ArgumentException("Source location is null or empty string.");
             }
@@ -50,7 +50,7 @@ namespace TileMapService.TileSources
 
         Task ITileSource.InitAsync()
         {
-            if (String.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(this.configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty.");
             }
@@ -59,9 +59,9 @@ namespace TileMapService.TileSources
 
             this.rasterProperties = U.ImageHelper.ReadGeoTiffProperties(this.configuration.Location);
 
-            var title = String.IsNullOrEmpty(this.configuration.Title) ?
-                this.configuration.Id :
-                this.configuration.Title;
+            var title = string.IsNullOrEmpty(this.configuration.Title)
+                ? this.configuration.Id
+                : this.configuration.Title;
 
             var minZoom = this.configuration.MinZoom ?? 0;
             var maxZoom = this.configuration.MaxZoom ?? 24;
@@ -96,7 +96,7 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("rasterProperties property is null.");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.ContentType))
+            if (string.IsNullOrEmpty(this.configuration.ContentType))
             {
                 throw new InvalidOperationException("configuration.ContentType property is null.");
             }
@@ -259,7 +259,7 @@ namespace TileMapService.TileSources
                 throw new InvalidOperationException("rasterProperties is null.");
             }
 
-            if (String.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(this.configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty.");
             }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace TileMapService.Models
 {
@@ -20,9 +19,7 @@ namespace TileMapService.Models
             this.Latitude = latitude;
         }
 
-        public override string ToString()
-        {
-            return String.Format(CultureInfo.InvariantCulture, "{0} {1}", this.Longitude, this.Latitude);
-        }
+        public override string ToString() =>
+            string.Format(CultureInfo.InvariantCulture, "{0} {1}", this.Longitude, this.Latitude);
     }
 }

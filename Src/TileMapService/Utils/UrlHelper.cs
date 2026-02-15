@@ -22,7 +22,7 @@ namespace TileMapService.Utils
             var items = QueryHelpers.ParseQuery(uri.Query)
                 .SelectMany(
                     kvp => kvp.Value,
-                    (kvp, value) => new KeyValuePair<string, string>(kvp.Key.ToLower(), value ?? String.Empty))
+                    (kvp, value) => new KeyValuePair<string, string>(kvp.Key.ToLower(), value ?? string.Empty))
                 .ToList();
 
             return items;

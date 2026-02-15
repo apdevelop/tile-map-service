@@ -23,12 +23,12 @@ namespace TileMapService.TileSources
 
         public MBTilesTileSource(SourceConfiguration configuration)
         {
-            if (String.IsNullOrEmpty(configuration.Id))
+            if (string.IsNullOrEmpty(configuration.Id))
             {
                 throw new ArgumentException("Source identifier is null or empty string");
             }
 
-            if (String.IsNullOrEmpty(configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new ArgumentException("Source location is null or empty string");
             }
@@ -45,7 +45,7 @@ namespace TileMapService.TileSources
             // 2. Actual values (MBTiles metadata table values).
             // 3. Values from configuration file.
 
-            if (String.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(this.configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
@@ -53,12 +53,12 @@ namespace TileMapService.TileSources
             this.repository = new MBTiles.Repository(configuration.Location, false);
             var metadata = new MBTiles.Metadata(this.repository.ReadMetadata());
 
-            var title = String.IsNullOrEmpty(this.configuration.Title)
-                ? (!String.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Id)
+            var title = string.IsNullOrEmpty(this.configuration.Title)
+                ? (!string.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Id)
                 : this.configuration.Title;
 
-            var format = String.IsNullOrEmpty(this.configuration.Format)
-                ? (!String.IsNullOrEmpty(metadata.Format) ? metadata.Format : ImageFormats.Png)
+            var format = string.IsNullOrEmpty(this.configuration.Format)
+                ? (!string.IsNullOrEmpty(metadata.Format) ? metadata.Format : ImageFormats.Png)
                 : this.configuration.Format;
 
             // Get tile image width and height from first tile, for raster formats
@@ -100,7 +100,7 @@ namespace TileMapService.TileSources
                 Format = format,
                 Title = title,
                 Abstract = this.configuration.Abstract,
-                Attribution = String.IsNullOrEmpty(this.configuration.Attribution) ? metadata.Attribution : null,
+                Attribution = string.IsNullOrEmpty(this.configuration.Attribution) ? metadata.Attribution : null,
                 Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
                 Srs = Utils.SrsCodes.EPSG3857, // MBTiles supports only Spherical Mercator tile grid
                 Location = this.configuration.Location,

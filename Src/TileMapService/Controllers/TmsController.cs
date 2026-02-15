@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,7 +76,7 @@ namespace TileMapService.Controllers
         public async Task<IActionResult> GetTileAsync(string tileset, int x, int y, int z, string extension, CancellationToken cancellationToken)
         {
             // TODO: z can be a string, not integer number
-            if (String.IsNullOrEmpty(tileset) || String.IsNullOrEmpty(extension))
+            if (string.IsNullOrEmpty(tileset) || string.IsNullOrEmpty(extension))
             {
                 return BadRequest();
             }

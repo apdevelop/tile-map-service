@@ -10,7 +10,7 @@ using M = TileMapService.Models;
 
 namespace TileMapService.Utils
 {
-    public class ImageHelper
+    public static class ImageHelper
     {
         public static byte[] CreateEmptyImage(
             int width,
@@ -56,7 +56,7 @@ namespace TileMapService.Utils
             var stride = rgbaPixels.Length / height;
             using var ms = new MemoryStream();
             var tiffStream = new TiffStream();
-            using (var tiff = Tiff.ClientOpen(String.Empty, ModeTiffWriting, ms, tiffStream))
+            using (var tiff = Tiff.ClientOpen(string.Empty, ModeTiffWriting, ms, tiffStream))
             {
                 tiff.SetField(TiffTag.IMAGEWIDTH, width);
                 tiff.SetField(TiffTag.IMAGELENGTH, height);
@@ -87,7 +87,7 @@ namespace TileMapService.Utils
                     // https://freeimage.sourceforge.io/fnet/html/CC586183.htm
                     var scaleX = (boundingBox.Right - boundingBox.Left) / width;
                     var scaleY = (boundingBox.Top - boundingBox.Bottom) / height;
-                    double[] scales = new[] { scaleX, scaleY, 0 };
+                    double[] scales = [scaleX, scaleY, 0];
                     if (!tiff.SetField(TiffTag.GEOTIFF_MODELPIXELSCALETAG, scales.Length, scales))
                     {
                         throw new InvalidOperationException($"Error writing {TiffTag.GEOTIFF_MODELPIXELSCALETAG}.");
@@ -95,7 +95,7 @@ namespace TileMapService.Utils
 
                     // Tie point
                     // https://freeimage.sourceforge.io/fnet/html/38F9430A.htm
-                    double[] tiePoints = new[] { 0, 0, 0, boundingBox.Left, boundingBox.Top, 0 };
+                    double[] tiePoints = [0, 0, 0, boundingBox.Left, boundingBox.Top, 0];
                     if (!tiff.SetField(TiffTag.GEOTIFF_MODELTIEPOINTTAG, tiePoints.Length, tiePoints))
                     {
                         throw new InvalidOperationException($"Error writing {TiffTag.GEOTIFF_MODELTIEPOINTTAG}.");
@@ -603,12 +603,12 @@ namespace TileMapService.Utils
             // https://github.com/BitMiracle/libtiff.net/blob/master/Samples/AddCustomTagsToExistingTiff/C%23/AddCustomTagsToExistingTiff.cs
 
             TiffFieldInfo[] tiffFieldInfo =
-            {
+            [
                 new(TiffTag.GEOTIFF_GEOKEYDIRECTORYTAG, 2, 2, TiffType.SHORT, FieldBit.Custom, false, true, "GeoKeyDirectoryTag"),
                 new(TiffTag.GEOTIFF_GEODOUBLEPARAMSTAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "GeoDoubleParamsTag"),
                 new(TiffTag.GEOTIFF_MODELPIXELSCALETAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "ModelPixelScaleTag"),
                 new(TiffTag.GEOTIFF_MODELTIEPOINTTAG, 2, 2, TiffType.DOUBLE, FieldBit.Custom, false, true, "ModelTiepointTag"),
-            };
+            ];
 
             tiff.MergeFieldInfo(tiffFieldInfo, tiffFieldInfo.Length);
         }

@@ -59,10 +59,7 @@ namespace TileMapService.Models
         /// <returns></returns>
         public static Bounds FromCommaSeparatedString(string s)
         {
-            if (s == null)
-            {
-                throw new ArgumentNullException(nameof(s));
-            }
+            ArgumentNullException.ThrowIfNull(s);
 
             var items = s.Split(',');
             if (items.Length != 4)
@@ -72,10 +69,10 @@ namespace TileMapService.Models
 
             return new Bounds
             {
-                Left = Double.Parse(items[0], CultureInfo.InvariantCulture),
-                Bottom = Double.Parse(items[1], CultureInfo.InvariantCulture),
-                Right = Double.Parse(items[2], CultureInfo.InvariantCulture),
-                Top = Double.Parse(items[3], CultureInfo.InvariantCulture),
+                Left = double.Parse(items[0], CultureInfo.InvariantCulture),
+                Bottom = double.Parse(items[1], CultureInfo.InvariantCulture),
+                Right = double.Parse(items[2], CultureInfo.InvariantCulture),
+                Top = double.Parse(items[3], CultureInfo.InvariantCulture),
             };
         }
 
@@ -83,15 +80,13 @@ namespace TileMapService.Models
         /// Converts instance to its string representation.
         /// </summary>
         /// <returns>The string representation of the instance.</returns>
-        public string ToBBoxString()
-        {
-            return String.Format(
+        public string ToBBoxString() =>
+            string.Format(
                 CultureInfo.InvariantCulture,
                 "{0},{1},{2},{3}",
                 this.Left,
                 this.Bottom,
                 this.Right,
                 this.Top);
-        }
     }
 }

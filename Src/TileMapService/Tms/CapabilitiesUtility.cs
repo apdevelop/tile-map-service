@@ -42,7 +42,7 @@ namespace TileMapService.Tms
         public XmlDocument GetRootResource()
         {
             var doc = new XmlDocument();
-            var rootElement = doc.CreateElement(String.Empty, Identifiers.Services, String.Empty);
+            var rootElement = doc.CreateElement(string.Empty, Identifiers.Services, string.Empty);
             doc.AppendChild(rootElement);
 
             var tileMapServiceElement = doc.CreateElement(Identifiers.TileMapService);
@@ -74,7 +74,7 @@ namespace TileMapService.Tms
         public XmlDocument GetTileMapService()
         {
             var doc = new XmlDocument();
-            var rootElement = doc.CreateElement(String.Empty, Identifiers.TileMapService, String.Empty);
+            var rootElement = doc.CreateElement(string.Empty, Identifiers.TileMapService, string.Empty);
             doc.AppendChild(rootElement);
 
             var versionAttribute = doc.CreateAttribute(Identifiers.VersionAttribute);
@@ -128,7 +128,7 @@ namespace TileMapService.Tms
         public XmlDocument GetTileMap(Models.Layer layer)
         {
             var doc = new XmlDocument();
-            var rootElement = doc.CreateElement(String.Empty, Identifiers.TileMapElement, String.Empty);
+            var rootElement = doc.CreateElement(string.Empty, Identifiers.TileMapElement, string.Empty);
             doc.AppendChild(rootElement);
 
             var versionAttribute = doc.CreateAttribute(Identifiers.VersionAttribute);
@@ -158,14 +158,14 @@ namespace TileMapService.Tms
                         pixelsWidth = layer.TileWidth;
 
                         var srsElement = doc.CreateElement(Identifiers.SrsElement);
-                        srsElement.AppendChild(doc.CreateTextNode(Utils.SrsCodes.OSGEO41001));
+                        srsElement.AppendChild(doc.CreateTextNode(SrsCodes.OSGEO41001));
                         rootElement.AppendChild(srsElement);
 
                         // GoogleMapsCompatible tile grid
-                        var minX = layer.GeographicalBounds == null ? -20037508.342789 : Utils.WebMercator.X(layer.GeographicalBounds.MinLongitude);
-                        var minY = layer.GeographicalBounds == null ? -20037508.342789 : Utils.WebMercator.Y(layer.GeographicalBounds.MinLatitude);
-                        var maxX = layer.GeographicalBounds == null ? +20037508.342789 : Utils.WebMercator.X(layer.GeographicalBounds.MaxLongitude);
-                        var maxY = layer.GeographicalBounds == null ? +20037508.342789 : Utils.WebMercator.Y(layer.GeographicalBounds.MaxLatitude);
+                        var minX = layer.GeographicalBounds == null ? -20037508.342789 : WebMercator.X(layer.GeographicalBounds.MinLongitude);
+                        var minY = layer.GeographicalBounds == null ? -20037508.342789 : WebMercator.Y(layer.GeographicalBounds.MinLatitude);
+                        var maxX = layer.GeographicalBounds == null ? +20037508.342789 : WebMercator.X(layer.GeographicalBounds.MaxLongitude);
+                        var maxY = layer.GeographicalBounds == null ? +20037508.342789 : WebMercator.Y(layer.GeographicalBounds.MaxLatitude);
 
                         var boundingBoxElement = CreateBoundingBoxElement(doc, minX, minY, maxX, maxY, "F6");
                         rootElement.AppendChild(boundingBoxElement);
@@ -182,7 +182,7 @@ namespace TileMapService.Tms
                         pixelsWidth = layer.TileWidth * 2;
 
                         var srsElement = doc.CreateElement(Identifiers.SrsElement);
-                        srsElement.AppendChild(doc.CreateTextNode(Utils.SrsCodes.EPSG4326));
+                        srsElement.AppendChild(doc.CreateTextNode(SrsCodes.EPSG4326));
                         rootElement.AppendChild(srsElement);
 
                         var minX = layer.GeographicalBounds == null ? -180 : layer.GeographicalBounds.MinLongitude;
@@ -264,18 +264,21 @@ namespace TileMapService.Tms
             var tileFormatElement = xml.SelectSingleNode($"/{Identifiers.TileMapElement}/{Identifiers.TileFormatElement}");
             ////var tileSets = xml.SelectNodes($"/{Identifiers.TileMapElement}/TileSets/TileSet")
             ////    .OfType<XmlNode>()
-            ////    .OrderBy(n => Int32.Parse(n.Attributes["order"].Value, CultureInfo.InvariantCulture))
+            ////    .OrderBy(n => int.Parse(n.Attributes["order"].Value, CultureInfo.InvariantCulture))
             ////    .ToArray();
 
-            var width = tileFormatElement != null && tileFormatElement.Attributes != null && tileFormatElement.Attributes["width"] != null ?
-                tileFormatElement.Attributes["width"]?.Value : null;
-            var height = tileFormatElement != null && tileFormatElement.Attributes != null && tileFormatElement.Attributes["height"] != null ?
-                tileFormatElement.Attributes["height"]?.Value : null;
+            var width = tileFormatElement != null && tileFormatElement.Attributes != null && tileFormatElement.Attributes["width"] != null
+                ? tileFormatElement.Attributes["width"]?.Value
+                : null;
+
+            var height = tileFormatElement != null && tileFormatElement.Attributes != null && tileFormatElement.Attributes["height"] != null
+                ? tileFormatElement.Attributes["height"]?.Value
+                : null;
 
             return new Models.Layer
             {
-                TileWidth = width != null ? Int32.Parse(width, CultureInfo.InvariantCulture) : WebMercator.DefaultTileWidth,
-                TileHeight = height != null ? Int32.Parse(height, CultureInfo.InvariantCulture) : WebMercator.DefaultTileHeight,
+                TileWidth = width != null ? int.Parse(width, CultureInfo.InvariantCulture) : WebMercator.DefaultTileWidth,
+                TileHeight = height != null ? int.Parse(height, CultureInfo.InvariantCulture) : WebMercator.DefaultTileHeight,
                 ContentType = tileFormatElement?.Attributes?["mime-type"]?.Value,
                 Srs = srsElement?.InnerText,
                 // TODO: MinZoom, MaxZoom
@@ -290,12 +293,12 @@ namespace TileMapService.Tms
             {
                 case SrsCodes.EPSG3857:
                     {
-                        srsAttribute.Value = Utils.SrsCodes.OSGEO41001;
+                        srsAttribute.Value = SrsCodes.OSGEO41001;
                         break;
                     }
                 case SrsCodes.EPSG4326:
                     {
-                        srsAttribute.Value = Utils.SrsCodes.EPSG4326;
+                        srsAttribute.Value = SrsCodes.EPSG4326;
                         break;
                     }
                 default:

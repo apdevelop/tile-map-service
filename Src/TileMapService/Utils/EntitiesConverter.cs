@@ -83,13 +83,12 @@ namespace TileMapService.Utils
             }
 
             return BitConverter.ToUInt32(
-                new[]
-                {
+                [
                     Convert.ToByte(rgbHexColor.Substring(4, 2), 16),
                     Convert.ToByte(rgbHexColor.Substring(2, 2), 16),
                     Convert.ToByte(rgbHexColor[..2], 16),
                     (byte)(isTransparent ? 0x00 : 0xFF),
-                },
+                ],
             0);
         }
 

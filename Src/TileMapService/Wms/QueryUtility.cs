@@ -31,7 +31,7 @@ namespace TileMapService.Wms
         public static string GetCapabilitiesUrl(SourceConfiguration configuration)
         {
             var location = configuration.Location;
-            if (String.IsNullOrWhiteSpace(location))
+            if (string.IsNullOrWhiteSpace(location))
             {
                 throw new ArgumentException("Location must be valid string");
             }
@@ -40,8 +40,8 @@ namespace TileMapService.Wms
             var items = Utils.UrlHelper.GetQueryParameters(location);
 
             // Version
-            var wmsVersion = String.Empty; // Default WMS version not set for GetCapabilities
-            if (configuration.Wms != null && !String.IsNullOrWhiteSpace(configuration.Wms.Version))
+            var wmsVersion = string.Empty; // Default WMS version not set for GetCapabilities
+            if (configuration.Wms != null && !string.IsNullOrWhiteSpace(configuration.Wms.Version))
             {
                 wmsVersion = configuration.Wms.Version;
             }
@@ -51,7 +51,7 @@ namespace TileMapService.Wms
             }
 
             RemoveKnownParameters(items);
-            items.RemoveAll(kvp => String.Compare(kvp.Key, WmsQueryStyles, StringComparison.OrdinalIgnoreCase) == 0); // TODO: add styles to WMS configuration and RemoveKnownParameters()
+            items.RemoveAll(kvp => string.Compare(kvp.Key, WmsQueryStyles, StringComparison.OrdinalIgnoreCase) == 0); // TODO: add styles to WMS configuration and RemoveKnownParameters()
 
             var qb = new QueryBuilder(items)
             {
@@ -59,7 +59,7 @@ namespace TileMapService.Wms
                 { WmsQueryRequest, Identifiers.GetCapabilities }
             };
 
-            if (!String.IsNullOrEmpty(wmsVersion))
+            if (!string.IsNullOrEmpty(wmsVersion))
             {
                 qb.Add(WmsQueryVersion, wmsVersion);
             }
@@ -91,7 +91,7 @@ namespace TileMapService.Wms
             uint backgroundColor)
         {
             var location = configuration.Location;
-            if (String.IsNullOrWhiteSpace(location))
+            if (string.IsNullOrWhiteSpace(location))
             {
                 throw new ArgumentException("Location must be valid string");
             }
@@ -101,7 +101,7 @@ namespace TileMapService.Wms
 
             // Version
             var wmsVersion = Identifiers.Version111; // Default WMS version is 1.1.1
-            if (configuration.Wms != null && !String.IsNullOrWhiteSpace(configuration.Wms.Version))
+            if (configuration.Wms != null && !string.IsNullOrWhiteSpace(configuration.Wms.Version))
             {
                 wmsVersion = configuration.Wms.Version;
             }
@@ -111,8 +111,8 @@ namespace TileMapService.Wms
             }
 
             // Layers
-            var layers = String.Empty;
-            if (configuration.Wms != null && !String.IsNullOrWhiteSpace(configuration.Wms.Layer))
+            var layers = string.Empty;
+            if (configuration.Wms != null && !string.IsNullOrWhiteSpace(configuration.Wms.Layer))
             {
                 layers = configuration.Wms.Layer; // TODO: ? multiple layers
             }
@@ -123,7 +123,7 @@ namespace TileMapService.Wms
 
             // Format
             var format = MediaTypeNames.Image.Png;
-            if (!String.IsNullOrWhiteSpace(configuration.ContentType))
+            if (!string.IsNullOrWhiteSpace(configuration.ContentType))
             {
                 format = configuration.ContentType;
             }
@@ -163,7 +163,7 @@ namespace TileMapService.Wms
                 WmsQueryFormat, WmsQueryTransparent, WmsQueryBackgroundColor,
                 WmsQueryWidth, WmsQueryHeight })
             {
-                items.RemoveAll(kvp => String.Compare(kvp.Key, known, StringComparison.OrdinalIgnoreCase) == 0);
+                items.RemoveAll(kvp => string.Compare(kvp.Key, known, StringComparison.OrdinalIgnoreCase) == 0);
             }
         }
     }

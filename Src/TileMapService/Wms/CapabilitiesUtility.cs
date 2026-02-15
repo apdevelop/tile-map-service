@@ -27,7 +27,7 @@ namespace TileMapService.Wms
             var rootNodeName = GetRootNodeName(version);
 
             doc = new XmlDocument();
-            var rootElement = doc.CreateElement(String.Empty, rootNodeName, String.Empty);
+            var rootElement = doc.CreateElement(string.Empty, rootNodeName, string.Empty);
             doc.AppendChild(rootElement);
 
             var versionAttribute = doc.CreateAttribute("version");
@@ -48,11 +48,11 @@ namespace TileMapService.Wms
             serviceElement.AppendChild(serviceNameElement);
 
             var serviceTitleElement = doc.CreateElement("Title");
-            serviceTitleElement.InnerText = service.Title ?? String.Empty;
+            serviceTitleElement.InnerText = service.Title ?? string.Empty;
             serviceElement.AppendChild(serviceTitleElement);
 
             var serviceAbstractElement = doc.CreateElement("Abstract");
-            serviceAbstractElement.InnerText = service.Abstract ?? String.Empty;
+            serviceAbstractElement.InnerText = service.Abstract ?? string.Empty;
             serviceElement.AppendChild(serviceAbstractElement);
 
             var serviceKeywordListElement = doc.CreateElement("KeywordList");
@@ -60,7 +60,7 @@ namespace TileMapService.Wms
             {
                 foreach (var keyword in service.Keywords)
                 {
-                    if (!String.IsNullOrWhiteSpace(keyword))
+                    if (!string.IsNullOrWhiteSpace(keyword))
                     {
                         var serviceKeywordElement = doc.CreateElement("Keyword");
                         serviceKeywordElement.InnerText = keyword;
@@ -131,7 +131,7 @@ namespace TileMapService.Wms
                 case Version.Version111:
                     {
                         bboxElementName = "LatLonBoundingBox";
-                        defaultNsPrefix = String.Empty;
+                        defaultNsPrefix = string.Empty;
                         xpath = @$"/{Identifiers.WMT_MS_CapabilitiesElement}//Capability//{Identifiers.LayerElement}[not(descendant::*[local-name() = '{Identifiers.LayerElement}'])]";
                         break;
                     }
@@ -188,15 +188,15 @@ namespace TileMapService.Wms
 
                     result.Add(new Layer
                     {
-                        Name = layerName != null ? layerName.InnerText : String.Empty,
-                        Title = layerTitle != null ? layerTitle.InnerText : String.Empty,
+                        Name = layerName != null ? layerName.InnerText : string.Empty,
+                        Title = layerTitle != null ? layerTitle.InnerText : string.Empty,
                         IsQueryable = layerQueryable != null && layerQueryable.Value == "1",
                         GeographicalBounds = bbox != null && bbox.Attributes != null
                             ? new Models.GeographicalBounds(
-                                minx != null ? Double.Parse(minx, CultureInfo.InvariantCulture) : 0,
-                                miny != null ? Double.Parse(miny, CultureInfo.InvariantCulture) : 0,
-                                maxx != null ? Double.Parse(maxx, CultureInfo.InvariantCulture) : 0,
-                                maxy != null ? Double.Parse(maxy, CultureInfo.InvariantCulture) : 0)
+                                minx != null ? double.Parse(minx, CultureInfo.InvariantCulture) : 0,
+                                miny != null ? double.Parse(miny, CultureInfo.InvariantCulture) : 0,
+                                maxx != null ? double.Parse(maxx, CultureInfo.InvariantCulture) : 0,
+                                maxy != null ? double.Parse(maxy, CultureInfo.InvariantCulture) : 0)
                             : null,
                     });
                 }
@@ -303,15 +303,15 @@ namespace TileMapService.Wms
             layerElement.Attributes.Append(queryableAttribute);
 
             var layerTitle = doc.CreateElement(Identifiers.TitleElement);
-            layerTitle.InnerText = layer.Title ?? String.Empty;
+            layerTitle.InnerText = layer.Title ?? string.Empty;
             layerElement.AppendChild(layerTitle);
 
             var layerName = doc.CreateElement(Identifiers.NameElement);
-            layerName.InnerText = layer.Name ?? String.Empty;
+            layerName.InnerText = layer.Name ?? string.Empty;
             layerElement.AppendChild(layerName);
 
             var layerAbstract = doc.CreateElement(Identifiers.AbstractElement);
-            layerAbstract.InnerText = layer.Abstract ?? String.Empty;
+            layerAbstract.InnerText = layer.Abstract ?? string.Empty;
             layerElement.AppendChild(layerAbstract);
 
             string layerSrsElementName;
