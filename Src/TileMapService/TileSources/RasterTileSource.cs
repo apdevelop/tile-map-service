@@ -345,17 +345,18 @@ namespace TileMapService.TileSources
                 canvasImage,
                 SKRect.Create((float)sourceOffsetX, (float)sourceOffsetY, (float)sourceWidth, (float)sourceHeight),
                 SKRect.Create(0, 0, outputWidth, outputHeight),
-                new SKPaint { FilterQuality = SKFilterQuality.High, });
+                new SKSamplingOptions(SKCubicResampler.Mitchell),
+                new SKPaint());
         }
 
         private class DisableErrorHandler : TiffErrorHandler
         {
-            public override void WarningHandler(Tiff tiff, string method, string format, params object[] args)
+            public override void WarningHandler(Tiff tif, string method, string format, params object[] args)
             {
 
             }
 
-            public override void WarningHandlerExt(Tiff tiff, object clientData, string method, string format, params object[] args)
+            public override void WarningHandlerExt(Tiff tif, object clientData, string method, string format, params object[] args)
             {
 
             }

@@ -68,6 +68,7 @@ Some improvements can be made for better using this application in real environm
 
 ### TODOs
 * .NET10 support.
+* Use modern C# language features and code style.
 * Support for more formats (image formats, vector tiles) and coordinate systems (tile grids).
 * Flexible settings of tile sources.
 * Configuration Web API / Web UI with authentication.

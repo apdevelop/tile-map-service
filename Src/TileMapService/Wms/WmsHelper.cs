@@ -137,7 +137,7 @@ namespace TileMapService.Wms
             var destRectangle = SKRect.Create(0, 0, width, height);
 
             using SKImage canvasImage = surface.Snapshot();
-            outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKPaint { FilterQuality = SKFilterQuality.High, });
+            outputCanvas.DrawImage(canvasImage, sourceRectangle, destRectangle, new SKSamplingOptions(SKCubicResampler.Mitchell), new SKPaint());
         }
 
         public static TileCoordinates[] BuildTileCoordinatesList(Models.Bounds boundingBox, int width)

@@ -1,19 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
 		<TargetFrameworks>net8.0</TargetFrameworks>
-		<Nullable>enable</Nullable>
-		<AssemblyName>tms</AssemblyName>
+		<OutputType>Exe</OutputType>
 		<RootNamespace>TileMapService</RootNamespace>
+		<AssemblyName>tms</AssemblyName>
+		<Nullable>enable</Nullable>
+		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
 		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.8" />
 		<PackageReference Include="Npgsql" Version="9.0.4" />
-		<PackageReference Include="SkiaSharp" Version="3.119.2" />
-		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2" />
+		<PackageReference Include="SkiaSharp" Version="3.119.4" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
 		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
 	</ItemGroup>
 
