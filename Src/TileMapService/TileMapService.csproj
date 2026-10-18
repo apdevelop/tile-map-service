@@ -7,6 +7,8 @@
 		<AssemblyName>tms</AssemblyName>
 		<Nullable>enable</Nullable>
 		<DebugType>embedded</DebugType>
+		<AllowedReferenceRelatedFileExtensions>-</AllowedReferenceRelatedFileExtensions>
+		<StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
 	</PropertyGroup>
 
 	<ItemGroup>
