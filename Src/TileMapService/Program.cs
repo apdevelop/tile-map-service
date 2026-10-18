@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 
 namespace TileMapService
@@ -20,6 +21,8 @@ namespace TileMapService
             builder.Services.AddSingleton<ITileSourceFabric, TileSourceFabric>();
 
             var app = builder.Build();
+            app.Environment.WebRootFileProvider = new ManifestEmbeddedFileProvider(typeof(Program).Assembly, "wwwroot");
+
             app.UseMiddleware<ErrorLoggingMiddleware>();
             app.UseDefaultFiles();
             app.UseStaticFiles();
