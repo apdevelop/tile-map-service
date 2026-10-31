@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using TileMapService.Models;
 
@@ -26,7 +25,7 @@ namespace TileMapService
         /// <summary>
         /// Returns list of sources configuration and properties.
         /// </summary>
-        List<SourceConfiguration> Sources { get; }
+        SourceConfiguration[] GetAllSources();
 
         /// <summary>
         /// Returns entire service properties.

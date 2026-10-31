@@ -39,15 +39,15 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (!this.tileSourceFabric.Contains(id))
+            if (!tileSourceFabric.Contains(id))
             {
                 return NotFound($"Specified tileset '{id}' not found");
             }
 
-            var tileSource = this.tileSourceFabric.Get(id);
+            var tileSource = tileSourceFabric.Get(id);
             var mediaType = tileSource.Configuration.ContentType;
 
-            return await this.GetTileAsync(id, x, y, z, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
+            return await GetTileAsync(id, x, y, z, mediaType, tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
         /// <summary>
@@ -68,12 +68,12 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (!this.tileSourceFabric.Contains(id))
+            if (!tileSourceFabric.Contains(id))
             {
                 return NotFound($"Specified tileset '{id}' not found.");
             }
 
-            return await this.GetTileAsync(id, x, y, z, EC.ExtensionToMediaType(extension), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
+            return await GetTileAsync(id, x, y, z, EC.ExtensionToMediaType(extension), tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
         /// <summary>
@@ -93,20 +93,20 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (!this.tileSourceFabric.Contains(id))
+            if (!tileSourceFabric.Contains(id))
             {
                 return NotFound($"Specified tileset '{id}' not found.");
             }
 
-            var tileSource = this.tileSourceFabric.Get(id);
+            var tileSource = tileSourceFabric.Get(id);
             var mediaType = tileSource.Configuration.ContentType;
 
-            return await this.GetTileAsync(id, x, y, z, mediaType, this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
+            return await GetTileAsync(id, x, y, z, mediaType, tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
         private async Task<IActionResult> GetTileAsync(string id, int x, int y, int z, string? mediaType, int quality, CancellationToken cancellationToken)
         {
-            var tileSource = this.tileSourceFabric.Get(id);
+            var tileSource = tileSourceFabric.Get(id);
 
             if (!WebMercator.IsInsideBBox(x, y, z, tileSource.Configuration.Srs))
             {

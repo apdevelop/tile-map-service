@@ -18,7 +18,7 @@ namespace TileMapService.Controllers
         [HttpGet("sources")]
         public IActionResult GetSources()
         {
-            var result = this.tileSourceFabric.Sources;
+            var result = tileSourceFabric.GetAllSources();
             return Ok(result);
         }
 

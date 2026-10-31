@@ -28,11 +28,11 @@ namespace TileMapService.Wms
             // TODO: ? xsi:schemaLocation
 
             var exceptionElement = doc.CreateElement(Identifiers.OwsPrefix, Identifiers.ExceptionElement, Identifiers.OwsNamespaceUri);
-            exceptionElement.SetAttribute(Identifiers.ExceptionCodeAttribute, this.exceptionCode);
-            exceptionElement.SetAttribute(Identifiers.LocatorAttribute, this.locator);
+            exceptionElement.SetAttribute(Identifiers.ExceptionCodeAttribute, exceptionCode);
+            exceptionElement.SetAttribute(Identifiers.LocatorAttribute, locator);
 
             var exceptionTextElement = doc.CreateElement(Identifiers.OwsPrefix, Identifiers.ExceptionTextElement, Identifiers.OwsNamespaceUri);
-            exceptionTextElement.AppendChild(doc.CreateTextNode(this.message));
+            exceptionTextElement.AppendChild(doc.CreateTextNode(message));
 
             exceptionElement.AppendChild(exceptionTextElement);
             rootElement.AppendChild(exceptionElement);

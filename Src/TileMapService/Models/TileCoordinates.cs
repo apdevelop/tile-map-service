@@ -15,14 +15,11 @@
 
         public TileCoordinates(int x, int y, int z)
         {
-            this.X = x;
-            this.Y = y;
-            this.Z = z;
+            X = x;
+            Y = y;
+            Z = z;
         }
 
-        public override string ToString()
-        {
-            return $"X={this.X} Y={this.Y} Z={this.Z}";
-        }
+        public override string ToString() => $"X={X} Y={Y} Z={Z}";
     }
 }

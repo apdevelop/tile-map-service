@@ -17,10 +17,10 @@
 
         public TileDataset(int x, int y, int z, byte[] imageData)
         {
-            this.X = x;
-            this.Y = y;
-            this.Z = z;
-            this.ImageData = imageData;
+            X = x;
+            Y = y;
+            Z = z;
+            ImageData = imageData;
         }
     }
 }

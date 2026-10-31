@@ -19,7 +19,7 @@ namespace TileMapService
         {
             try
             {
-                await this.next(context);
+                await next(context);
             }
             catch (Exception e)
             {

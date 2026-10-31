@@ -45,26 +45,26 @@ namespace TileMapService.TileSources
             // 2. Actual values (MBTiles metadata table values).
             // 3. Values from configuration file.
 
-            if (string.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            this.repository = new MBTiles.Repository(configuration.Location, false);
-            var metadata = new MBTiles.Metadata(this.repository.ReadMetadata());
+            repository = new MBTiles.Repository(configuration.Location, false);
+            var metadata = new MBTiles.Metadata(repository.ReadMetadata());
 
-            var title = string.IsNullOrEmpty(this.configuration.Title)
-                ? (!string.IsNullOrEmpty(metadata.Name) ? metadata.Name : this.configuration.Id)
-                : this.configuration.Title;
+            var title = string.IsNullOrEmpty(configuration.Title)
+                ? (!string.IsNullOrEmpty(metadata.Name) ? metadata.Name : configuration.Id)
+                : configuration.Title;
 
-            var format = string.IsNullOrEmpty(this.configuration.Format)
+            var format = string.IsNullOrEmpty(configuration.Format)
                 ? (!string.IsNullOrEmpty(metadata.Format) ? metadata.Format : ImageFormats.Png)
-                : this.configuration.Format;
+                : configuration.Format;
 
             // Get tile image width and height from first tile, for raster formats
             var tileWidth = Utils.WebMercator.DefaultTileWidth;
             var tileHeight = Utils.WebMercator.DefaultTileHeight;
-            var firstTile = this.repository.ReadFirstTile();
+            var firstTile = repository.ReadFirstTile();
             if (firstTile != null && (format == ImageFormats.Png || format == ImageFormats.Jpeg))
             {
                 var size = Utils.ImageHelper.GetImageSize(firstTile);
@@ -75,11 +75,11 @@ namespace TileMapService.TileSources
                 }
             }
 
-            var minZoom = this.configuration.MinZoom ?? metadata.MinZoom ?? null;
-            var maxZoom = this.configuration.MaxZoom ?? metadata.MaxZoom ?? null;
+            var minZoom = configuration.MinZoom ?? metadata.MinZoom ?? null;
+            var maxZoom = configuration.MaxZoom ?? metadata.MaxZoom ?? null;
             if (minZoom == null || maxZoom == null)
             {
-                var zoomRange = this.repository.ReadZoomLevelRange();
+                var zoomRange = repository.ReadZoomLevelRange();
                 if (zoomRange.HasValue)
                 {
                     minZoom = zoomRange.Value.Min;
@@ -93,17 +93,17 @@ namespace TileMapService.TileSources
             }
 
             // Re-create configuration
-            this.configuration = new SourceConfiguration
+            configuration = new SourceConfiguration
             {
-                Id = this.configuration.Id,
-                Type = this.configuration.Type,
+                Id = configuration.Id,
+                Type = configuration.Type,
                 Format = format,
                 Title = title,
-                Abstract = this.configuration.Abstract,
-                Attribution = string.IsNullOrEmpty(this.configuration.Attribution) ? metadata.Attribution : null,
-                Tms = this.configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
+                Abstract = configuration.Abstract,
+                Attribution = string.IsNullOrEmpty(configuration.Attribution) ? metadata.Attribution : null,
+                Tms = configuration.Tms ?? true, // Default true for the MBTiles, following the Tile Map Service Specification.
                 Srs = Utils.SrsCodes.EPSG3857, // MBTiles supports only Spherical Mercator tile grid
-                Location = this.configuration.Location,
+                Location = configuration.Location,
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(format),
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
@@ -118,18 +118,18 @@ namespace TileMapService.TileSources
 
         Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
-            if (this.repository == null)
+            if (repository == null)
             {
                 throw new InvalidOperationException("Repository was not initialized.");
             }
 
-            var tileRow = this.configuration.Tms != null && this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
-            var tileData = this.repository.ReadTile(x, tileRow, z);
+            var tileRow = configuration.Tms != null && configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
+            var tileData = repository.ReadTile(x, tileRow, z);
 
             // TODO: pass gzipped data as-is with setting HTTP headers?
             // pbf as a format refers to gzip-compressed vector tile data in Mapbox Vector Tile format, 
             // which uses Google Protocol Buffers as encoding format.
-            if (this.configuration.Format == ImageFormats.Protobuf && tileData != null)
+            if (configuration.Format == ImageFormats.Protobuf && tileData != null)
             {
                 using var compressedStream = new MemoryStream(tileData);
                 using var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress);
@@ -141,7 +141,7 @@ namespace TileMapService.TileSources
             return Task.FromResult(tileData);
         }
 
-        SourceConfiguration ITileSource.Configuration => this.configuration;
+        SourceConfiguration ITileSource.Configuration => configuration;
 
         #endregion
     }

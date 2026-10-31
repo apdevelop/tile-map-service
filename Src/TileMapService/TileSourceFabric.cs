@@ -27,8 +27,8 @@ namespace TileMapService
             this.loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
             var sources = configuration
-                    .GetSection("Sources")
-                    .Get<IList<SourceConfiguration>>();
+                .GetSection("Sources")
+                .Get<IList<SourceConfiguration>>();
 
             if (sources == null)
             {
@@ -36,23 +36,23 @@ namespace TileMapService
             }
             else
             {
-                this.tileSources = sources
-                        .Where(c => !string.IsNullOrEmpty(c.Id)) // Skip disabled sources
-                        .ToDictionary(c => c.Id, c => CreateTileSource(c));
+                tileSources = sources
+                    .Where(c => !string.IsNullOrEmpty(c.Id)) // Skip disabled sources
+                    .ToDictionary(c => c.Id, CreateTileSource);
             }
 
             var serviceProps = configuration
-                    .GetSection("Service")
-                    .Get<ServiceProperties>();
+                .GetSection("Service")
+                .Get<ServiceProperties>();
 
-            this.serviceProperties = serviceProps ?? new ServiceProperties();
+            serviceProperties = serviceProps ?? new ServiceProperties();
         }
 
         #region ITileSourceFabric implementation
 
         async Task ITileSourceFabric.InitAsync()
         {
-            foreach (var tileSource in this.tileSources)
+            foreach (var tileSource in tileSources)
             {
                 // TODO: ? execute in parallel
                 // TODO: ? exclude or set flag if initialization error
@@ -62,28 +62,26 @@ namespace TileMapService
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError(ex, $"Error initializing '{tileSource.Value.Configuration.Id}' source.");
+                    logger.LogError(ex, $"Error initializing '{tileSource.Value.Configuration.Id}' source.");
                 }
             }
         }
 
-        bool ITileSourceFabric.Contains(string id) => this.tileSources.ContainsKey(id);
+        bool ITileSourceFabric.Contains(string id) => tileSources.ContainsKey(id);
 
-        ITileSource ITileSourceFabric.Get(string id) => this.tileSources[id];
+        ITileSource ITileSourceFabric.Get(string id) => tileSources[id];
 
-        List<SourceConfiguration> ITileSourceFabric.Sources =>
-            this.tileSources
+        SourceConfiguration[] ITileSourceFabric.GetAllSources() =>
+            tileSources
                 .Select(s => s.Value.Configuration)
-                .ToList();
+                .ToArray();
 
-        ServiceProperties ITileSourceFabric.ServiceProperties => this.serviceProperties;
+        ServiceProperties ITileSourceFabric.ServiceProperties => serviceProperties;
 
         #endregion
 
         private ITileSource CreateTileSource(SourceConfiguration config)
         {
-            ArgumentNullException.ThrowIfNull(config);
-
             if (string.IsNullOrEmpty(config.Type))
             {
                 throw new InvalidOperationException("config.Type is null or empty");

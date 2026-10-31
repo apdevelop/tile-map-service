@@ -13,10 +13,10 @@
 
         public TileCoordinates(int x, int y)
         {
-            this.X = x;
-            this.Y = y;
+            X = x;
+            Y = y;
         }
 
-        public override string ToString() => $"X = {this.X}  Y = {this.Y}";
+        public override string ToString() => $"X = {X}  Y = {Y}";
     }
 }

@@ -71,7 +71,7 @@ namespace TileMapService.Wms
 
             serviceElement.AppendChild(serviceKeywordListElement);
 
-            var serviceOnlineResource = CreateOnlineResourceElement(this.baseUrl);
+            var serviceOnlineResource = CreateOnlineResourceElement(baseUrl);
             serviceElement.AppendChild(serviceOnlineResource);
 
             var capabilityElement = doc.CreateElement(Identifiers.CapabilityElement);
@@ -240,7 +240,7 @@ namespace TileMapService.Wms
 
         private XmlElement CreateRequestElement(string name, IEnumerable<string> formats)
         {
-            if (this.doc == null)
+            if (doc == null)
             {
                 throw new InvalidOperationException();
             }
@@ -263,7 +263,7 @@ namespace TileMapService.Wms
             var requestDCPTypeHTTPGet = doc.CreateElement("Get");
             requestDCPTypeHTTP.AppendChild(requestDCPTypeHTTPGet);
 
-            var serviceOnlineResource = CreateOnlineResourceElement(this.baseUrl);
+            var serviceOnlineResource = CreateOnlineResourceElement(baseUrl);
             requestDCPTypeHTTPGet.AppendChild(serviceOnlineResource);
 
             return request;
@@ -271,7 +271,7 @@ namespace TileMapService.Wms
 
         private XmlElement CreateOnlineResourceElement(string href)
         {
-            if (this.doc == null)
+            if (doc == null)
             {
                 throw new InvalidOperationException();
             }
@@ -291,7 +291,7 @@ namespace TileMapService.Wms
 
         private XmlElement CreateLayerElement(Version version, Layer layer)
         {
-            if (this.doc == null)
+            if (doc == null)
             {
                 throw new InvalidOperationException();
             }

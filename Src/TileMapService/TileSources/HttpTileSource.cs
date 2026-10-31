@@ -55,60 +55,60 @@ namespace TileMapService.TileSources
             // 2. Actual values (from source metadata / capabilities).
             // 3. Values from configuration file - overrides given above, if provided.
 
-            this.client = new HttpClient { Timeout = TimeSpan.FromSeconds(15), }; // TODO: add custom headers from configuration
+            client = new HttpClient { Timeout = TimeSpan.FromSeconds(15), }; // TODO: add custom headers from configuration
 
-            var sourceCapabilities = await this.GetSourceCapabilitiesAsync().ConfigureAwait(false);
+            var sourceCapabilities = await GetSourceCapabilitiesAsync().ConfigureAwait(false);
 
             // TODO: combine capabilies with configuration
-            var title = string.IsNullOrEmpty(this.configuration.Title)
-                ? this.configuration.Id
-                : this.configuration.Title;
+            var title = string.IsNullOrEmpty(configuration.Title)
+                ? configuration.Id
+                : configuration.Title;
 
-            var minZoom = this.configuration.MinZoom ?? 0;
-            var maxZoom = this.configuration.MaxZoom ?? 24;
+            var minZoom = configuration.MinZoom ?? 0;
+            var maxZoom = configuration.MaxZoom ?? 24;
 
-            if (string.IsNullOrEmpty(this.configuration.Type))
+            if (string.IsNullOrEmpty(configuration.Type))
             {
                 throw new InvalidOperationException("configuration.Type is null or empty");
             }
 
-            if (string.IsNullOrEmpty(this.configuration.Format)) // TODO: get from metadata
+            if (string.IsNullOrEmpty(configuration.Format)) // TODO: get from metadata
             {
                 throw new InvalidOperationException("configuration.Format is null or empty");
             }
 
             // Default is tms=false for simple XYZ tile services
-            var tms = this.configuration.Tms ?? (string.Compare(this.configuration.Type, SourceConfiguration.TypeTms, StringComparison.InvariantCultureIgnoreCase) == 0);
-            var srs = string.IsNullOrWhiteSpace(this.configuration.Srs) ? Utils.SrsCodes.EPSG3857 : this.configuration.Srs.Trim().ToUpper();
+            var tms = configuration.Tms ?? (string.Compare(configuration.Type, SourceConfiguration.TypeTms, StringComparison.InvariantCultureIgnoreCase) == 0);
+            var srs = string.IsNullOrWhiteSpace(configuration.Srs) ? Utils.SrsCodes.EPSG3857 : configuration.Srs.Trim().ToUpper();
 
             // Re-create configuration
-            this.configuration = new SourceConfiguration
+            configuration = new SourceConfiguration
             {
-                Id = this.configuration.Id,
-                Type = this.configuration.Type.ToLowerInvariant(),
-                Format = this.configuration.Format, // TODO: from source service/layer capabilities
+                Id = configuration.Id,
+                Type = configuration.Type.ToLowerInvariant(),
+                Format = configuration.Format, // TODO: from source service/layer capabilities
                 Title = title,
-                Abstract = this.configuration.Abstract, // TODO: from source layer capabilities
-                Attribution = this.configuration.Attribution,
+                Abstract = configuration.Abstract, // TODO: from source layer capabilities
+                Attribution = configuration.Attribution,
                 Tms = tms,
                 Srs = srs,
-                Location = this.configuration.Location,
-                ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from source service capabilities
+                Location = configuration.Location,
+                ContentType = Utils.EntitiesConverter.TileFormatToContentType(configuration.Format), // TODO: from source service capabilities
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
                 GeographicalBounds = sourceCapabilities?.GeographicalBounds,
                 TileWidth = sourceCapabilities != null ? sourceCapabilities.TileWidth : Utils.WebMercator.DefaultTileWidth,
                 TileHeight = sourceCapabilities != null ? sourceCapabilities.TileHeight : Utils.WebMercator.DefaultTileHeight,
-                Cache = srs == Utils.SrsCodes.EPSG3857 ? this.configuration.Cache : null, // Only Web Mercator is supported in MBTiles specification
-                Wmts = this.configuration.Wmts,
-                Wms = this.configuration.Wms,
+                Cache = srs == Utils.SrsCodes.EPSG3857 ? configuration.Cache : null, // Only Web Mercator is supported in MBTiles specification
+                Wmts = configuration.Wmts,
+                Wms = configuration.Wms,
                 PostGis = null,
                 TileMatrixSet = sourceCapabilities != null ? sourceCapabilities.TileMatrixSet : [], // Actual for WMTS sources
             };
 
-            if (this.configuration.Cache != null)
+            if (configuration.Cache != null)
             {
-                var dbpath = this.configuration.Cache.DbFile;
+                var dbpath = configuration.Cache.DbFile;
                 if (string.IsNullOrEmpty(dbpath))
                 {
                     throw new InvalidOperationException("DBpath is null or empty string");
@@ -116,30 +116,30 @@ namespace TileMapService.TileSources
 
                 if (File.Exists(dbpath))
                 {
-                    this.cache = new MBT.CacheRepository(dbpath);
+                    cache = new MBT.CacheRepository(dbpath);
                 }
                 else
                 {
-                    this.cache = MBT.CacheRepository.CreateEmpty(dbpath);
+                    cache = MBT.CacheRepository.CreateEmpty(dbpath);
                 }
             }
 
-            this.logger.LogInformation($"Source '{this.configuration.Id}' initialization completed.");
+            logger.LogInformation($"Source '{configuration.Id}' initialization completed.");
         }
 
         private async Task<Layer?> GetSourceCapabilitiesAsync()
         {
-            if (this.client == null)
+            if (client == null)
             {
                 throw new InvalidOperationException("HTTP client was not initialized.");
             }
 
-            if (string.IsNullOrEmpty(this.configuration.Type))
+            if (string.IsNullOrEmpty(configuration.Type))
             {
                 throw new InvalidOperationException("configuration.Type is null or empty");
             }
 
-            if (string.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
@@ -152,12 +152,12 @@ namespace TileMapService.TileSources
             };
 
             // TODO: separate WMS/WMTS/TMS capabilities client classes
-            var sourceType = this.configuration.Type.ToLowerInvariant();
+            var sourceType = configuration.Type.ToLowerInvariant();
             switch (sourceType)
             {
                 case SourceConfiguration.TypeTms:
                     {
-                        var r = await this.client.GetAsync(this.configuration.Location).ConfigureAwait(false);
+                        var r = await client.GetAsync(configuration.Location).ConfigureAwait(false);
                         if (r.IsSuccessStatusCode)
                         {
                             var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -177,22 +177,22 @@ namespace TileMapService.TileSources
                 case SourceConfiguration.TypeWmts:
                     {
                         string? sourceLayerIdentifier = null, capabilitiesUrl = null;
-                        if (this.configuration.Wmts != null)
+                        if (configuration.Wmts != null)
                         {
-                            capabilitiesUrl = string.IsNullOrWhiteSpace(this.configuration.Wmts.CapabilitiesUrl) || !this.configuration.Wmts.CapabilitiesUrl.EndsWith(".xml")
-                                ? Wmts.QueryUtility.GetCapabilitiesKvpUrl(this.configuration.Location)
-                                : this.configuration.Wmts.CapabilitiesUrl;
-                            sourceLayerIdentifier = this.configuration.Wmts.Layer;
+                            capabilitiesUrl = string.IsNullOrWhiteSpace(configuration.Wmts.CapabilitiesUrl) || !configuration.Wmts.CapabilitiesUrl.EndsWith(".xml")
+                                ? Wmts.QueryUtility.GetCapabilitiesKvpUrl(configuration.Location)
+                                : configuration.Wmts.CapabilitiesUrl;
+                            sourceLayerIdentifier = configuration.Wmts.Layer;
                         }
                         else
                         {
-                            capabilitiesUrl = Wmts.QueryUtility.GetCapabilitiesKvpUrl(this.configuration.Location);
-                            sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(this.configuration.Location)
+                            capabilitiesUrl = Wmts.QueryUtility.GetCapabilitiesKvpUrl(configuration.Location);
+                            sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(configuration.Location)
                                 .First(p => string.Compare(p.Key, Wmts.QueryUtility.WmtsQueryLayer, StringComparison.OrdinalIgnoreCase) == 0)
                                 .Value;
                         }
 
-                        var r = await this.client.GetAsync(capabilitiesUrl).ConfigureAwait(false);
+                        var r = await client.GetAsync(capabilitiesUrl).ConfigureAwait(false);
                         if (r.IsSuccessStatusCode)
                         {
                             var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -219,20 +219,20 @@ namespace TileMapService.TileSources
                 case SourceConfiguration.TypeWms:
                     {
                         string? sourceLayerIdentifier = null;
-                        if (this.configuration.Wms != null)
+                        if (configuration.Wms != null)
                         {
-                            sourceLayerIdentifier = this.configuration.Wms.Layer;
+                            sourceLayerIdentifier = configuration.Wms.Layer;
                         }
                         else
                         {
-                            sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(this.configuration.Location)
+                            sourceLayerIdentifier = Utils.UrlHelper.GetQueryParameters(configuration.Location)
                                 .First(p => string.Compare(p.Key, Wms.QueryUtility.WmsQueryLayers, StringComparison.OrdinalIgnoreCase) == 0)
                                 .Value;
                         }
 
                         // TODO: cache XML Capabilities documents from same source
-                        var url = Wms.QueryUtility.GetCapabilitiesUrl(this.configuration);
-                        var r = await this.client.GetAsync(url).ConfigureAwait(false);
+                        var url = Wms.QueryUtility.GetCapabilitiesUrl(configuration);
+                        var r = await client.GetAsync(url).ConfigureAwait(false);
                         if (r.IsSuccessStatusCode)
                         {
                             var xml = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -260,23 +260,23 @@ namespace TileMapService.TileSources
 
         async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
-            if (z < this.configuration.MinZoom || z > this.configuration.MaxZoom)
+            if (z < configuration.MinZoom || z > configuration.MaxZoom)
             {
                 return null;
             }
             else
             {
                 // Check if exists in cache
-                if (this.cache != null)
+                if (cache != null)
                 {
-                    var data = this.cache.ReadTile(x, y, z);
+                    var data = cache.ReadTile(x, y, z);
                     if (data != null)
                     {
                         return data;
                     }
                 }
 
-                if (this.client == null)
+                if (client == null)
                 {
                     throw new InvalidOperationException("HTTP client was not initialized.");
                 }
@@ -293,14 +293,14 @@ namespace TileMapService.TileSources
                             response.Content.Headers.ContentType.MediaType == MediaTypeNames.Text.Xml)
                         {
                             var message = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                            this.logger.LogWarning($"Error reading tile: '{message}'."); // TODO: ? parse XML doc
+                            logger.LogWarning($"Error reading tile: '{message}'."); // TODO: ? parse XML doc
                             return null;
                         }
                     }
 
                     // TODO: more checks of Content-Type, response size, etc.
                     var data = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
-                    this.cache?.AddTile(x, y, z, data);
+                    cache?.AddTile(x, y, z, data);
 
                     return data;
                 }
@@ -319,17 +319,17 @@ namespace TileMapService.TileSources
             uint backgroundColor,
             CancellationToken cancellationToken)
         {
-            if (this.client == null)
+            if (client == null)
             {
                 throw new InvalidOperationException("HTTP client was not initialized.");
             }
 
-            if (string.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            var url = Wms.QueryUtility.GetMapUrl(this.configuration, width, height, boundingBox, isTransparent, backgroundColor);
+            var url = Wms.QueryUtility.GetMapUrl(configuration, width, height, boundingBox, isTransparent, backgroundColor);
             var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -337,7 +337,7 @@ namespace TileMapService.TileSources
                     response.Content.Headers.ContentType.MediaType == MediaTypeNames.Application.OgcServiceExceptionXml)
                 {
                     var message = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                    this.logger.LogWarning($"Error reading tile: '{message}'.");
+                    logger.LogWarning($"Error reading tile: '{message}'.");
                     return null;
                 }
 
@@ -356,39 +356,39 @@ namespace TileMapService.TileSources
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetSourceTileUrl(int x, int y, int z)
         {
-            if (string.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            if (string.IsNullOrEmpty(this.configuration.Type))
+            if (string.IsNullOrEmpty(configuration.Type))
             {
                 throw new InvalidOperationException("configuration.Type is null or empty");
             }
 
-            if (string.IsNullOrEmpty(this.configuration.Format))
+            if (string.IsNullOrEmpty(configuration.Format))
             {
                 throw new InvalidOperationException("configuration.Format is null or empty");
             }
 
-            if (string.IsNullOrEmpty(this.configuration.ContentType))
+            if (string.IsNullOrEmpty(configuration.ContentType))
             {
                 throw new InvalidOperationException("configuration.ContentType is null or empty");
             }
 
-            y = this.configuration.Tms != null && this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
+            y = configuration.Tms != null && configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
 
-            return this.configuration.Type.ToLowerInvariant() switch
+            return configuration.Type.ToLowerInvariant() switch
             {
-                SourceConfiguration.TypeXyz => GetTileXyzUrl(this.configuration.Location, x, y, z),
-                SourceConfiguration.TypeTms => GetTileTmsUrl(this.configuration.Location, this.configuration.Format, x, y, z),
-                SourceConfiguration.TypeWmts => Wmts.QueryUtility.GetTileKvpUrl(this.configuration, x, y, z),
-                SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(this.configuration, x, y, z),
-                _ => throw new InvalidOperationException($"Source type '{this.configuration.Type}' is not supported."),
+                SourceConfiguration.TypeXyz => GetTileXyzUrl(configuration.Location, x, y, z),
+                SourceConfiguration.TypeTms => GetTileTmsUrl(configuration.Location, configuration.Format, x, y, z),
+                SourceConfiguration.TypeWmts => Wmts.QueryUtility.GetTileKvpUrl(configuration, x, y, z),
+                SourceConfiguration.TypeWms => Wms.QueryUtility.GetTileUrl(configuration, x, y, z),
+                _ => throw new InvalidOperationException($"Source type '{configuration.Type}' is not supported."),
             };
         }
 
-        SourceConfiguration ITileSource.Configuration => this.configuration;
+        SourceConfiguration ITileSource.Configuration => configuration;
 
         #endregion
 

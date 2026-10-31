@@ -20,8 +20,8 @@ namespace TileMapService.Wmts
             var rootElement = doc.CreateElement(string.Empty, Identifiers.ExceptionReportElement, Identifiers.OwsNamespaceUri);
 
             var exceptionElement = doc.CreateElement(string.Empty, Identifiers.ExceptionElement, Identifiers.OwsNamespaceUri);
-            exceptionElement.SetAttribute(Identifiers.ExceptionCodeAttribute, this.exceptionCode);
-            exceptionElement.AppendChild(doc.CreateTextNode(this.message));
+            exceptionElement.SetAttribute(Identifiers.ExceptionCodeAttribute, exceptionCode);
+            exceptionElement.AppendChild(doc.CreateTextNode(message));
             rootElement.AppendChild(exceptionElement);
 
             doc.AppendChild(rootElement);

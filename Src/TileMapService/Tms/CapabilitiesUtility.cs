@@ -26,10 +26,10 @@ namespace TileMapService.Tms
                 throw new ArgumentNullException("capabilities.BaseUrl", "BaseUrl is null.");
             }
 
-            this.serviceTitle = capabilities.ServiceTitle;
-            this.serviceAbstract = capabilities.ServiceAbstract;
-            this.baseUrl = capabilities.BaseUrl;
-            this.layers = capabilities.Layers;
+            serviceTitle = capabilities.ServiceTitle;
+            serviceAbstract = capabilities.ServiceAbstract;
+            baseUrl = capabilities.BaseUrl;
+            layers = capabilities.Layers;
         }
 
         /// <summary>
@@ -49,14 +49,14 @@ namespace TileMapService.Tms
             rootElement.AppendChild(tileMapServiceElement);
 
             var titleAttribute = doc.CreateAttribute(Identifiers.TitleAttribute);
-            titleAttribute.Value = this.serviceTitle;
+            titleAttribute.Value = serviceTitle;
             tileMapServiceElement.Attributes.Append(titleAttribute);
 
             var versionAttribute = doc.CreateAttribute(Identifiers.VersionAttribute);
             versionAttribute.Value = Identifiers.Version100;
             tileMapServiceElement.Attributes.Append(versionAttribute);
 
-            var href = $"{this.baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/";
+            var href = $"{baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/";
             var hrefAttribute = doc.CreateAttribute(Identifiers.HRefAttribute);
             hrefAttribute.Value = href;
             tileMapServiceElement.Attributes.Append(hrefAttribute);
@@ -82,17 +82,17 @@ namespace TileMapService.Tms
             rootElement.Attributes.Append(versionAttribute);
 
             var titleElement = doc.CreateElement(Identifiers.TitleElement);
-            titleElement.AppendChild(doc.CreateTextNode(this.serviceTitle));
+            titleElement.AppendChild(doc.CreateTextNode(serviceTitle));
             rootElement.AppendChild(titleElement);
 
             var abstractElement = doc.CreateElement(Identifiers.AbstractElement);
-            abstractElement.AppendChild(doc.CreateTextNode(this.serviceAbstract));
+            abstractElement.AppendChild(doc.CreateTextNode(serviceAbstract));
             rootElement.AppendChild(abstractElement);
 
             var tileMapsElement = doc.CreateElement("TileMaps");
             rootElement.AppendChild(tileMapsElement);
 
-            foreach (var layer in this.layers)
+            foreach (var layer in layers)
             {
                 var tileMapElement = doc.CreateElement(Identifiers.TileMapElement);
 
@@ -106,7 +106,7 @@ namespace TileMapService.Tms
                 var profileAttribute = CreateProfileAttribute(doc, layer.Srs);
                 tileMapElement.Attributes.Append(profileAttribute);
 
-                var href = $"{this.baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/{layer.Identifier}";
+                var href = $"{baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/{layer.Identifier}";
                 var hrefAttribute = doc.CreateAttribute(Identifiers.HRefAttribute);
                 hrefAttribute.Value = href;
                 tileMapElement.Attributes.Append(hrefAttribute);
@@ -135,7 +135,7 @@ namespace TileMapService.Tms
             versionAttribute.Value = Identifiers.Version100;
             rootElement.Attributes.Append(versionAttribute);
 
-            var tilemapservice = $"{this.baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}";
+            var tilemapservice = $"{baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}";
             var tilemapserviceAttribute = doc.CreateAttribute("tilemapservice");
             tilemapserviceAttribute.Value = tilemapservice;
             rootElement.Attributes.Append(tilemapserviceAttribute);
@@ -237,7 +237,7 @@ namespace TileMapService.Tms
 
                 var tileSetElement = doc.CreateElement(Identifiers.TileSetElement);
 
-                var href = $"{this.baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/{layer.Identifier}/{level}";
+                var href = $"{baseUrl}/{Identifiers.Tms}/{Identifiers.Version100}/{layer.Identifier}/{level}";
                 var hrefAttribute = doc.CreateAttribute(Identifiers.HRefAttribute);
                 hrefAttribute.Value = href;
                 tileSetElement.Attributes.Append(hrefAttribute);

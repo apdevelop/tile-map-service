@@ -46,10 +46,10 @@ namespace TileMapService.Models
         /// <returns>The new instance of <see cref="Bounds"/>.</returns>
         public Bounds(double left, double bottom, double right, double top)
         {
-            this.Left = left;
-            this.Bottom = bottom;
-            this.Right = right;
-            this.Top = top;
+            Left = left;
+            Bottom = bottom;
+            Right = right;
+            Top = top;
         }
 
         /// <summary>
@@ -84,9 +84,9 @@ namespace TileMapService.Models
             string.Format(
                 CultureInfo.InvariantCulture,
                 "{0},{1},{2},{3}",
-                this.Left,
-                this.Bottom,
-                this.Right,
-                this.Top);
+                Left,
+                Bottom,
+                Right,
+                Top);
     }
 }

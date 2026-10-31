@@ -30,7 +30,7 @@ namespace TileMapService.Controllers
         public IActionResult GetRootResource()
         {
             // TODO: services/root.xml
-            var capabilities = this.GetCapabilities();
+            var capabilities = GetCapabilities();
             var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetRootResource();
 
             return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
@@ -40,7 +40,7 @@ namespace TileMapService.Controllers
         public IActionResult GetTileMapService()
         {
             // TODO: services/tilemapservice.xml
-            var capabilities = this.GetCapabilities();
+            var capabilities = GetCapabilities();
             var xmlDoc = new Tms.CapabilitiesUtility(capabilities).GetTileMapService();
 
             return File(EC.XmlDocumentToUTF8ByteArray(xmlDoc), MediaTypeNames.Text.Xml);
@@ -50,7 +50,7 @@ namespace TileMapService.Controllers
         public IActionResult GetTileMap(string tileset)
         {
             // TODO: services/basemap.xml
-            var capabilities = this.GetCapabilities();
+            var capabilities = GetCapabilities();
             var layer = capabilities.Layers.SingleOrDefault(l => l.Identifier == tileset);
             if (layer == null)
             {
@@ -81,10 +81,10 @@ namespace TileMapService.Controllers
                 return BadRequest();
             }
 
-            if (this.tileSourceFabric.Contains(tileset))
+            if (tileSourceFabric.Contains(tileset))
             {
                 // TODO: ? convert source format to requested output format
-                var tileSource = this.tileSourceFabric.Get(tileset);
+                var tileSource = tileSourceFabric.Get(tileset);
 
                 if (!WebMercator.IsInsideBBox(x, y, z, tileSource.Configuration.Srs))
                 {
@@ -96,7 +96,7 @@ namespace TileMapService.Controllers
                     data,
                     EC.ExtensionToMediaType(extension),
                     tileSource.Configuration.ContentType,
-                    this.tileSourceFabric.ServiceProperties.JpegQuality);
+                    tileSourceFabric.ServiceProperties.JpegQuality);
 
                 return result != null
                     ? File(result.FileContents, result.ContentType)
@@ -108,18 +108,16 @@ namespace TileMapService.Controllers
             }
         }
 
-        private Tms.Capabilities GetCapabilities()
-        {
-            return new Tms.Capabilities
-            {
-                BaseUrl = this.BaseUrl,
-                Layers = EC.SourcesToLayers(this.tileSourceFabric.Sources),
-                ServiceTitle = this.tileSourceFabric.ServiceProperties.Title,
-                ServiceAbstract = this.tileSourceFabric.ServiceProperties.Abstract,
-            };
-        }
+        private string BaseUrl => $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
 
-        private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
+        private Tms.Capabilities GetCapabilities() =>
+            new()
+            {
+                BaseUrl = BaseUrl,
+                Layers = EC.SourcesToLayers(tileSourceFabric.GetAllSources()),
+                ServiceTitle = tileSourceFabric.ServiceProperties.Title,
+                ServiceAbstract = tileSourceFabric.ServiceProperties.Abstract,
+            };
 
         private FileContentResult ResponseWithNotFoundError(string message)
         {

@@ -31,7 +31,7 @@ namespace TileMapService.Controllers
         /// </summary>
         /// <param name="service">Name of service (must be "WMTS").</param>
         /// <param name="request">Name of request (one of "GetCapabilities", "GetTile").</param>
-        /// <param name="version">WMTS version (must be "1.0.0")</param>
+        /// <param name="version">WMTS version (must be "1.0.0").</param>
         /// <param name="layer">Style  identifier.</param>
         /// <param name="layer">Layer identifier.</param>
         /// <param name="tileMatrix">TileMatrix identifier.</param>
@@ -69,7 +69,7 @@ namespace TileMapService.Controllers
 
             if (string.Compare(request, Identifiers.GetCapabilities, StringComparison.Ordinal) == 0)
             {
-                return this.ProcessGetCapabilitiesRequest();
+                return ProcessGetCapabilitiesRequest();
             }
             else if (string.Compare(request, Identifiers.GetTile, StringComparison.Ordinal) == 0)
             {
@@ -83,7 +83,7 @@ namespace TileMapService.Controllers
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, $"{QueryUtility.WmtsQueryLayer} parameter is not defined");
                 }
 
-                if (!this.tileSourceFabric.Contains(layer))
+                if (!tileSourceFabric.Contains(layer))
                 {
                     return ResponseWithNotFoundError(Identifiers.NotFound, $"Specified layer '{layer}' was not found");
                 }
@@ -93,7 +93,7 @@ namespace TileMapService.Controllers
                     return ResponseWithBadRequestError(Identifiers.MissingParameter, $"{QueryUtility.WmtsQueryFormat} parameter is not defined");
                 }
 
-                return await this.GetTileAsync(layer, tileCol, tileRow, int.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
+                return await GetTileAsync(layer, tileCol, tileRow, int.Parse(tileMatrix), EC.TileFormatToContentType(format), tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
             }
             else
             {
@@ -117,7 +117,7 @@ namespace TileMapService.Controllers
                 return ResponseWithBadRequestError(Identifiers.InvalidParameterValue, $"Invalid VERSION parameter value (must be {Identifiers.Version100})");
             }
 
-            return this.ProcessGetCapabilitiesRequest();
+            return ProcessGetCapabilitiesRequest();
         }
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace TileMapService.Controllers
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "LAYER parameter is not defined");
             }
 
-            if (!this.tileSourceFabric.Contains(layer))
+            if (!tileSourceFabric.Contains(layer))
             {
                 return ResponseWithNotFoundError(Identifiers.NotFound, $"Specified layer '{layer}' was not found");
             }
@@ -177,21 +177,21 @@ namespace TileMapService.Controllers
                 return ResponseWithBadRequestError(Identifiers.MissingParameter, "FORMAT parameter is not defined");
             }
 
-            return await this.GetTileAsync(layer, tileCol, tileRow, int.Parse(tileMatrix), EC.TileFormatToContentType(format), this.tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
+            return await GetTileAsync(layer, tileCol, tileRow, int.Parse(tileMatrix), EC.TileFormatToContentType(format), tileSourceFabric.ServiceProperties.JpegQuality, cancellationToken);
         }
 
         private FileContentResult ProcessGetCapabilitiesRequest()
         {
-            var layers = EC.SourcesToLayers(this.tileSourceFabric.Sources)
+            var layers = EC.SourcesToLayers(tileSourceFabric.GetAllSources())
                 .Where(l => l.Format == ImageFormats.Png || l.Format == ImageFormats.Jpeg) // Only raster formats
                 .ToList();
 
             var xmlDoc = new CapabilitiesUtility(
                 new ServiceProperties
                 {
-                    Title = this.tileSourceFabric.ServiceProperties.Title,
-                    Abstract = this.tileSourceFabric.ServiceProperties.Abstract,
-                    Keywords = this.tileSourceFabric.ServiceProperties.KeywordsList,
+                    Title = tileSourceFabric.ServiceProperties.Title,
+                    Abstract = tileSourceFabric.ServiceProperties.Abstract,
+                    Keywords = tileSourceFabric.ServiceProperties.KeywordsList,
                 },
                 BaseUrl + "/wmts",
                 layers)
@@ -209,7 +209,7 @@ namespace TileMapService.Controllers
             int quality,
             CancellationToken cancellationToken)
         {
-            var tileSource = this.tileSourceFabric.Get(tileset);
+            var tileSource = tileSourceFabric.Get(tileset);
 
             if (!WebMercator.IsInsideBBox(tileCol, tileRow, tileMatrix, tileSource.Configuration.Srs))
             {
@@ -228,7 +228,7 @@ namespace TileMapService.Controllers
                 : ResponseWithNotFoundError(Identifiers.NotFound, "Specified tile was not found");
         }
 
-        private string BaseUrl => $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}";
+        private string BaseUrl => $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
 
         private FileContentResult ResponseWithBadRequestError(string exceptionCode, string message)
         {

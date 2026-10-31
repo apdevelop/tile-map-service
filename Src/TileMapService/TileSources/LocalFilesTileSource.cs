@@ -37,12 +37,12 @@ namespace TileMapService.TileSources
 
         Task ITileSource.InitAsync()
         {
-            if (string.IsNullOrEmpty(this.configuration.Location))
+            if (string.IsNullOrEmpty(configuration.Location))
             {
                 throw new InvalidOperationException("configuration.Location is null or empty");
             }
 
-            if (string.IsNullOrEmpty(this.configuration.Format)) // TODO: from first file, if any
+            if (string.IsNullOrEmpty(configuration.Format)) // TODO: from first file, if any
             {
                 throw new InvalidOperationException("configuration.Format is null or empty");
             }
@@ -54,12 +54,12 @@ namespace TileMapService.TileSources
 
             // Detect zoom levels range - build list of folders
             var zoomLevels = new List<int>();
-            var xIndex = this.configuration.Location.IndexOf("{x}", StringComparison.OrdinalIgnoreCase);
-            var yIndex = this.configuration.Location.IndexOf("{y}", StringComparison.OrdinalIgnoreCase);
-            var zIndex = this.configuration.Location.IndexOf("{z}", StringComparison.OrdinalIgnoreCase);
+            var xIndex = configuration.Location.IndexOf("{x}", StringComparison.OrdinalIgnoreCase);
+            var yIndex = configuration.Location.IndexOf("{y}", StringComparison.OrdinalIgnoreCase);
+            var zIndex = configuration.Location.IndexOf("{z}", StringComparison.OrdinalIgnoreCase);
             if ((zIndex < yIndex) && (zIndex < xIndex))
             {
-                var baseFolder = new Uri(this.configuration.Location[..zIndex]).LocalPath;
+                var baseFolder = new Uri(configuration.Location[..zIndex]).LocalPath;
                 foreach (var directory in Directory.GetDirectories(baseFolder))
                 {
                     if (int.TryParse(Path.GetFileName(directory), out int zoomLevel)) // Directory name is integer number
@@ -69,32 +69,32 @@ namespace TileMapService.TileSources
                 }
             }
 
-            var title = string.IsNullOrEmpty(this.configuration.Title)
-                ? this.configuration.Id
-                : this.configuration.Title;
+            var title = string.IsNullOrEmpty(configuration.Title)
+                ? configuration.Id
+                : configuration.Title;
 
-            var srs = string.IsNullOrWhiteSpace(this.configuration.Srs)
+            var srs = string.IsNullOrWhiteSpace(configuration.Srs)
                 ? Utils.SrsCodes.EPSG3857
-                : this.configuration.Srs.Trim().ToUpper();
+                : configuration.Srs.Trim().ToUpper();
 
-            var minZoom = this.configuration.MinZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Min(z => z) : 0);
-            var maxZoom = this.configuration.MaxZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 20);
+            var minZoom = configuration.MinZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Min(z => z) : 0);
+            var maxZoom = configuration.MaxZoom ?? (zoomLevels.Count > 0 ? zoomLevels.Max(z => z) : 20);
 
             // TODO: TileWidh, TileHeight from file properties (with supported image extension)
 
             // Re-create configuration
-            this.configuration = new SourceConfiguration
+            configuration = new SourceConfiguration
             {
-                Id = this.configuration.Id,
-                Type = this.configuration.Type,
-                Format = this.configuration.Format, // TODO: from file properties (extension)
+                Id = configuration.Id,
+                Type = configuration.Type,
+                Format = configuration.Format, // TODO: from file properties (extension)
                 Title = title,
-                Abstract = this.configuration.Abstract,
-                Attribution = this.configuration.Attribution,
-                Tms = this.configuration.Tms ?? false, // Default is tms=false for file storage
+                Abstract = configuration.Abstract,
+                Attribution = configuration.Attribution,
+                Tms = configuration.Tms ?? false, // Default is tms=false for file storage
                 Srs = srs,
-                Location = this.configuration.Location,
-                ContentType = Utils.EntitiesConverter.TileFormatToContentType(this.configuration.Format), // TODO: from file properties
+                Location = configuration.Location,
+                ContentType = Utils.EntitiesConverter.TileFormatToContentType(configuration.Format), // TODO: from file properties
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
                 GeographicalBounds = null, // TODO: compute bounds (need to scan all folders ?)
@@ -108,19 +108,19 @@ namespace TileMapService.TileSources
 
         async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
-            if (z < this.configuration.MinZoom || z > this.configuration.MaxZoom)
+            if (z < configuration.MinZoom || z > configuration.MaxZoom)
             {
                 return null;
             }
             else
             {
-                if (string.IsNullOrEmpty(this.configuration.Location))
+                if (string.IsNullOrEmpty(configuration.Location))
                 {
                     throw new InvalidOperationException("configuration.Location is null or empty");
                 }
 
-                y = this.configuration.Tms != null && this.configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
-                var path = GetLocalFilePath(this.configuration.Location, x, y, z);
+                y = configuration.Tms != null && configuration.Tms.Value ? y : Utils.WebMercator.FlipYCoordinate(y, z);
+                var path = GetLocalFilePath(configuration.Location, x, y, z);
                 var fileInfo = new FileInfo(path);
                 if (fileInfo.Exists)
                 {
@@ -136,7 +136,7 @@ namespace TileMapService.TileSources
             }
         }
 
-        SourceConfiguration ITileSource.Configuration => this.configuration;
+        SourceConfiguration ITileSource.Configuration => configuration;
 
         #endregion
 

@@ -56,11 +56,11 @@ namespace TileMapService.Wmts
             var serviceIdentificationElement = doc.CreateElement(OwsPrefix, "ServiceIdentification", Identifiers.OwsNamespaceUri);
 
             var titleElement = doc.CreateElement(OwsPrefix, Identifiers.TitleElement, Identifiers.OwsNamespaceUri);
-            titleElement.InnerText = this.service.Title ?? string.Empty;
+            titleElement.InnerText = service.Title ?? string.Empty;
             serviceIdentificationElement.AppendChild(titleElement);
 
             var abstractElement = doc.CreateElement(OwsPrefix, Identifiers.AbstractElement, Identifiers.OwsNamespaceUri);
-            abstractElement.InnerText = this.service.Abstract ?? string.Empty;
+            abstractElement.InnerText = service.Abstract ?? string.Empty;
             serviceIdentificationElement.AppendChild(abstractElement);
 
             var serviceKeywordListElement = doc.CreateElement(OwsPrefix, Identifiers.KeywordsElement, Identifiers.OwsNamespaceUri);
@@ -102,15 +102,15 @@ namespace TileMapService.Wmts
             operationsMetadataElement.AppendChild(CreateOperationElement(
                 doc,
                 [
-                    new OperationProperties { Href = this.baseUrl + $"/{Identifiers.Version100}/WMTSCapabilities.xml", Encoding = Identifiers.RESTful },
-                    new OperationProperties { Href = this.baseUrl + "?", Encoding = Identifiers.KVP },
+                    new OperationProperties { Href = baseUrl + $"/{Identifiers.Version100}/WMTSCapabilities.xml", Encoding = Identifiers.RESTful },
+                    new OperationProperties { Href = baseUrl + "?", Encoding = Identifiers.KVP },
                 ],
                 Identifiers.GetCapabilities));
             operationsMetadataElement.AppendChild(CreateOperationElement(
                 doc,
                 [
-                    new OperationProperties { Href = this.baseUrl + $"/tile/{Identifiers.Version100}/", Encoding = Identifiers.RESTful },
-                    new OperationProperties { Href = this.baseUrl + "?", Encoding = Identifiers.KVP },
+                    new OperationProperties { Href = baseUrl + $"/tile/{Identifiers.Version100}/", Encoding = Identifiers.RESTful },
+                    new OperationProperties { Href = baseUrl + "?", Encoding = Identifiers.KVP },
                 ],
                 Identifiers.GetTile));
             // TODO: ? GetFeatureInfo
@@ -119,14 +119,14 @@ namespace TileMapService.Wmts
             var contentsElement = doc.CreateElement(string.Empty, "Contents", WmtsNamespaceUri);
 
             var identifiers = new HashSet<string>();
-            foreach (var layer in this.layers)
+            foreach (var layer in layers)
             {
                 switch (layer.Srs)
                 {
                     case Utils.SrsCodes.EPSG3857:
                         {
                             var identifier = string.Format(CultureInfo.InvariantCulture, "google3857_{0}-{1}", layer.MinZoom, layer.MaxZoom);
-                            contentsElement.AppendChild(CreateLayerElement(doc, this.baseUrl, layer, identifier));
+                            contentsElement.AppendChild(CreateLayerElement(doc, baseUrl, layer, identifier));
                             if (identifiers.Add(identifier))
                             {
                                 contentsElement.AppendChild(CreateTileMatrixSetElement(
@@ -142,7 +142,7 @@ namespace TileMapService.Wmts
                     case Utils.SrsCodes.EPSG4326:
                         {
                             var identifier = string.Format(CultureInfo.InvariantCulture, "WGS84_{0}-{1}", layer.MinZoom, layer.MaxZoom);
-                            contentsElement.AppendChild(CreateLayerElement(doc, this.baseUrl, layer, identifier));
+                            contentsElement.AppendChild(CreateLayerElement(doc, baseUrl, layer, identifier));
                             if (identifiers.Add(identifier))
                             {
                                 contentsElement.AppendChild(CreateTileMatrixSetElement(

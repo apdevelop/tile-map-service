@@ -37,25 +37,25 @@ namespace TileMapService.TileSources
 
         Task ITileSource.InitAsync()
         {
-            var title = string.IsNullOrEmpty(this.configuration.Title)
-                ? this.configuration.Id
-                : this.configuration.Title;
+            var title = string.IsNullOrEmpty(configuration.Title)
+                ? configuration.Id
+                : configuration.Title;
 
-            var minZoom = this.configuration.MinZoom ?? 0;
-            var maxZoom = this.configuration.MaxZoom ?? 20;
+            var minZoom = configuration.MinZoom ?? 0;
+            var maxZoom = configuration.MaxZoom ?? 20;
 
             // Re-create configuration
-            this.configuration = new SourceConfiguration
+            configuration = new SourceConfiguration
             {
-                Id = this.configuration.Id,
-                Type = this.configuration.Type,
+                Id = configuration.Id,
+                Type = configuration.Type,
                 Format = ImageFormats.MapboxVectorTile,
                 Title = title,
-                Abstract = this.configuration.Abstract,
-                Attribution = this.configuration.Attribution,
-                Tms = this.configuration.Tms ?? true,
+                Abstract = configuration.Abstract,
+                Attribution = configuration.Attribution,
+                Tms = configuration.Tms ?? true,
                 Srs = Utils.SrsCodes.EPSG3857,
-                Location = this.configuration.Location,
+                Location = configuration.Location,
                 ContentType = Utils.EntitiesConverter.TileFormatToContentType(ImageFormats.MapboxVectorTile),
                 MinZoom = minZoom,
                 MaxZoom = maxZoom,
@@ -71,8 +71,8 @@ namespace TileMapService.TileSources
 
         async Task<byte[]?> ITileSource.GetTileAsync(int x, int y, int z, CancellationToken cancellationToken)
         {
-            if (z < this.configuration.MinZoom ||
-                z > this.configuration.MaxZoom ||
+            if (z < configuration.MinZoom ||
+                z > configuration.MaxZoom ||
                 x < 0 ||
                 y < 0 ||
                 x > Utils.WebMercator.TileCount(z) ||
@@ -82,7 +82,7 @@ namespace TileMapService.TileSources
             }
             else
             {
-                var postgis = this.configuration.PostGis ?? throw new InvalidOperationException("PostGIS connection options must be defined.");
+                var postgis = configuration.PostGis ?? throw new InvalidOperationException("PostGIS connection options must be defined.");
 
                 if (string.IsNullOrWhiteSpace(postgis.Table))
                 {
@@ -109,7 +109,7 @@ namespace TileMapService.TileSources
             }
         }
 
-        SourceConfiguration ITileSource.Configuration => this.configuration;
+        SourceConfiguration ITileSource.Configuration => configuration;
 
         private static readonly string[] FieldsSeparator = [","];
 
@@ -136,11 +136,11 @@ namespace TileMapService.TileSources
                         FROM ""{tableName}""
                         WHERE ST_Intersects({geometry}, ST_TileEnvelope({z},{x},{y}))
                     )
-                    SELECT ST_AsMVT(mvtgeom.*, '{this.configuration.Id}')
+                    SELECT ST_AsMVT(mvtgeom.*, '{configuration.Id}')
                     FROM mvtgeom";
 
             // TODO: ? other SRS, using ST_Transform if needed
-            using var connection = new NpgsqlConnection(this.connectionString);
+            using var connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
             using var command = new NpgsqlCommand(commandText, connection);
             using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);

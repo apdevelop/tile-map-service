@@ -15,11 +15,11 @@ namespace TileMapService.Models
 
         public GeographicalPoint(double longitude, double latitude)
         {
-            this.Longitude = longitude;
-            this.Latitude = latitude;
+            Longitude = longitude;
+            Latitude = latitude;
         }
 
         public override string ToString() =>
-            string.Format(CultureInfo.InvariantCulture, "{0} {1}", this.Longitude, this.Latitude);
+            string.Format(CultureInfo.InvariantCulture, "{0} {1}", Longitude, Latitude);
     }
 }
