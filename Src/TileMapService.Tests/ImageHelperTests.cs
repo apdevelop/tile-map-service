@@ -55,7 +55,7 @@ namespace TileMapService.Tests
         {
             var props = U.ImageHelper.ReadGeoTiffProperties(Path.Combine(TestConfiguration.DataPath, Sample1_3857));
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(props.ImageWidth, Is.EqualTo(80));
                 Assert.That(props.ImageHeight, Is.EqualTo(60));
@@ -64,7 +64,7 @@ namespace TileMapService.Tests
                 Assert.That(props.ProjectedBounds.Right, Is.EqualTo(637857.616).Within(0.001));
                 Assert.That(props.ProjectedBounds.Bottom, Is.EqualTo(-166644.204).Within(0.001));
                 Assert.That(props.ProjectedBounds.Top, Is.EqualTo(-150349.815).Within(0.001));
-            });
+            }
         }
 
         [Test]
@@ -72,7 +72,7 @@ namespace TileMapService.Tests
         {
             var props = U.ImageHelper.ReadGeoTiffProperties(Path.Combine(TestConfiguration.DataPath, Sample1_4326));
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(props.ImageWidth, Is.EqualTo(80));
                 Assert.That(props.ImageHeight, Is.EqualTo(60));
@@ -81,7 +81,7 @@ namespace TileMapService.Tests
                 Assert.That(props.GeographicalBounds.MaxLongitude, Is.EqualTo(5.729972).Within(0.001));
                 Assert.That(props.GeographicalBounds.MinLatitude, Is.EqualTo(-1.496728).Within(0.001));
                 Assert.That(props.GeographicalBounds.MaxLatitude, Is.EqualTo(-1.350353).Within(0.001));
-            });
+            }
         }
 
         [Test]
@@ -94,12 +94,12 @@ namespace TileMapService.Tests
             File.WriteAllBytes(path, image);
 
             var props = U.ImageHelper.ReadGeoTiffProperties(path);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(props.ImageWidth, Is.EqualTo(64));
                 Assert.That(props.ImageHeight, Is.EqualTo(32));
                 Assert.That(props.Srid, Is.EqualTo(3857));
-            });
+            }
         }
     }
 }

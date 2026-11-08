@@ -33,8 +33,8 @@ namespace TileMapService.Tests
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(coordinates.All(c => c.Z == 1));
-                Assert.That(coordinates[0].X, Is.EqualTo(0));
-                Assert.That(coordinates[0].Y, Is.EqualTo(0));
+                Assert.That(coordinates[0].X, Is.Zero);
+                Assert.That(coordinates[0].Y, Is.Zero);
             }
         }
     }

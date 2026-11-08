@@ -142,12 +142,12 @@ namespace TileMapService.Tests
             xml.LoadXml(tmsXml);
             Assert.That(xml.SelectSingleNode("/TileMap/Abstract").InnerText, Is.EqualTo("World map"));
             var tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(int.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
                 Assert.That(int.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
                 Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("png"));
-            });
+            }
 
             var tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
             Assert.That(tileSets, Has.Count.EqualTo(6)); // Z=0..5 from tiles zoomLevel range in table
@@ -159,12 +159,12 @@ namespace TileMapService.Tests
             xml.LoadXml(tmsXml);
             Assert.That(xml.SelectSingleNode("/TileMap/Abstract").InnerText, Is.EqualTo("Small area map"));
             tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(int.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
                 Assert.That(int.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
                 Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("jpg"));
-            });
+            }
 
             tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
             Assert.That(tileSets, Has.Count.EqualTo(3)); // Z=8..10 from tiles zoomLevel range in table
@@ -175,24 +175,24 @@ namespace TileMapService.Tests
             tmsXml = await r.Content.ReadAsStringAsync();
             xml.LoadXml(tmsXml);
             Assert.That(xml.SelectSingleNode("/TileMap/Abstract").InnerText, Is.EqualTo(string.Empty));
-            
+
             tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(int.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
                 Assert.That(int.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(256));
                 Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("jpg")); // TODO: or "jpeg" ?
-            });
+            }
 
             tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
             Assert.That(tileSets, Has.Count.EqualTo(4));
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(tileSets[0].Attributes["units-per-pixel"].Value, Is.EqualTo("0.703125")); // = 360 degrees / (2 * 256 pixels)
                 Assert.That(tileSets[1].Attributes["units-per-pixel"].Value, Is.EqualTo("0.3515625")); // = 360 degrees / (4 * 256 pixels)
                 Assert.That(tileSets[2].Attributes["units-per-pixel"].Value, Is.EqualTo("0.17578125")); // = 360 degrees / (8 * 256 pixels)
                 Assert.That(tileSets[3].Attributes["units-per-pixel"].Value, Is.EqualTo("0.087890625")); // = 360 degrees / (16 * 256 pixels)
-            });
+            }
         }
 
         [Test]
@@ -204,14 +204,14 @@ namespace TileMapService.Tests
             var tmsXml = await r.Content.ReadAsStringAsync();
             var xml = new XmlDocument();
             xml.LoadXml(tmsXml);
-            
+
             var tileFormat = xml.SelectSingleNode("/TileMap/TileFormat");
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(int.Parse(tileFormat.Attributes["width"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
                 Assert.That(int.Parse(tileFormat.Attributes["height"].Value, CultureInfo.InvariantCulture), Is.EqualTo(512));
                 Assert.That(tileFormat.Attributes["extension"].Value, Is.EqualTo("png"));
-            });
+            }
 
             ////var tileSets = xml.SelectNodes("/TileMap/TileSets/TileSet");
             ////Assert.That(tileSets, Has.Count.EqualTo(6)); // Z=0..5 from tiles zoomLevel range in table
@@ -236,39 +236,33 @@ namespace TileMapService.Tests
             var db = new MBT.Repository(MbtilesFilePath1);
             var original = db.ReadTile(0, 0, 0);
 
+            var r1 = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.png");
+            Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var actual1 = await r1.Content.ReadAsByteArrayAsync();
+            using (Assert.EnterMultipleScope())
             {
-                var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.png");
-                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
-                    Assert.That(actual, Is.EqualTo(original));
-                });
+                Assert.That(r1.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
+                Assert.That(actual1, Is.EqualTo(original));
             }
 
+            var expected2 = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
+            var r2 = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.jpeg");
+            Assert.That(r2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var actual2 = await r2.Content.ReadAsByteArrayAsync();
+            using (Assert.EnterMultipleScope())
             {
-                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
-                var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.jpeg");
-                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
-                    Assert.That(actual, Is.EqualTo(expected));
-                });
+                Assert.That(r2.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
+                Assert.That(actual2, Is.EqualTo(expected2));
             }
 
+            var expected3 = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
+            var r3 = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.webp");
+            Assert.That(r3.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var actual3 = await r3.Content.ReadAsByteArrayAsync();
+            using (Assert.EnterMultipleScope())
             {
-                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
-                var r = await client.GetAsync("/tms/1.0.0/world-mercator-hd/0/0/0.webp");
-                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Webp));
-                    Assert.That(actual, Is.EqualTo(expected));
-                });
+                Assert.That(r3.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Webp));
+                Assert.That(actual3, Is.EqualTo(expected3));
             }
         }
 
@@ -298,12 +292,11 @@ namespace TileMapService.Tests
 
             var actual0 = await r0.Content.ReadAsByteArrayAsync();
             var actual1 = await r1.Content.ReadAsByteArrayAsync();
-
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(actual0, Is.EqualTo(expected0));
                 Assert.That(actual1, Is.EqualTo(expected1));
-            });
+            }
         }
 
         [Test]

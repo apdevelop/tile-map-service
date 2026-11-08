@@ -63,7 +63,7 @@ namespace TileMapService.Tests
                 ////},
             };
 
-            this.client = new HttpClient
+            client = new HttpClient
             {
                 BaseAddress = new Uri(TestConfiguration.BaseUrl),
             };
@@ -75,7 +75,7 @@ namespace TileMapService.Tests
                     Service = new { keywords = "wms,service,tile" }
                 });
 
-            this.serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.PortNumber);
+            serviceHost = await TestsUtility.CreateAndRunServiceHostAsync(json, TestConfiguration.PortNumber);
 
             // TODO: proxy source for WMS
         }
@@ -83,8 +83,8 @@ namespace TileMapService.Tests
         [OneTimeTearDown]
         public async Task TearDown()
         {
-            await this.serviceHost.StopAsync();
-            this.serviceHost.Dispose();
+            await serviceHost.StopAsync();
+            serviceHost.Dispose();
 
             // Skip deleting files to analyze them
             if (!System.Diagnostics.Debugger.IsAttached)
@@ -92,7 +92,7 @@ namespace TileMapService.Tests
                 RemoveTestData();
             }
 
-            this.client.Dispose();
+            client.Dispose();
         }
 
         [Test]
@@ -131,11 +131,11 @@ namespace TileMapService.Tests
 
             var messageNode = xml.SelectSingleNode("/ows:ExceptionReport/ows:Exception", nsManager);
             Assert.That(messageNode, Is.Not.Null);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
                 Assert.That(messageNode.Attributes["exceptionCode"].Value, Is.EqualTo("InvalidParameterValue"));
-            });
+            }
         }
 
         [Test]
@@ -152,32 +152,32 @@ namespace TileMapService.Tests
 
             var messageNode = xml.SelectSingleNode("/ogc:ServiceExceptionReport/ogc:ServiceException", nsManager);
             Assert.That(messageNode, Is.Not.Null);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
                 Assert.That(messageNode.Attributes["code"].Value, Is.EqualTo("OperationNotSupported"));
-            });
+            }
         }
 
         [Test]
         public async Task GetMapWebMercatorEntireWorldAsync()
         {
             var r = await client.GetAsync("/wms/?SERVICE=WMS&REQUEST=GetMap&LAYERS=world-mercator-hd&FORMAT=image/png&SRS=EPSG:3857&WIDTH=1024&HEIGHT=1024&BBOX=-20026376.39,-20048966.10,20026376.39,20048966.10");
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo("image/png"));
-            });
+            }
 
             var actual = await r.Content.ReadAsByteArrayAsync();
             Assert.That(actual, Has.Length.GreaterThan(1000));
 
             var size = Utils.ImageHelper.GetImageSize(actual);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(size.Value.Width, Is.EqualTo(1024));
                 Assert.That(size.Value.Height, Is.EqualTo(1024));
-            });
+            }
 
             var color = Utils.ImageHelper.CheckIfImageIsBlank(actual);
             Assert.That(color, Is.Not.Null);

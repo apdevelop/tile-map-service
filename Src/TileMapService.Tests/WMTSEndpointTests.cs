@@ -128,12 +128,12 @@ namespace TileMapService.Tests
             Assert.That(tileMatrixSet, Is.Not.Empty);
 
             var tileMatrix = xml.SelectSingleNode("/ns:Capabilities/ns:Contents/ns:TileMatrixSet[ows:Identifier='" + tileMatrixSet + "']/ns:TileMatrix[ows:Identifier='0']", nsManager);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(tileMatrix, Is.Not.Null);
                 Assert.That(int.Parse(tileMatrix.SelectSingleNode("//ns:TileWidth", nsManager).InnerText, CultureInfo.InvariantCulture), Is.EqualTo(512));
                 Assert.That(int.Parse(tileMatrix.SelectSingleNode("//ns:TileHeight", nsManager).InnerText, CultureInfo.InvariantCulture), Is.EqualTo(512));
-            });
+            }
         }
 
         [Test]
@@ -150,11 +150,11 @@ namespace TileMapService.Tests
 
             var messageNode = xml.SelectSingleNode("/ows:ExceptionReport/ows:Exception", nsManager);
             Assert.That(messageNode, Is.Not.Null);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
                 Assert.That(messageNode.Attributes["exceptionCode"].Value, Is.EqualTo("MissingParameterValue"));
-            });
+            }
         }
 
         [Test]
@@ -171,11 +171,11 @@ namespace TileMapService.Tests
 
             var messageNode = xml.SelectSingleNode("/ows:ExceptionReport/ows:Exception", nsManager);
             Assert.That(messageNode, Is.Not.Null);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
                 Assert.That(messageNode.Attributes["exceptionCode"].Value, Is.EqualTo("InvalidParameterValue"));
-            });
+            }
         }
 
         [Test]
@@ -197,30 +197,26 @@ namespace TileMapService.Tests
             var db = new MBT.Repository(MbtilesFilePath1);
             var original = db.ReadTile(0, 0, 0);
 
+            var expected1 = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
+            var r1 = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
+            Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var actual1 = await r1.Content.ReadAsByteArrayAsync();
+            using (Assert.EnterMultipleScope())
             {
-                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
-                var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
-                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
-                    Assert.That(Utils.ImageHelper.GetImageMediaType(actual), Is.EqualTo(MediaTypeNames.Image.Jpeg));
-                    Assert.That(actual, Is.EqualTo(expected));
-                });
+                Assert.That(r1.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
+                Assert.That(Utils.ImageHelper.GetImageMediaType(actual1), Is.EqualTo(MediaTypeNames.Image.Jpeg));
+                Assert.That(actual1, Is.EqualTo(expected1));
             }
 
+            var expected2 = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
+            var r2 = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/webp&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
+            Assert.That(r2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var actual2 = await r2.Content.ReadAsByteArrayAsync();
+            using (Assert.EnterMultipleScope())
             {
-                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
-                var r = await client.GetAsync("/wmts/?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=world-mercator-hd&STYLE=normal&FORMAT=image/webp&TILEMATRIXSET=EPSG:3857&TILEMATRIX=0&TILEROW=0&TILECOL=0");
-                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Webp));
-                    Assert.That(Utils.ImageHelper.GetImageMediaType(actual), Is.EqualTo(MediaTypeNames.Image.Webp));
-                    Assert.That(actual, Is.EqualTo(expected));
-                });
+                Assert.That(r2.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Webp));
+                Assert.That(Utils.ImageHelper.GetImageMediaType(actual2), Is.EqualTo(MediaTypeNames.Image.Webp));
+                Assert.That(actual2, Is.EqualTo(expected2));
             }
         }
 
@@ -231,11 +227,11 @@ namespace TileMapService.Tests
             var expected = db.ReadTile(0, 0, 0);
 
             var r = await client.GetAsync("/wmts/tile/1.0.0/world-mercator-hd/normal/EPSG:3857/0/0/0.png");
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
-            });
+            }
 
             var actual = await r.Content.ReadAsByteArrayAsync();
             Assert.That(actual, Is.EqualTo(expected));
@@ -255,11 +251,11 @@ namespace TileMapService.Tests
 
             var messageNode = xml.SelectSingleNode("/ows:ExceptionReport/ows:Exception", nsManager);
             Assert.That(messageNode, Is.Not.Null);
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(messageNode.InnerText, Has.Length.GreaterThan(10));
                 Assert.That(messageNode.Attributes["exceptionCode"].Value, Is.EqualTo("Not Found"));
-            });
+            }
         }
 
         #region Utility methods

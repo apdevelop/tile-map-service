@@ -103,44 +103,38 @@ namespace TileMapService.Tests
         [Test]
         public async Task GetTileAsync()
         {
+            var r1 = await client.GetAsync("/xyz/world-mercator-hd/0/0/0.png");
+            using (Assert.EnterMultipleScope())
             {
-                var r1 = await client.GetAsync("/xyz/world-mercator-hd/0/0/0.png");
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                    Assert.That(r1.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
-                });
-
-                var expected1 = new MBT.Repository(MbtilesFilePath1).ReadTile(0, 0, 0);
-                var actual1 = await r1.Content.ReadAsByteArrayAsync();
-                Assert.That(actual1, Is.EqualTo(expected1));
+                Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(r1.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
             }
 
-            {
-                var r2 = await client.GetAsync("/xyz/world-mercator-hd/?x=0&y=0&z=0");
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                    Assert.That(r2.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
-                });
+            var expected1 = new MBT.Repository(MbtilesFilePath1).ReadTile(0, 0, 0);
+            var actual1 = await r1.Content.ReadAsByteArrayAsync();
+            Assert.That(actual1, Is.EqualTo(expected1));
 
-                var expected2 = new MBT.Repository(MbtilesFilePath1).ReadTile(0, 0, 0);
-                var actual2 = await r2.Content.ReadAsByteArrayAsync();
-                Assert.That(actual2, Is.EqualTo(expected2));
+            var r2 = await client.GetAsync("/xyz/world-mercator-hd/?x=0&y=0&z=0");
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(r2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(r2.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Png));
             }
 
-            {
-                var r3 = await client.GetAsync("/xyz/small-area/?x=0&y=255&z=8");
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r3.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                    Assert.That(r3.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
-                });
+            var expected2 = new MBT.Repository(MbtilesFilePath1).ReadTile(0, 0, 0);
+            var actual2 = await r2.Content.ReadAsByteArrayAsync();
+            Assert.That(actual2, Is.EqualTo(expected2));
 
-                var expected3 = new MBT.Repository(MbtilesFilePath2).ReadTile(0, 0, 8);
-                var actual3 = await r3.Content.ReadAsByteArrayAsync();
-                Assert.That(actual3, Is.EqualTo(expected3));
+            var r3 = await client.GetAsync("/xyz/small-area/?x=0&y=255&z=8");
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(r3.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(r3.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
             }
+
+            var expected3 = new MBT.Repository(MbtilesFilePath2).ReadTile(0, 0, 8);
+            var actual3 = await r3.Content.ReadAsByteArrayAsync();
+            Assert.That(actual3, Is.EqualTo(expected3));
         }
 
         [Test]
@@ -149,30 +143,26 @@ namespace TileMapService.Tests
             var db = new MBT.Repository(MbtilesFilePath1);
             var original = db.ReadTile(0, 0, 0);
 
+            var r1 = await client.GetAsync("/xyz/world-mercator-hd/0/0/0.jpeg");
+            Assert.That(r1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var expected1 = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
+            var actual1 = await r1.Content.ReadAsByteArrayAsync();
+            using (Assert.EnterMultipleScope())
             {
-                var r = await client.GetAsync("/xyz/world-mercator-hd/0/0/0.jpeg");
-                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Jpeg, 90);
-                var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
-                    Assert.That(Utils.ImageHelper.GetImageMediaType(actual), Is.EqualTo(MediaTypeNames.Image.Jpeg));
-                    Assert.That(actual, Is.EqualTo(expected));
-                });
+                Assert.That(r1.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Jpeg));
+                Assert.That(Utils.ImageHelper.GetImageMediaType(actual1), Is.EqualTo(MediaTypeNames.Image.Jpeg));
+                Assert.That(actual1, Is.EqualTo(expected1));
             }
 
+            var r2 = await client.GetAsync("/xyz/world-mercator-hd/0/0/0.webp");
+            Assert.That(r2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var expected2 = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
+            var actual2 = await r2.Content.ReadAsByteArrayAsync();
+            using (Assert.EnterMultipleScope())
             {
-                var r = await client.GetAsync("/xyz/world-mercator-hd/0/0/0.webp");
-                Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                var expected = Utils.ImageHelper.ConvertImageToFormat(original, MediaTypeNames.Image.Webp, 90);
-                var actual = await r.Content.ReadAsByteArrayAsync();
-                Assert.Multiple(() =>
-                {
-                    Assert.That(r.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Webp));
-                    Assert.That(Utils.ImageHelper.GetImageMediaType(actual), Is.EqualTo(MediaTypeNames.Image.Webp));
-                    Assert.That(actual, Is.EqualTo(expected));
-                });
+                Assert.That(r2.Content.Headers.ContentType.MediaType, Is.EqualTo(MediaTypeNames.Image.Webp));
+                Assert.That(Utils.ImageHelper.GetImageMediaType(actual2), Is.EqualTo(MediaTypeNames.Image.Webp));
+                Assert.That(actual2, Is.EqualTo(expected2));
             }
         }
 

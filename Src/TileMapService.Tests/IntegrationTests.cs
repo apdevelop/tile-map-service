@@ -303,30 +303,24 @@ namespace TileMapService.Tests
             }
 
             // Create and fill MBTiles databases
-            {
-                var db1 = MBT.Repository.CreateEmptyDatabase(Mbtiles1FilePath);
-                db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "World Countries"));
-                db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Png));
-                db1.AddTile(0, 0, 0, new TileDataStub(0, 0, 0).ToByteArray());
-            }
+            var db1 = MBT.Repository.CreateEmptyDatabase(Mbtiles1FilePath);
+            db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "World Countries"));
+            db1.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Png));
+            db1.AddTile(0, 0, 0, new TileDataStub(0, 0, 0).ToByteArray());
 
-            {
-                var db2 = MBT.Repository.CreateEmptyDatabase(Mbtiles2FilePath);
-                db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "World Satellite Imagery"));
-                db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Jpeg));
-                db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMinZoom, "0"));
-                db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMaxZoom, "5"));
-                db2.AddTile(0, 0, 0, new TileDataStub(0, 0, 0).ToByteArray());
-            }
+            var db2 = MBT.Repository.CreateEmptyDatabase(Mbtiles2FilePath);
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "World Satellite Imagery"));
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Jpeg));
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMinZoom, "0"));
+            db2.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMaxZoom, "5"));
+            db2.AddTile(0, 0, 0, new TileDataStub(0, 0, 0).ToByteArray());
 
-            {
-                var db3 = MBT.Repository.CreateEmptyDatabase(Mbtiles3FilePath);
-                db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "Caspian Sea"));
-                db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Png));
-                db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMinZoom, "5"));
-                db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMaxZoom, "10"));
-                db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyBounds, "46.4012447459838,35.79530426558146,55.064448928947485,47.40446363441855"));
-            }
+            var db3 = MBT.Repository.CreateEmptyDatabase(Mbtiles3FilePath);
+            db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyName, "Caspian Sea"));
+            db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyFormat, ImageFormats.Png));
+            db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMinZoom, "5"));
+            db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyMaxZoom, "10"));
+            db3.AddMetadataItem(new MBT.MetadataItem(MBT.MetadataItem.KeyBounds, "46.4012447459838,35.79530426558146,55.064448928947485,47.40446363441855"));
         }
 
         private static void CreateLocalTiles(SourceConfiguration tileSource)
